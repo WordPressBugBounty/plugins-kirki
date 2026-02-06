@@ -644,7 +644,7 @@ wp.customize.controlConstructor.repeater = wp.customize.Control.extend({
    * @returns {void}
    */
   setValue: function (newValue, refresh, filtering) {
-    // We need to filter the values after the first load to remove data requrired for diplay but that we don't want to save in DB
+    // We need to filter the values after the first load to remove data required for display but that we don't want to save in DB
     var filteredValue = newValue,
       filter = [];
 
@@ -670,6 +670,8 @@ wp.customize.controlConstructor.repeater = wp.customize.Control.extend({
     this.setting.set(encodeURI(JSON.stringify(filteredValue)));
 
     if (refresh) {
+			// Check acive_callback in every change
+			KirkiRepeaterDependencies.init();
       // Trigger the change event on the hidden field so
       // previewer refresh the website on Customizer
       this.settingField.trigger("change");
