@@ -111,7 +111,7 @@ class WpAdmin {
 		$data['post_max_size']       = ini_get( 'post_max_size' );
 		$data['php_zip_ext_enabled'] = class_exists( 'ZipArchive' );
 		if ( ! isset( $data['is_show_wp_theme_header_footer'] ) ) {
-			$data['is_show_wp_theme_header_footer'] = false;
+			$data['is_show_wp_theme_header_footer'] = true;
 		}
 		if ( $inernal ) {
 			return $data;

@@ -4,7 +4,7 @@ Donate link: https://kirki.com
 Tags: page builder, website builder, drag and drop, no-code, freeform canvas, theme customizer
 Requires at least: 5.3
 Tested up to: 6.9
-Stable tag: 6.0.0
+Stable tag: 6.0.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -188,6 +188,9 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 
 == Changelog ==
 
+= 6.0.1 =
+* Update: Theme header and footer display logic updated.
+
 = 6.0.0 =
 * New: Kirki is now a fully freeform visual website builder — design on an infinite canvas with no layout restrictions.
 * New: Rebranded from Droip to Kirki — the Customizer framework and the visual builder are now unified under one product.
@@ -225,7 +228,7 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 
 == Support ==
 
-- Community support: https://facebook.com/groups/kirki
+- Community support: https://facebook.com/groups/kirkicommunity
 - Documentation: https://kirki.com/docs
 - Website: https://kirki.com
 
