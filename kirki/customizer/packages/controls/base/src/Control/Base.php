@@ -227,7 +227,8 @@ class Base extends \WP_Customize_Control {
 
 		// ! Consider to esc $data_attrs.
 		// ? What function we can use to escape string like data-xx="yy"?
-		printf( '<' . esc_attr( $tag ) . ' id="%s" class="%s"%s>', esc_attr( $id ), esc_attr( $class ), $data_attrs );
+		// $data_attrs is pre-escaped during construction in the loop above.
+		printf( '<' . esc_attr( $tag ) . ' id="%s" class="%s" %s>', esc_attr( $id ), esc_attr( $class ), $data_attrs ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		$this->render_content();
 		echo '</' . esc_attr( $tag ) . '>';
 

@@ -1,35 +1,66 @@
 <?php
+/* THIS_FILE_IS_FREE */
 /**
- * Plugin Name: Kirki Customizer Framework
- * Plugin URI: https://www.themeum.com
- * Description: The Ultimate WordPress Customizer Framework
- * Author: Themeum
- * Author URI: https://www.themeum.com
- * Version: 5.2.3
- * Text Domain: kirki
- * Requires at least: 5.3
- * Requires PHP: 7.4
+ * Kirki
  *
- * @package Kirki
- * @category Core
- * @author Themeum
- * @copyright Copyright (c) 2023, Themeum
- * @license https://opensource.org/licenses/MIT
- * @since 1.0
+ * @package     kirki
+ * Plugin Name: Kirki
+ * Plugin URI: https://kirki.com
+ * Description: Kirki is an all-in-one no-code builder that empowers users to build professional-grade WordPress sites without writing any code. It’s a promising glimpse into the future of website development.
+ * Version: 6.0.0
+ * Author: Kirki
+ * Author URI: https://kirki.com
+ * Text Domain: kirki
+ * Domain Path: /languages
+ * Requires at least: 5.0
+ * Requires PHP: 7.0
  */
 
-use Kirki\Customizer;
+use Kirki\HelperFunctions;
 
-// Exit if accessed directly.
-if (!defined('ABSPATH')) {
-	exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
 }
 
-// No need to proceed if Kirki already exists.
-if (class_exists('Kirki')) {
-	return;
+
+
+if ( ! class_exists( 'KirkiProMain' ) && ! class_exists( 'KirkiMain' ) && ! class_exists( 'Droip' ) ) {
+	require_once __DIR__ . '/vendor/autoload.php';
+	require_once __DIR__ . '/customizer/class-customizer.php';
+	require_once __DIR__ . '/includes/KirkiBase.php';
+
+	if (!defined('KIRKI_PLUGIN_FILE')) {
+		define('KIRKI_PLUGIN_FILE', plugin_dir_path(__FILE__) . 'kirki.php');
+	}
+
+	final class KirkiMain extends KirkiBase {
+
+		protected function get_plugin_file() {
+			return __FILE__;
+		}
+
+		protected function load_version_specific_events() {
+		}
+	}
+
+	/**
+	 * Initilizes the main plugin
+	 *
+	 * @return \Kirki
+	 */
+	if ( ! function_exists( 'KirkiMain' ) ) {
+		/**
+		 * This function for entry point
+		 */
+		function KirkiMain() {
+			return KirkiMain::init();
+		}
+
+		try {
+			// kick-off the plugin.
+			KirkiMain();
+		} catch ( Exception $e ) {
+			HelperFunctions::store_error_log( wp_json_encode( $e ) );
+		}
+	}
 }
-
-require_once __DIR__ . '/customizer/class-customizer.php';
-
-Customizer::init();

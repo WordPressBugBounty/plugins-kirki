@@ -10,6 +10,10 @@
 
 namespace Kirki\Data;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Hooks and tweaks to allow Kirki saving Options instead of theme-mods.
  *

@@ -6,6 +6,11 @@
  * @package kirki
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 /**
  * Instantiate oblects.
  *

@@ -10,6 +10,10 @@
 
 namespace Kirki\Settings;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Repeater Settings.
  */

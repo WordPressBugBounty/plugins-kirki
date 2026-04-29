@@ -10,6 +10,10 @@
 
 namespace Kirki;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Make it easier to create customizer settings & controls with a single call,
  * register the control type if needed, run extra actions the the customizer.

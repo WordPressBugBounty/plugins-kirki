@@ -12,6 +12,10 @@
 
 namespace Kirki\Module;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 use Kirki\Compatibility\Kirki;
 use Kirki\Util\Helper;
 use Kirki\Compatibility\Values;
@@ -221,7 +225,7 @@ class CSS
 		$inline_styles_id = apply_filters('kirki_inline_styles_id', self::$inline_styles_id);
 
 		echo '<style id="' . esc_attr($inline_styles_id) . '">';
-		echo $inline_styles;
+		echo wp_strip_all_tags( $inline_styles ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo '</style>';
 
 	}

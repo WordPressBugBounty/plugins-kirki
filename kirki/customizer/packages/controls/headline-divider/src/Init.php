@@ -8,6 +8,10 @@
 
 namespace Kirki\HeadlineDivider;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Manage the tabs package.
  */

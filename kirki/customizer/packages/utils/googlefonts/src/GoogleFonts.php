@@ -12,6 +12,10 @@
 
 namespace Kirki;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Manages the way Google Fonts are enqueued.
  */

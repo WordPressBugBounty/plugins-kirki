@@ -16,6 +16,10 @@
 
 namespace Kirki\Module;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 use Kirki\Compatibility\Kirki;
 
 /**

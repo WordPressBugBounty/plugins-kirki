@@ -4,9 +4,13 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit6bf0ad1fa92875c6d2b4504d26cbe17c
+class ComposerStaticInitKirkiFree
 {
     public static $prefixLengthsPsr4 = array (
+        'e' =>
+        array (
+            'enshrined\\svgSanitize\\' => 22,
+        ),
         'K' =>
         array (
             'Kirki\\Util\\' => 11,
@@ -26,6 +30,10 @@ class ComposerStaticInit6bf0ad1fa92875c6d2b4504d26cbe17c
     );
 
     public static $prefixDirsPsr4 = array (
+        'enshrined\\svgSanitize\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/enshrined/svg-sanitize/src',
+        ),
         'Kirki\\Util\\' =>
         array (
             0 => __DIR__ . '/../..' . '/customizer/packages/utils/src',
@@ -179,11 +187,48 @@ class ComposerStaticInit6bf0ad1fa92875c6d2b4504d26cbe17c
             31 => __DIR__ . '/../..' . '/customizer/packages/modules/panels/src',
             32 => __DIR__ . '/../..' . '/customizer/packages/modules/sections/src',
             33 => __DIR__ . '/../..' . '/customizer/packages/utils/url-getter/src',
+            34 => __DIR__ . '/../..' . '/includes',
         ),
     );
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'Kirki\\API' => __DIR__ . '/../..' . '/includes/API.php',
+        'Kirki\\API\\ContentManager\\ContentManagerHelper' => __DIR__ . '/../..' . '/includes/API/ContentManager/ContentManagerHelper.php',
+        'Kirki\\API\\ContentManager\\ContentManagerRest' => __DIR__ . '/../..' . '/includes/API/ContentManager/ContentManagerRest.php',
+        'Kirki\\API\\Frontend\\Controllers\\CollectionController' => __DIR__ . '/../..' . '/includes/API/Frontend/Controllers/CollectionController.php',
+        'Kirki\\API\\Frontend\\Controllers\\FormController' => __DIR__ . '/../..' . '/includes/API/Frontend/Controllers/FormController.php',
+        'Kirki\\API\\Frontend\\Controllers\\FrontendRESTController' => __DIR__ . '/../..' . '/includes/API/Frontend/Controllers/FrontendRESTController.php',
+        'Kirki\\API\\Frontend\\FrontendApi' => __DIR__ . '/../..' . '/includes/API/Frontend/FrontendApi.php',
+        'Kirki\\API\\KirkiComments\\KirkiCommentsRest' => __DIR__ . '/../..' . '/includes/API/KirkiComments/KirkiCommentsRest.php',
+        'Kirki\\API\\Media' => __DIR__ . '/../..' . '/includes/API/Media.php',
+        'Kirki\\API\\Utils' => __DIR__ . '/../..' . '/includes/API/Utils.php',
+        'Kirki\\Admin' => __DIR__ . '/../..' . '/includes/Admin.php',
+        'Kirki\\Admin\\AdminMenu' => __DIR__ . '/../..' . '/includes/Admin/AdminMenu.php',
+        'Kirki\\Admin\\EditWithButton' => __DIR__ . '/../..' . '/includes/Admin/EditWithButton.php',
+        'Kirki\\Admin\\PostActions' => __DIR__ . '/../..' . '/includes/Admin/PostActions.php',
+        'Kirki\\Ajax' => __DIR__ . '/../..' . '/includes/Ajax.php',
+        'Kirki\\Ajax\\Apps' => __DIR__ . '/../..' . '/includes/Ajax/Apps.php',
+        'Kirki\\Ajax\\Collaboration\\Collaboration' => __DIR__ . '/../..' . '/includes/Ajax/Collaboration/Collaboration.php',
+        'Kirki\\Ajax\\Collaboration\\Sender' => __DIR__ . '/../..' . '/includes/Ajax/Collaboration/Sender.php',
+        'Kirki\\Ajax\\Collection' => __DIR__ . '/../..' . '/includes/Ajax/Collection.php',
+        'Kirki\\Ajax\\Comments' => __DIR__ . '/../..' . '/includes/Ajax/Comments.php',
+        'Kirki\\Ajax\\DynamicContent' => __DIR__ . '/../..' . '/includes/Ajax/DynamicContent.php',
+        'Kirki\\Ajax\\ExportImport' => __DIR__ . '/../..' . '/includes/Ajax/ExportImport.php',
+        'Kirki\\Ajax\\Form' => __DIR__ . '/../..' . '/includes/Ajax/Form.php',
+        'Kirki\\Ajax\\Media' => __DIR__ . '/../..' . '/includes/Ajax/Media.php',
+        'Kirki\\Ajax\\Page' => __DIR__ . '/../..' . '/includes/Ajax/Page.php',
+        'Kirki\\Ajax\\PageSettings' => __DIR__ . '/../..' . '/includes/Ajax/PageSettings.php',
+        'Kirki\\Ajax\\RBAC' => __DIR__ . '/../..' . '/includes/Ajax/RBAC.php',
+        'Kirki\\Ajax\\Symbol' => __DIR__ . '/../..' . '/includes/Ajax/Symbol.php',
+        'Kirki\\Ajax\\Taxonomy' => __DIR__ . '/../..' . '/includes/Ajax/Taxonomy.php',
+        'Kirki\\Ajax\\TemplateExportImport' => __DIR__ . '/../..' . '/includes/Ajax/TemplateExportImport.php',
+        'Kirki\\Ajax\\UserData' => __DIR__ . '/../..' . '/includes/Ajax/UserData.php',
+        'Kirki\\Ajax\\Users' => __DIR__ . '/../..' . '/includes/Ajax/Users.php',
+        'Kirki\\Ajax\\Walkthrough' => __DIR__ . '/../..' . '/includes/Ajax/Walkthrough.php',
+        'Kirki\\Ajax\\WordpressData' => __DIR__ . '/../..' . '/includes/Ajax/WordpressData.php',
+        'Kirki\\Ajax\\WpAdmin' => __DIR__ . '/../..' . '/includes/Ajax/WpAdmin.php',
+        'Kirki\\Apps' => __DIR__ . '/../..' . '/includes/Apps.php',
         'Kirki\\Compatibility\\Aliases' => __DIR__ . '/../..' . '/customizer/packages/compatibility/src/Aliases.php',
         'Kirki\\Compatibility\\Config' => __DIR__ . '/../..' . '/customizer/packages/compatibility/src/Config.php',
         'Kirki\\Compatibility\\Control' => __DIR__ . '/../..' . '/customizer/packages/compatibility/src/Control.php',
@@ -197,6 +242,7 @@ class ComposerStaticInit6bf0ad1fa92875c6d2b4504d26cbe17c
         'Kirki\\Compatibility\\Scripts' => __DIR__ . '/../..' . '/customizer/packages/compatibility/src/Scripts.php',
         'Kirki\\Compatibility\\Settings' => __DIR__ . '/../..' . '/customizer/packages/compatibility/src/Settings.php',
         'Kirki\\Compatibility\\Values' => __DIR__ . '/../..' . '/customizer/packages/compatibility/src/Values.php',
+        'Kirki\\ContentManager' => __DIR__ . '/../..' . '/includes/ContentManager.php',
         'Kirki\\Control\\Base' => __DIR__ . '/../..' . '/customizer/packages/controls/base/src/Control/Base.php',
         'Kirki\\Control\\Checkbox' => __DIR__ . '/../..' . '/customizer/packages/controls/checkbox/src/Control/Checkbox.php',
         'Kirki\\Control\\Checkbox_Switch' => __DIR__ . '/../..' . '/customizer/packages/controls/checkbox/src/Control/Checkbox_Switch.php',
@@ -231,6 +277,10 @@ class ComposerStaticInit6bf0ad1fa92875c6d2b4504d26cbe17c
         'Kirki\\Control\\Tabs' => __DIR__ . '/../..' . '/customizer/packages/controls/tabs/src/Control/Tabs.php',
         'Kirki\\Control\\Upload' => __DIR__ . '/../..' . '/customizer/packages/controls/upload/src/Control/Upload.php',
         'Kirki\\Data\\Option' => __DIR__ . '/../..' . '/customizer/packages/utils/data-option/src/Option.php',
+        'Kirki\\DbQueryUtils' => __DIR__ . '/../..' . '/includes/DbQueryUtils.php',
+        'Kirki\\ElementVisibilityConditions' => __DIR__ . '/../..' . '/includes/ElementVisibilityConditions.php',
+        'Kirki\\ExportImport\\TemplateExport' => __DIR__ . '/../..' . '/includes/ExportImport/TemplateExport.php',
+        'Kirki\\ExportImport\\TemplateImport' => __DIR__ . '/../..' . '/includes/ExportImport/TemplateImport.php',
         'Kirki\\Field' => __DIR__ . '/../..' . '/customizer/packages/fields/base/src/Field.php',
         'Kirki\\Field\\Background' => __DIR__ . '/../..' . '/customizer/packages/fields/background/src/Background.php',
         'Kirki\\Field\\CSS\\Background' => __DIR__ . '/../..' . '/customizer/packages/fields/background/src/CSS/Background.php',
@@ -284,10 +334,28 @@ class ComposerStaticInit6bf0ad1fa92875c6d2b4504d26cbe17c
         'Kirki\\Field\\Typography' => __DIR__ . '/../..' . '/customizer/packages/fields/typography/src/Field/Typography.php',
         'Kirki\\Field\\URL' => __DIR__ . '/../..' . '/customizer/packages/controls/generic/src/Field/URL.php',
         'Kirki\\Field\\Upload' => __DIR__ . '/../..' . '/customizer/packages/controls/upload/src/Field/Upload.php',
+        'Kirki\\FormValidator\\FormValidator' => __DIR__ . '/../..' . '/includes/FormValidator/FormValidator.php',
+        'Kirki\\FormValidator\\Validate' => __DIR__ . '/../..' . '/includes/FormValidator/Validate.php',
+        'Kirki\\Frontend' => __DIR__ . '/../..' . '/includes/Frontend.php',
+        'Kirki\\Frontend\\Editor' => __DIR__ . '/../..' . '/includes/Frontend/Editor.php',
+        'Kirki\\Frontend\\Iframe' => __DIR__ . '/../..' . '/includes/Frontend/Iframe.php',
+        'Kirki\\Frontend\\Preview\\DataHelper' => __DIR__ . '/../..' . '/includes/Frontend/Preview/DataHelper.php',
+        'Kirki\\Frontend\\Preview\\ExceptionalElements' => __DIR__ . '/../..' . '/includes/Frontend/Preview/ExceptionalElements.php',
+        'Kirki\\Frontend\\Preview\\Preview' => __DIR__ . '/../..' . '/includes/Frontend/Preview/Preview.php',
+        'Kirki\\Frontend\\Preview\\Utils' => __DIR__ . '/../..' . '/includes/Frontend/Preview/Utils.php',
+        'Kirki\\Frontend\\TheFrontend' => __DIR__ . '/../..' . '/includes/Frontend/TheFrontend.php',
+        'Kirki\\Frontend\\TheFrontendHooks' => __DIR__ . '/../..' . '/includes/Frontend/TheFrontendHooks.php',
         'Kirki\\GoogleFonts' => __DIR__ . '/../..' . '/customizer/packages/utils/googlefonts/src/GoogleFonts.php',
         'Kirki\\HeadlineDivider\\Init' => __DIR__ . '/../..' . '/customizer/packages/controls/headline-divider/src/Init.php',
+        'Kirki\\HelperFunctions' => __DIR__ . '/../..' . '/includes/HelperFunctions.php',
         'Kirki\\InputSlider\\Init' => __DIR__ . '/../..' . '/customizer/packages/controls/input-slider/src/Init.php',
         'Kirki\\L10n' => __DIR__ . '/../..' . '/customizer/packages/utils/l10n/src/L10n.php',
+        'Kirki\\Manager\\PluginActiveEvents' => __DIR__ . '/../..' . '/includes/Manager/PluginActiveEvents.php',
+        'Kirki\\Manager\\PluginDeactivateEvents' => __DIR__ . '/../..' . '/includes/Manager/PluginDeactivateEvents.php',
+        'Kirki\\Manager\\PluginInitEvents' => __DIR__ . '/../..' . '/includes/Manager/PluginInitEvents.php',
+        'Kirki\\Manager\\PluginLoadedEvents' => __DIR__ . '/../..' . '/includes/Manager/PluginLoadedEvents.php',
+        'Kirki\\Manager\\PluginShortcode' => __DIR__ . '/../..' . '/includes/Manager/PluginShortcode.php',
+        'Kirki\\Manager\\TemplateRedirection' => __DIR__ . '/../..' . '/includes/Manager/TemplateRedirection.php',
         'Kirki\\MarginPadding\\Init' => __DIR__ . '/../..' . '/customizer/packages/controls/margin-padding/src/Init.php',
         'Kirki\\Module\\CSS' => __DIR__ . '/../..' . '/customizer/packages/modules/css/src/CSS.php',
         'Kirki\\Module\\CSS\\Generator' => __DIR__ . '/../..' . '/customizer/packages/modules/css/src/CSS/Generator.php',
@@ -311,6 +379,7 @@ class ComposerStaticInit6bf0ad1fa92875c6d2b4504d26cbe17c
         'Kirki\\Module\\Webfonts\\Google' => __DIR__ . '/../..' . '/customizer/packages/modules/webfonts/src/Webfonts/Google.php',
         'Kirki\\Panel' => __DIR__ . '/../..' . '/customizer/packages/modules/panels/src/Panel.php',
         'Kirki\\Panel_Types\\Nested' => __DIR__ . '/../..' . '/customizer/packages/modules/panels/src/Panel_Types/Nested.php',
+        'Kirki\\PostsQueryUtils' => __DIR__ . '/../..' . '/includes/PostsQueryUtils.php',
         'Kirki\\Responsive\\Init' => __DIR__ . '/../..' . '/customizer/packages/controls/responsive/src/Init.php',
         'Kirki\\Section' => __DIR__ . '/../..' . '/customizer/packages/modules/sections/src/Section.php',
         'Kirki\\Section_Types\\Expanded' => __DIR__ . '/../..' . '/customizer/packages/modules/sections/src/Section_Types/Expanded.php',
@@ -318,6 +387,7 @@ class ComposerStaticInit6bf0ad1fa92875c6d2b4504d26cbe17c
         'Kirki\\Section_Types\\Nested' => __DIR__ . '/../..' . '/customizer/packages/modules/sections/src/Section_Types/Nested.php',
         'Kirki\\Section_Types\\Outer' => __DIR__ . '/../..' . '/customizer/packages/modules/sections/src/Section_Types/Outer.php',
         'Kirki\\Settings\\Repeater' => __DIR__ . '/../..' . '/customizer/packages/controls/repeater/src/Settings/Repeater.php',
+        'Kirki\\Staging' => __DIR__ . '/../..' . '/includes/Staging.php',
         'Kirki\\Tabs\\Init' => __DIR__ . '/../..' . '/customizer/packages/controls/tabs/src/Init.php',
         'Kirki\\URL' => __DIR__ . '/../..' . '/customizer/packages/utils/url-getter/src/URL.php',
         'Kirki\\Util\\Dashicons' => __DIR__ . '/../..' . '/customizer/packages/controls/dashicons/src/Util/Dashicons.php',
@@ -326,14 +396,25 @@ class ComposerStaticInit6bf0ad1fa92875c6d2b4504d26cbe17c
         'Kirki\\Util\\Setting\\Site_Option' => __DIR__ . '/../..' . '/customizer/packages/utils/src/Setting/Site_Option.php',
         'Kirki\\Util\\Setting\\User_Meta' => __DIR__ . '/../..' . '/customizer/packages/utils/src/Setting/User_Meta.php',
         'Kirki\\Util\\Util' => __DIR__ . '/../..' . '/customizer/packages/utils/src/Util.php',
+        'enshrined\\svgSanitize\\ElementReference\\Resolver' => __DIR__ . '/..' . '/enshrined/svg-sanitize/src/ElementReference/Resolver.php',
+        'enshrined\\svgSanitize\\ElementReference\\Subject' => __DIR__ . '/..' . '/enshrined/svg-sanitize/src/ElementReference/Subject.php',
+        'enshrined\\svgSanitize\\ElementReference\\Usage' => __DIR__ . '/..' . '/enshrined/svg-sanitize/src/ElementReference/Usage.php',
+        'enshrined\\svgSanitize\\Exceptions\\NestingException' => __DIR__ . '/..' . '/enshrined/svg-sanitize/src/Exceptions/NestingException.php',
+        'enshrined\\svgSanitize\\Helper' => __DIR__ . '/..' . '/enshrined/svg-sanitize/src/Helper.php',
+        'enshrined\\svgSanitize\\Sanitizer' => __DIR__ . '/..' . '/enshrined/svg-sanitize/src/Sanitizer.php',
+        'enshrined\\svgSanitize\\data\\AllowedAttributes' => __DIR__ . '/..' . '/enshrined/svg-sanitize/src/data/AllowedAttributes.php',
+        'enshrined\\svgSanitize\\data\\AllowedTags' => __DIR__ . '/..' . '/enshrined/svg-sanitize/src/data/AllowedTags.php',
+        'enshrined\\svgSanitize\\data\\AttributeInterface' => __DIR__ . '/..' . '/enshrined/svg-sanitize/src/data/AttributeInterface.php',
+        'enshrined\\svgSanitize\\data\\TagInterface' => __DIR__ . '/..' . '/enshrined/svg-sanitize/src/data/TagInterface.php',
+        'enshrined\\svgSanitize\\data\\XPath' => __DIR__ . '/..' . '/enshrined/svg-sanitize/src/data/XPath.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit6bf0ad1fa92875c6d2b4504d26cbe17c::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit6bf0ad1fa92875c6d2b4504d26cbe17c::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInit6bf0ad1fa92875c6d2b4504d26cbe17c::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInitKirkiFree::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInitKirkiFree::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInitKirkiFree::$classMap;
 
         }, null, ClassLoader::class);
     }

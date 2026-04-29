@@ -11,6 +11,10 @@
 
 namespace Kirki\Module\Webfonts;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 use Kirki\URL;
 
 /**3.

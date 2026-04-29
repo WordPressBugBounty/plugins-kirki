@@ -12,6 +12,10 @@
 
 namespace Kirki\Compatibility;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Adds class aliases for backwards compatibility.
  *

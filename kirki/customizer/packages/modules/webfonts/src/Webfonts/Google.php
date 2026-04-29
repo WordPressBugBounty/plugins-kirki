@@ -12,6 +12,10 @@
 
 namespace Kirki\Module\Webfonts;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 use Kirki\Module\Webfonts\Fonts;
 use Kirki\GoogleFonts;
 

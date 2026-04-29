@@ -8,6 +8,10 @@
 
 namespace Kirki\Tabs;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 use Kirki\Field\Tabs;
 
 /**

@@ -8,6 +8,10 @@
 
 namespace Kirki\Responsive;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 use Kirki\Field\Responsive;
 
 /**

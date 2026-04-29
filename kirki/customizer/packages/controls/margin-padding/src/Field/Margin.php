@@ -8,6 +8,10 @@
 
 namespace Kirki\Field;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 use Kirki\Field;
 use Kirki\URL;
 

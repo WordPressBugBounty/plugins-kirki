@@ -1,0 +1,220 @@
+/*!**************************************************************************************************************************************************************************************!*\
+  !*** css ../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[1].use[1]!../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[1].use[2]!./src/Canvas/RealTimeMCP/styles.css ***!
+  \**************************************************************************************************************************************************************************************/
+.realtime-mcp {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 9999;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.realtime-mcp.minimized {
+  width: auto;
+  height: auto;
+}
+
+.realtime-mcp.expanded {
+  width: 400px;
+  max-height: 600px;
+  bottom: 20px;
+}
+
+.realtime-mcp-container {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.realtime-mcp.minimized .realtime-mcp-container {
+  padding: 0;
+}
+
+.realtime-mcp.expanded .realtime-mcp-container {
+  padding: 1.5rem;
+}
+
+.realtime-mcp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.realtime-mcp-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #111827;
+  font-weight: 700;
+}
+
+.realtime-mcp-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+}
+
+.realtime-mcp-status.connected {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.realtime-mcp-status.connecting {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.realtime-mcp-status.disconnected,
+.realtime-mcp-status.error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.realtime-mcp-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+.realtime-mcp-info {
+  background: #f9fafb;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid #6366f1;
+}
+
+.realtime-mcp-info p {
+  margin: 0.5rem 0;
+  color: #4b5563;
+  font-size: 0.875rem;
+}
+
+.realtime-mcp-info p:first-child {
+  margin-top: 0;
+}
+
+.realtime-mcp-info p:last-child {
+  margin-bottom: 0;
+}
+
+.realtime-mcp-info code {
+  background: #e5e7eb;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-family: "Courier New", monospace;
+  font-size: 0.875rem;
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.realtime-mcp-messages {
+  min-height: 200px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.realtime-mcp-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.realtime-mcp-item {
+  background: #f9fafb;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  border-radius: 8px;
+  border-left: 4px solid #10b981;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.realtime-mcp-item:hover {
+  background: #f3f4f6;
+  transform: translateX(4px);
+}
+
+.realtime-mcp-item:last-child {
+  margin-bottom: 0;
+}
+
+.realtime-mcp-time {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.realtime-mcp-text {
+  font-size: 1rem;
+  color: #111827;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.realtime-mcp-empty {
+  color: #9ca3af;
+  font-style: italic;
+  text-align: center;
+  padding: 3rem 1rem;
+  font-size: 0.875rem;
+}
+
+.realtime-mcp-messages::-webkit-scrollbar {
+  width: 8px;
+}
+
+.realtime-mcp-messages::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+.realtime-mcp-messages::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.realtime-mcp-messages::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+@media (max-width: 640px) {
+  .realtime-mcp-container {
+    padding: 1rem;
+  }
+  .realtime-mcp-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .realtime-mcp-header h2 {
+    font-size: 1.25rem;
+  }
+  .realtime-mcp-messages {
+    max-height: 300px;
+  }
+}

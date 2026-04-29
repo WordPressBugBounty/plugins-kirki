@@ -10,6 +10,10 @@
 
 namespace Kirki\Field;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 use Kirki\Util\Helper;
 use Kirki\Field;
 use Kirki\GoogleFonts;

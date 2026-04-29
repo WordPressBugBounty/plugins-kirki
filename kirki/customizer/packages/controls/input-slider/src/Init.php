@@ -8,6 +8,10 @@
 
 namespace Kirki\InputSlider;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Manage the tabs package.
  *

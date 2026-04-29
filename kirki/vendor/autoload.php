@@ -19,4 +19,4 @@ if (PHP_VERSION_ID < 50600) {
 
 require_once __DIR__ . '/composer/autoload_real.php';
 
-return ComposerAutoloaderInit6bf0ad1fa92875c6d2b4504d26cbe17c::getLoader();
+return ComposerAutoloaderInitKirkiFree::getLoader();

@@ -11,6 +11,10 @@
 
 namespace Kirki;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Panel.
  */

@@ -11,6 +11,10 @@
 
 namespace Kirki\Module;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Handle selective refreshes introduced in WordPress 4.5.
  */

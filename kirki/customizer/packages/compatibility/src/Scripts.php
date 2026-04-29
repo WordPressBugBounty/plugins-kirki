@@ -12,6 +12,10 @@
 
 namespace Kirki\Compatibility;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 use Kirki\URL;
 
 /**

@@ -12,6 +12,10 @@
 
 namespace Kirki\Util;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Utility class.
  */
@@ -190,7 +194,10 @@ class Util {
 		}
 		// Inject data.
 		if ( ! $exists && defined( 'KIRKI_PLUGIN_FILE' ) ) {
+			/* FREE_START */
 			$plugins['plugins']['kirki/kirki.php'] = get_plugin_data( KIRKI_PLUGIN_FILE );
+			/* FREE_END */
+			
 		}
 		$request['body']['plugins'] = wp_json_encode( $plugins );
 		return $request;

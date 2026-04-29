@@ -11,6 +11,10 @@
 
 namespace Kirki\Module;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 use Kirki\Compatibility\Values;
 use Kirki\Compatibility\Kirki;
 use Kirki\Module\Webfonts\Google;

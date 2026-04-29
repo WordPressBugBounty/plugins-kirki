@@ -10,6 +10,10 @@
 
 namespace Kirki;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Section.
  */
