@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
-define( 'KIRKI_VERSION', '6.0.1' );
+define( 'KIRKI_VERSION', '6.0.2' );
 define( 'KIRKI_APP_PREFIX', 'kirki' );
 define( 'KIRKI_CORE_PLUGIN_URL', 'https://kirki.com' );
 define( 'KIRKI_PUBLIC_ASSETS_URL', 'https://d31d7414w5c76z.cloudfront.net' );

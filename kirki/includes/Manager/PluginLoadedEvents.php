@@ -125,30 +125,6 @@ class PluginLoadedEvents {
 			$this->alter_collection_names();
 		}
 
-		// TODO: Change version name before release
-		$db_altered_in4 = '2.2.4';
-		if ( empty( $version_in_db ) || version_compare( $version_in_db, $db_altered_in4, '<' ) ) {
-			$page = HelperFunctions::find_utility_page_for_this_context( '404' );
-			if ( $page ) {
-				$post_id = $page['id'];
-				update_post_meta(
-					$post_id,
-					KIRKI_META_NAME_FOR_PAGE_HF_SYMBOL_DISABLE_STATUS,
-					array(
-						'header' => true,
-						'footer' => true,
-					)
-				);
-			}
-			HelperFunctions::handle_legacy_slider_class();
-		}
-
-		// fix: previous slider default class problem with new slider class issue.
-		$db_altered_in5 = '2.2.6';
-		if ( empty( $version_in_db ) || version_compare( $version_in_db, $db_altered_in5, '<' ) ) {
-			HelperFunctions::handle_legacy_slider_default_class();
-		}
-
 		$db_altered_in6 = '2.3.0';
 		if ( empty( $version_in_db ) || version_compare( $version_in_db, $db_altered_in6, '<' ) ) {
 			PluginActiveEvents::create_custom_tables();

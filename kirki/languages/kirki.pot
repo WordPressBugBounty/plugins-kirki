@@ -2,14 +2,14 @@
 # This file is distributed under the same license as the Kirki plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: Kirki 6.0.1\n"
+"Project-Id-Version: Kirki 6.0.2\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/kirki\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-04-29T16:31:05+00:00\n"
+"POT-Creation-Date: 2026-04-30T13:55:58+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: kirki\n"
@@ -825,32 +825,32 @@ msgid "%1$s or %2$s"
 msgstr ""
 
 #. translators: %s represents the field ID where the error occurs.
-#: customizer/packages/compatibility/src/Field.php:268
+#: customizer/packages/compatibility/src/Field.php:277
 #, php-format
 msgid "Typo found in field %s - setting instead of settings."
 msgstr ""
 
 #. translators: %1$s represents the field ID where the error occurs. %2$s is the URL in the documentation site.
-#: customizer/packages/compatibility/src/Field.php:279
+#: customizer/packages/compatibility/src/Field.php:288
 #, php-format
 msgid "Config not defined for field %1$s - See %2$s for details on how to properly add fields."
 msgstr ""
 
 #. translators: %1$s represents the field ID where the error occurs.
-#: customizer/packages/compatibility/src/Field.php:378
+#: customizer/packages/compatibility/src/Field.php:387
 #, php-format
 msgid "Typo found in field %s - \"theme_mods\" vs \"theme_mod\""
 msgstr ""
 
 #. translators: %1$s represents the field ID where the error occurs.
-#: customizer/packages/compatibility/src/Field.php:395
+#: customizer/packages/compatibility/src/Field.php:404
 #, php-format
 msgid "\"partial_refresh\" invalid entry in field %s"
 msgstr ""
 
 #. translators: The field ID where the error occurs.
-#: customizer/packages/compatibility/src/Field.php:521
-#: customizer/packages/compatibility/src/Field.php:532
+#: customizer/packages/compatibility/src/Field.php:530
+#: customizer/packages/compatibility/src/Field.php:541
 #: customizer/packages/modules/css/src/CSS.php:140
 #: customizer/packages/modules/css/src/CSS.php:151
 #: customizer/packages/modules/postmessage/src/Postmessage.php:76

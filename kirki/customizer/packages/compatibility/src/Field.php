@@ -242,6 +242,15 @@ class Field {
 	protected $partial_refresh = array();
 
 	/**
+	 * Gutenberg support flag.
+	 *
+	 * @access public
+	 * @var bool
+	 */
+	public $gutenberg_support = false;
+	public $disable_loader = false;
+
+	/**
 	 * The class constructor.
 	 * Parses and sanitizes all field arguments.
 	 * Then it adds the field to Kirki::$fields.

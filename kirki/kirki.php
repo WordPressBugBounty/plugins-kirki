@@ -7,7 +7,7 @@
  * Plugin Name: Kirki
  * Plugin URI: https://kirki.com
  * Description: Kirki is an all-in-one no-code builder that empowers users to build professional-grade WordPress sites without writing any code. It’s a promising glimpse into the future of website development.
- * Version: 6.0.1
+ * Version: 6.0.2
  * Author: Kirki
  * Author URI: https://kirki.com
  * Text Domain: kirki
