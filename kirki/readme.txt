@@ -4,7 +4,7 @@ Donate link: https://kirki.com
 Tags: page builder, website builder, drag and drop, no-code, freeform canvas, theme customizer
 Requires at least: 5.3
 Tested up to: 6.9
-Stable tag: 6.0.2
+Stable tag: 6.0.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -187,6 +187,16 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 ---
 
 == Changelog ==
+
+= 6.0.3 =
+* Fix: WebFontLoader JavaScript file not found issue resolved.
+* Fix: WebFont is not defined error fixed in the Konte theme.
+* Fix: Added backward compatibility for all Kirki modules (CSS, Tooltips, Postmessage, Field_Dependencies, Selective_Refresh, Preset, Webfonts, Editor_Styles) to prevent fatal errors.
+* Fix: Added class alias existence checks to prevent redeclaration warnings when themes/plugins have bundled Kirki.
+* Fix: Added type safety check in Field constructor to handle legacy argument formats.
+* Fix: Added missing property declarations ($name, $data_tags, $dynamic) to prevent PHP 8.2+ dynamic property deprecation warnings.
+* Improvement: Stability improvements.
+* Improvement: Fixed DesiIcons alignment issue.
 
 = 6.0.2 =
 * Fix: Resolved a fatal error that occurred when the wp_insert_post hook was triggered after the plugin finished loading.

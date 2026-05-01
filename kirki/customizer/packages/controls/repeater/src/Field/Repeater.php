@@ -40,6 +40,15 @@ class Repeater extends Field {
 	protected $fields = [];
 
 	/**
+	 * Dynamic property flag.
+	 *
+	 * @access public
+	 * @since 1.0
+	 * @var bool
+	 */
+	public $dynamic = false;
+
+	/**
 	 * Sets the control type.
 	 *
 	 * @access protected

@@ -26,6 +26,16 @@ use Kirki\URL;
 class Tooltips {
 
 	/**
+	 * The class instance.
+	 *
+	 * @static
+	 * @access private
+	 * @since 1.0
+	 * @var object
+	 */
+	private static $instance;
+
+	/**
 	 * An array containing field identifieds and their tooltips.
 	 *
 	 * @access private
@@ -33,6 +43,22 @@ class Tooltips {
 	 * @var array
 	 */
 	private $tooltips_content = [];
+
+	/**
+	 * Get the one, true instance of this class.
+	 * Prevents performance issues since this is instantiated in a filter.
+	 *
+	 * @static
+	 * @access public
+	 * @since 1.0
+	 * @return object
+	 */
+	public static function get_instance() {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
 
 	/**
 	 * The class constructor

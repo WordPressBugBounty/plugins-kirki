@@ -21,6 +21,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Selective_Refresh {
 
 	/**
+	 * The class instance.
+	 *
+	 * @static
+	 * @access private
+	 * @since 1.0.0
+	 * @var object
+	 */
+	private static $instance;
+
+	/**
 	 * An array of fields with selective refreshes.
 	 *
 	 * @static
@@ -29,6 +39,21 @@ class Selective_Refresh {
 	 * @var array
 	 */
 	private static $fields = [];
+
+	/**
+	 * Get the one, true instance of this class.
+	 *
+	 * @static
+	 * @access public
+	 * @since 1.0.0
+	 * @return object
+	 */
+	public static function get_instance() {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
 
 	/**
 	 * Adds any necessary actions & filters.

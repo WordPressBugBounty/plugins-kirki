@@ -165,8 +165,14 @@ class Aliases {
 	 */
 	public function add_aliases() {
 		foreach ( $this->aliases['generic'] as $item ) {
-			if ( class_exists( $item[0] ) ) {
-				class_alias( $item[0], $item[1] );
+			// Only create alias if source exists and alias doesn't already exist.
+			if ( class_exists( $item[0] ) && ! class_exists( $item[1] ) ) {
+				try {
+					class_alias( $item[0], $item[1] );
+				} catch ( \Exception $e ) {
+					// Silently fail if alias creation fails (e.g., due to conflicts with bundled Kirki).
+					// This prevents fatal errors when multiple Kirki versions are present.
+				}
 			}
 		}
 	}
@@ -180,8 +186,14 @@ class Aliases {
 	 */
 	public function add_customizer_aliases() {
 		foreach ( $this->aliases['customizer'] as $item ) {
-			if ( class_exists( $item[0] ) ) {
-				class_alias( $item[0], $item[1] );
+			// Only create alias if source exists and alias doesn't already exist.
+			if ( class_exists( $item[0] ) && ! class_exists( $item[1] ) ) {
+				try {
+					class_alias( $item[0], $item[1] );
+				} catch ( \Exception $e ) {
+					// Silently fail if alias creation fails (e.g., due to conflicts with bundled Kirki).
+					// This prevents fatal errors when multiple Kirki versions are present.
+				}
 			}
 		}
 	}

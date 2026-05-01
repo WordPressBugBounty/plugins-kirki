@@ -74,6 +74,12 @@ abstract class Field {
 	 */
 	public function __construct( $args ) {
 
+		// Backward compatibility: Ensure $args is an array.
+		// Old code might pass a string (config_id) as first argument.
+		if ( ! is_array( $args ) ) {
+			$args = [];
+		}
+
 		$control_class = property_exists( $this, 'control_class' ) && ! empty( $this->control_class ) ? $this->control_class : '';
 
 		// Allow 3rd parties to do their custom "init" work.

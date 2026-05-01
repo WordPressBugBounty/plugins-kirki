@@ -151,7 +151,9 @@ final class Async
 		}
 
 		if (self::$load || $wp_customize || is_customize_preview()) {
-			wp_enqueue_script('webfont-loader', URL::get_from_path(dirname(__DIR__) . '/assets/scripts/vendor-typekit/webfontloader.js'), [], '3.0.28', true);
+			// wp_enqueue_script('webfont-loader', URL::get_from_path(dirname(__DIR__) . '/assets/scripts/vendor-typekit/webfontloader.js'), [], '3.0.28', true);
+
+			wp_enqueue_script('webfont-loader', URL::get_from_path(dirname(__DIR__) . "/assets/customizer/webfontloader.min.js"), [], '3.0.28', true);
 		}
 	}
 
@@ -166,7 +168,7 @@ final class Async
 		if (!empty($this->fonts_to_load)) {
 			wp_add_inline_script(
 				'webfont-loader',
-				'WebFont.load({google:{families:[\'' . join('\', \'', $this->fonts_to_load) . '\']}});',
+				'if(typeof WebFont!=="undefined"){WebFont.load({google:{families:[\'' . join('\', \'', $this->fonts_to_load) . '\']}});}',
 				'after'
 			);
 		}

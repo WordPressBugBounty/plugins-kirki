@@ -30,6 +30,16 @@ use Kirki\Compatibility\Kirki;
 class Editor_Styles {
 
 	/**
+	 * The class instance.
+	 *
+	 * @static
+	 * @access private
+	 * @since 3.0.35
+	 * @var object
+	 */
+	private static $instance;
+
+	/**
 	 * Configuration reference.
 	 *
 	 * @access public
@@ -73,6 +83,21 @@ class Editor_Styles {
 	 * @var object $google_fonts
 	 */
 	private $google_fonts;
+
+	/**
+	 * Get the one, true instance of this class.
+	 *
+	 * @static
+	 * @access public
+	 * @since 3.0.35
+	 * @return object
+	 */
+	public static function get_instance() {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
 
 	/**
 	 * Constructor.

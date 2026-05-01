@@ -28,6 +28,16 @@ class CSS
 {
 
 	/**
+	 * The class instance.
+	 *
+	 * @static
+	 * @access private
+	 * @since 1.0
+	 * @var object
+	 */
+	private static $instance;
+
+	/**
 	 * The CSS array
 	 *
 	 * @access public
@@ -76,6 +86,23 @@ class CSS
 	 * @var string
 	 */
 	private static $inline_styles_id = 'kirki-inline-styles';
+
+	/**
+	 * Get the one, true instance of this class.
+	 * Prevents performance issues since this is instantiated in a filter.
+	 *
+	 * @static
+	 * @access public
+	 * @since 1.0
+	 * @return object
+	 */
+	public static function get_instance()
+	{
+		if (null === self::$instance) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
 
 	/**
 	 * Constructor
@@ -268,12 +295,12 @@ class CSS
 		}
 
 		// Enqueue the dynamic stylesheet.
-		// wp_enqueue_style(
-		// 	self::$css_handle,
-		// 	add_query_arg( $args, home_url() ),
-		// 	array(),
-		// 	'4.0'
-		// );
+		wp_enqueue_style(
+			self::$css_handle,
+			add_query_arg( $args, home_url() ),
+			array(),
+			'4.0'
+		);
 
 	}
 

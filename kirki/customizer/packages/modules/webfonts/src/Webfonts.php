@@ -27,6 +27,16 @@ use Kirki\Module\Webfonts\Async;
 class Webfonts {
 
 	/**
+	 * The class instance.
+	 *
+	 * @static
+	 * @access private
+	 * @since 1.0.0
+	 * @var object
+	 */
+	private static $instance;
+
+	/**
 	 * The Google object.
 	 *
 	 * @access protected
@@ -44,6 +54,21 @@ class Webfonts {
 	 * @var array
 	 */
 	public static $fields = [];
+
+	/**
+	 * Get the one, true instance of this class.
+	 *
+	 * @static
+	 * @access public
+	 * @since 1.0.0
+	 * @return object
+	 */
+	public static function get_instance() {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
 
 	/**
 	 * The class constructor

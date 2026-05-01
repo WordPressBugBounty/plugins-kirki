@@ -35,10 +35,6 @@ if (!class_exists(__NAMESPACE__ . '\\Customizer', false)) {
             require_once dirname(__DIR__) . '/vendor/autoload.php';
             require_once __DIR__ . '/bootstrap.php';
 
-            if (!defined('KIRKI_VERSION')) {
-                define('KIRKI_VERSION', '5.2.3');
-            }
-
             if (!defined('KIRKI_PLUGIN_DIR')) {
                 define('KIRKI_PLUGIN_DIR', dirname(__DIR__));
             }

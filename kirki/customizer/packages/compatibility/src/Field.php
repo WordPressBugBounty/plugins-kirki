@@ -251,6 +251,22 @@ class Field {
 	public $disable_loader = false;
 
 	/**
+	 * Field name.
+	 *
+	 * @access public
+	 * @var string
+	 */
+	public $name = '';
+
+	/**
+	 * Data tags for the field.
+	 *
+	 * @access public
+	 * @var array
+	 */
+	public $data_tags = array();
+
+	/**
 	 * The class constructor.
 	 * Parses and sanitizes all field arguments.
 	 * Then it adds the field to Kirki::$fields.
