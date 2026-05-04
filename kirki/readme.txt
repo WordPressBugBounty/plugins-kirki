@@ -1,15 +1,14 @@
-=== Kirki – Freeform Website Builder & Customizer ===
+=== Kirki – Freeform Page Builder, Website Builder & Customizer ===
 Contributors: themeum
-Donate link: https://kirki.com
-Tags: page builder, website builder, drag and drop, no-code, freeform canvas, theme customizer
+Tags: page builder, website builder, drag and drop, form builder, freeform canvas
 Requires at least: 5.3
 Tested up to: 6.9
-Stable tag: 6.0.3
+Stable tag: 6.0.4
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-A freeform drag-and-drop visual builder for WordPress and Customizer framework — design on an infinite canvas without coding, with built-in forms, animations, dynamic content, and 35+ theme controls.
+Freeform page builder & website builder for WordPress. Infinite canvas for complex, interactive websites. Built-in forms, animations & Customizer.
 
 == Description ==
 
@@ -187,6 +186,12 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 ---
 
 == Changelog ==
+
+= 6.0.4 =
+* Fix: Resolved an Uncaught SyntaxError in webfontloader.min.js
+* Fix: Broken woocommerce catalog product title
+* Update: Updated frontend script enqueue handling for Kirki-based designs.
+* Improvement: Enhanced text element tag selection; now supports span, p, and h1–h6
 
 = 6.0.3 =
 * Fix: WebFontLoader JavaScript file not found issue resolved.

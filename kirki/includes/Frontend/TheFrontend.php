@@ -26,6 +26,7 @@ class TheFrontend {
 	 */
 	private $call_from       = 'front-end';
 	private $staging_version = false;
+	private $assets_should_load = false;
 
 	/**
 	 * Collect kirki type data header, footer, content, popups
@@ -85,8 +86,12 @@ class TheFrontend {
 	 * @return void
 	 */
 	public function get_current_post_related_dependency() {
-		 $d = HelperFunctions::is_kirki_type_data( null, $this->staging_version );
-		if ( $d ) {
+		$d = HelperFunctions::is_kirki_type_data( null, $this->staging_version );
+		$this->assets_should_load = ( $d && ( ! empty( $d['blocks'] ) || ! empty( $d['styles'] ) ) );
+
+		$GLOBALS['kirki_assets_should_load_for_request'] = $this->assets_should_load;
+
+		if ( $this->assets_should_load ) {
 			$params = array(
 				'blocks'       => $d['blocks'],
 				'style_blocks' => $d['styles'],

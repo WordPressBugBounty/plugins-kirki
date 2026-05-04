@@ -380,7 +380,6 @@ class KirkiCommentsRest extends WP_REST_Controller {
 		$session_id = HelperFunctions::sanitize_text( isset( $request['session_id'] ) ? $request['session_id'] : '' );
 		$user_id    = get_current_user_id();
 
-		// echo "<pre>";var_dump($comment, $post_id, $parent_id, $status, $meta_data);die;
 
 		global $wpdb;
 		$table_name = $wpdb->prefix . KIRKI_COMMENTS_TABLE;

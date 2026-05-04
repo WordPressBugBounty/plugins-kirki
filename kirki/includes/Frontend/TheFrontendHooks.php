@@ -32,6 +32,37 @@ class TheFrontendHooks {
 		add_action( 'template_redirect', array( $this, 'may_be_change_header_footer' ) );
 	}
 
+	private function should_load_assets() {
+		$should_load = false;
+
+		/**
+		 * Allow TemplateRedirection (or others) to force-load assets when the current
+		 * request is being served by a kirki template.
+		 */
+		$should_load = $should_load || (bool) apply_filters( 'kirki_assets_should_load', false );
+
+		// TheFrontend sets this on the 'wp' action after running is_kirki_type_data().
+		if ( isset( $GLOBALS['kirki_assets_should_load_for_request'] ) ) {
+			$should_load = $should_load || (bool) $GLOBALS['kirki_assets_should_load_for_request'];
+		}
+
+		// If custom header/footer is present, frontend needs kirki assets.
+		global $kirki_custom_header, $kirki_custom_footer;
+		$has_custom_header = is_string( $kirki_custom_header ) ? ( '' !== trim( $kirki_custom_header ) ) : ! empty( $kirki_custom_header );
+		$has_custom_footer = is_string( $kirki_custom_footer ) ? ( '' !== trim( $kirki_custom_footer ) ) : ! empty( $kirki_custom_footer );
+		if ( $has_custom_header || $has_custom_footer ) {
+			$should_load = true;
+		}
+
+		// If current page is a kirki template, load assets.
+		$template_data = HelperFunctions::get_template_data_if_current_page_is_kirki_template();
+		if ( $template_data ) {
+			$should_load = true;
+		}
+
+		return $should_load;
+	}
+
 	public function may_be_change_header_footer() {
 		ob_start( array( $this, 'check_and_change_header_and_footer' ) );
 	}
@@ -59,6 +90,10 @@ class TheFrontendHooks {
 	}
 
 	public function load_assets() {
+		if ( ! $this->should_load_assets() ) {
+			return;
+		}
+
 		wp_enqueue_script( 'kirki', KIRKI_ASSETS_URL . 'js/kirki.min.js', array( 'wp-i18n' ), KIRKI_VERSION, true );
 		wp_enqueue_style( 'kirki', KIRKI_ASSETS_URL . 'css/kirki.min.css', null, KIRKI_VERSION );
 	}
@@ -118,7 +153,7 @@ class TheFrontendHooks {
     </script>';
 
 		// smooth scroll
-		if ( ! $this->call_from == 'iframe' ) {
+		if ( 'iframe' !== $this->call_from ) {
 			$s .= HelperFunctions::get_smooth_scroll_script();
 		}
 

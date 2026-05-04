@@ -166,6 +166,7 @@ class Editor {
 					'post_type' => 'any',
 					'numberposts' => 1,
 					'fields' => 'ids',
+					'post_status' => 'any',
 				)
 			);
 			$post_id = $post_id[0];
