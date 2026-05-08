@@ -445,8 +445,8 @@ class UserData {
 					'variables' => array(),
 				),
 				array(
-					'title'     => 'Font Family',
-					'key'       => 'font-family',
+					'title'     => 'Text Styles',
+					'key'       => 'text-style',
 					'modes'     => array(
 						array(
 							'title' => 'Default',
@@ -456,8 +456,8 @@ class UserData {
 					'variables' => array(),
 				),
 				array(
-					'title'     => 'Text Styles',
-					'key'       => 'text-style',
+					'title'     => 'Font Family',
+					'key'       => 'font-family',
 					'modes'     => array(
 						array(
 							'title' => 'Default',

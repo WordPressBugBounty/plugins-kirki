@@ -204,6 +204,7 @@ class Preview extends ExceptionalElements {
 		'file-upload',
 		'popup-body',
 		'navigation',
+		'navigation-item',
 		'navigation-items',
 		'section',
 		'common',
@@ -849,7 +850,7 @@ class Preview extends ExceptionalElements {
 						$s .= "$name:" . $variable['value'][$mode]['value'] . $variable['value'][$mode]['unit'] . ";";
 						break;
 					case 'font-family':
-						$s .= "$name:" . $variable['value'][$mode] . ";";
+						$s .= "$name:\"" . $variable['value'][$mode] . "\";";
 						break;
 					case 'color':
 						$s .= "$name:" . $variable['value'][$mode] . ";";

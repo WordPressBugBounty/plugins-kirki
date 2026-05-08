@@ -189,6 +189,10 @@ class ContentManagerHelper {
 	 * @param object $othersArgs parent post slug and other configuration
 	 */
 	public static function create_or_update_a_post_type_item( $args, $othersArgs ) {
+		
+		if (isset($args['ID']) && !empty($args['ID'])) {
+			$post = get_post($args['ID']);
+		}
 		$wp_post = array(
 			'post_parent' => $args['post_parent'],
 			'post_type'   => self::get_child_post_post_type_value( $args['post_parent'] ),
@@ -197,8 +201,16 @@ class ContentManagerHelper {
 			'post_status' => $args['post_status'],
 		);
 		if ( isset( $args['post_date'] ) && ! empty( $args['post_date'] ) ) {
-			$wp_post['post_date']     = $args['post_date'];
-			$wp_post['post_date_gmt'] = get_gmt_from_date( $args['post_date'] );
+			if(isset($args['post_status']) && $args['post_status'] === "future"){
+				$wp_post['post_date']     = $args['post_date'];
+				$wp_post['post_date_gmt'] = get_gmt_from_date( $args['post_date'] );
+			}
+			elseif (
+				isset($args['post_status']) && $post && $post->post_status === 'draft' && $args['post_status'] === 'publish') {
+				$wp_post['post_date'] = current_time('mysql');
+				$wp_post['post_date_gmt'] = get_gmt_from_date( $args['post_date'] );
+			}
+			
 		}
 
 		if ( isset( $args['ID'] ) && ! empty( $args['ID'] ) ) {

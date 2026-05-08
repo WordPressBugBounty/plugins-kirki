@@ -11,6 +11,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
+// Created alias for legacy Droip\Apps references
+if ( ! class_exists( 'Droip\Apps', false ) ) {
+	class_alias( 'Kirki\Apps', 'Droip\Apps' );
+}
 
 /**
  * Kirki Apps

@@ -57,6 +57,8 @@ class Ajax {
 		 */
 		add_action( 'wp_ajax_kirki_wp_admin_get_apis', array( $this, 'kirki_wp_admin_get_apis' ) );
 		add_action( 'wp_ajax_kirki_wp_admin_post_apis', array( $this, 'kirki_wp_admin_post_apis' ) );
+		add_action( 'wp_ajax_nopriv_kirki_wp_admin_get_apis', array( $this, 'kirki_wp_admin_unauthorized' ) );
+		add_action( 'wp_ajax_nopriv_kirki_wp_admin_post_apis', array( $this, 'kirki_wp_admin_unauthorized' ) );
 
 		/**
 		 * Manage Post API call's from Frontend (logged in not required)
@@ -306,11 +308,15 @@ class Ajax {
 
 		//phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$endpoint = HelperFunctions::sanitize_text( isset( $_GET['endpoint'] ) ? $_GET['endpoint'] : null );
-		if ( 'collect-collaboration-actions' !== $endpoint && 'delete-collaboration-connection' !== $endpoint ) {
+		if ( in_array( $endpoint, array( 'collect-collaboration-actions', 'delete-collaboration-connection' ), true ) ) {
+			if ( ! $this->user_can_access_collaboration() ) {
+				wp_send_json_error( 'Not authorized' );
+			}
+		} else {
 			// TODO: Need to verify for collaboration.
 			HelperFunctions::verify_nonce( 'wp_rest' );
 		}
-
+		
 		if ( ! is_admin() ) {
 			wp_send_json_error( 'Not authorized' );
 		}
@@ -603,6 +609,21 @@ class Ajax {
 	}
 
 	/**
+	 * Check if the current request can access collaboration endpoints.
+	 *
+	 * @return bool
+	 */
+	private function user_can_access_collaboration() {
+		return is_user_logged_in() && HelperFunctions::has_access(
+			array(
+				KIRKI_ACCESS_LEVELS['FULL_ACCESS'],
+				KIRKI_ACCESS_LEVELS['CONTENT_ACCESS'],
+				KIRKI_ACCESS_LEVELS['VIEW_ACCESS'],
+			)
+		);
+	}
+
+	/**
 	 * Initialize the admin post apis
 	 *
 	 * @return void
@@ -665,6 +686,15 @@ class Ajax {
 			TemplateExportImport::export();
 		}
 
+	}
+
+	/**
+	 * Return an explicit unauthorized response for unauthenticated admin AJAX requests.
+	 *
+	 * @return void
+	 */
+	public function kirki_wp_admin_unauthorized() {
+		wp_send_json_error( 'Not authorized', 401 );
 	}
 
 	/**

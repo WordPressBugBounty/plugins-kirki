@@ -3,7 +3,7 @@ Contributors: themeum
 Tags: page builder, website builder, drag and drop, form builder, freeform canvas
 Requires at least: 5.3
 Tested up to: 6.9
-Stable tag: 6.0.4
+Stable tag: 6.0.5
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -186,6 +186,20 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 ---
 
 == Changelog ==
+
+= 6.0.5 =
+* Update: Improved element comment coordinate positioning
+* Update: Enhanced island toolbar functionality
+* Update: Improved grid inline control area settings and track unit selection
+* Update: Improved navigation element functionality
+* Update: Enhanced code element functionality
+* Update: Improved variable and text addition workflow
+* Update: Collection item post_data and modified_data are not updating correctly for scheduled posts
+* Fix: Fixed handling of multi-select values when styleBlockId is missing
+* Fix: Resolved component name overflow in component list items
+* Fix: Fixed canvas repositioning issue during component editing
+* Fix: Fixed collaboration endpoint unauthorized access
+* Fix: Fixed grid x,y alignment property update issue
 
 = 6.0.4 =
 * Fix: Resolved an Uncaught SyntaxError in webfontloader.min.js

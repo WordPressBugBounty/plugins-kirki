@@ -1315,7 +1315,7 @@ class HelperFunctions {
 		$data_helper->rec_update_data_id_to_new_id( $data, $style_blocks, $root, null );
 		$data = $data_helper->temp_data;
 		$style_blocks = $data_helper->temp_styles;
-		$root = $data_helper->temp_ids[ $root ];
+		$root = isset($data_helper->temp_ids[ $root ])?$data_helper->temp_ids[ $root ]:false;
 
 		$params = array( 
 			'blocks' => $data,
@@ -4302,5 +4302,16 @@ class HelperFunctions {
 				$val *= 1024;
 		}
 		return $val;
+	}
+
+	public static function get_kirki_full_canvas_template_path(){
+		return self::normalize_kirki_full_canvas_template_path(KIRKI_FULL_CANVAS_TEMPLATE_PATH);
+	}
+	public static function normalize_kirki_full_canvas_template_path($path){
+		// replace if has kirki-pro => kirki
+		if (strpos($path, 'kirki-pro') !== false) {
+			$path = str_replace('kirki-pro', 'kirki', $path);
+		}
+		return $path;
 	}
 }

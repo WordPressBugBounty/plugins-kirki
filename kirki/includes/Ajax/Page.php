@@ -107,7 +107,7 @@ class Page {
 			update_post_meta( $post_id, KIRKI_META_NAME_FOR_POST_EDITOR_MODE, 'kirki' );
 			if ( $options['post_type'] === 'page' || $options['post_type'] === 'kirki_page' ) {
 				// check if type = kirki_page then change it to wp page type. cause we only set template if page type is kirki_page.
-				update_post_meta( $post_id, '_wp_page_template', KIRKI_FULL_CANVAS_TEMPLATE_PATH );
+				update_post_meta( $post_id, '_wp_page_template', HelperFunctions::get_kirki_full_canvas_template_path() );
 			}
 
 			if ( $options['post_type'] ==='kirki_utility' ) {
@@ -236,6 +236,7 @@ class Page {
 		 */
 		$page_template = get_post_meta( $post_id, '_wp_page_template', true );
 		if ( $page_template ) {
+			$page_template = HelperFunctions::normalize_kirki_full_canvas_template_path($page_template);
 			update_post_meta( $new_post_id, '_wp_page_template', $page_template );
 		}
 
@@ -285,7 +286,7 @@ class Page {
 			wp_update_post( $data );
 		}
 
-		update_post_meta( $post_id, '_wp_page_template', KIRKI_FULL_CANVAS_TEMPLATE_PATH );
+		update_post_meta( $post_id, '_wp_page_template', HelperFunctions::get_kirki_full_canvas_template_path() );
 		wp_send_json( array( 'status' => true ) );
 	}
 

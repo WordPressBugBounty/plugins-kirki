@@ -48,6 +48,9 @@ class TheFrontendHooks {
 
 		// If custom header/footer is present, frontend needs kirki assets.
 		global $kirki_custom_header, $kirki_custom_footer;
+		$kirki_custom_header = HelperFunctions::get_page_custom_section( 'header' );
+		$kirki_custom_footer = HelperFunctions::get_page_custom_section( 'footer' );
+
 		$has_custom_header = is_string( $kirki_custom_header ) ? ( '' !== trim( $kirki_custom_header ) ) : ! empty( $kirki_custom_header );
 		$has_custom_footer = is_string( $kirki_custom_footer ) ? ( '' !== trim( $kirki_custom_footer ) ) : ! empty( $kirki_custom_footer );
 		if ( $has_custom_header || $has_custom_footer ) {

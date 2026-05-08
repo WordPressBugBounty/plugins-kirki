@@ -124,6 +124,7 @@ class TemplateRedirection {
 	 * @return string template name.
 	 */
 	public function load_page_template( $original, $staging_version = false ) {
+		$original = HelperFunctions::normalize_kirki_full_canvas_template_path($original);
 		$post_id = HelperFunctions::get_post_id_if_possible_from_url();
 		$post    = null;
 		if ( $post_id ) {
@@ -140,8 +141,8 @@ class TemplateRedirection {
 				// Set a global variable with custom data to make it available in the template
 				set_query_var('kirki_custom_data', $custom_data );
 
-				if ( file_exists( KIRKI_FULL_CANVAS_TEMPLATE_PATH ) ) {
-					$original = KIRKI_FULL_CANVAS_TEMPLATE_PATH;
+				if ( file_exists( HelperFunctions::get_kirki_full_canvas_template_path() ) ) {
+					$original = HelperFunctions::get_kirki_full_canvas_template_path();
 				}
 			} elseif ( $post && $post->post_type ==='kirki_utility' ) {
 				// this is for template preview.(kirki_template post type)
@@ -154,13 +155,13 @@ class TemplateRedirection {
 				// Set a global variable with custom data to make it available in the template
 				set_query_var('kirki_custom_data', $custom_data );
 
-				if ( file_exists( KIRKI_FULL_CANVAS_TEMPLATE_PATH ) ) {
-					$original = KIRKI_FULL_CANVAS_TEMPLATE_PATH;
+				if ( file_exists( HelperFunctions::get_kirki_full_canvas_template_path() ) ) {
+					$original = HelperFunctions::get_kirki_full_canvas_template_path();
 				}
 			}
 		}
 
-		if ( $original !== KIRKI_FULL_CANVAS_TEMPLATE_PATH ) {
+		if ( $original !== HelperFunctions::get_kirki_full_canvas_template_path() ) {
 			$context = HelperFunctions::get_current_page_context(); // {id, type}
 			if ( ! empty( $context ) ) {
 				switch ( $context['type'] ) {
@@ -182,7 +183,8 @@ class TemplateRedirection {
 						} else {
 							if ( is_page() ) {
 								$template_name = get_post_meta( $post_id, '_wp_page_template', true );
-								if ( ! empty( $template_name ) && $template_name !== $original && KIRKI_FULL_CANVAS_TEMPLATE_PATH === $template_name ) {
+								$template_name = HelperFunctions::normalize_kirki_full_canvas_template_path($template_name);
+								if ( ! empty( $template_name ) && $template_name !== $original && HelperFunctions::get_kirki_full_canvas_template_path() === $template_name ) {
 									add_action( 'wp_enqueue_scripts', array( new HelperFunctions(), 'remove_theme_style' ) ); // we can remove it. need to rethink. dequeue_all_except_my_plugin
 									$original = $template_name;
 								}
@@ -230,9 +232,9 @@ class TemplateRedirection {
 		$kirki_custom_header = HelperFunctions::get_page_custom_section( 'header' );
 		$kirki_custom_footer = HelperFunctions::get_page_custom_section( 'footer' );
 
-		if ( $original !== KIRKI_FULL_CANVAS_TEMPLATE_PATH ) {
+		if ( $original !== HelperFunctions::get_kirki_full_canvas_template_path() ) {
 			if ( $kirki_custom_header || $kirki_custom_footer ) {
-				// $original = KIRKI_FULL_CANVAS_TEMPLATE_PATH;
+				// $original = HelperFunctions::get_kirki_full_canvas_template_path();
 			}
 		}
 
@@ -280,8 +282,8 @@ class TemplateRedirection {
 					return true;
 				}
 			);
-			if ( file_exists( KIRKI_FULL_CANVAS_TEMPLATE_PATH ) ) {
-				return KIRKI_FULL_CANVAS_TEMPLATE_PATH;
+			if ( file_exists( HelperFunctions::get_kirki_full_canvas_template_path() ) ) {
+				return HelperFunctions::get_kirki_full_canvas_template_path();
 			}
 		}
 		return $original_template_path;

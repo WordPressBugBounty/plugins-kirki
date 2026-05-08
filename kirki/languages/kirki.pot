@@ -2,14 +2,14 @@
 # This file is distributed under the same license as the Kirki plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: Kirki 6.0.4\n"
+"Project-Id-Version: Kirki 6.0.5\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/kirki\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-05-04T10:03:54+00:00\n"
+"POT-Creation-Date: 2026-05-08T11:27:58+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: kirki\n"
@@ -2315,6 +2315,22 @@ msgid "Arrows"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+msgid "Bezier"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Bounce"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Hamburger menu"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Timing Editor"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "Add Caption"
 msgstr ""
 
@@ -2627,14 +2643,6 @@ msgid "Offset"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Bezier"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Bounce"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Animate when the user clicks or taps on the element."
 msgstr ""
 
@@ -2816,10 +2824,6 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Custom Timing Editor"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Timing Editor"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -3023,11 +3027,11 @@ msgid "Guide"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Guide Color"
+msgid "Done"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Done"
+msgid "Guide Color"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -3061,6 +3065,10 @@ msgstr ""
 #: assets/js/kirki-editor.min.js:2
 #, js-format
 msgid "Element cannot be pasted in %s"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "CMS"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -3156,6 +3164,18 @@ msgid "Export Kirki Page"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+msgid "Close"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Export"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "PHP Zip extension is not enabled in your system"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "Class Prefix (optional)"
 msgstr ""
 
@@ -3169,18 +3189,6 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "eg. kirki-page"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Close"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Export"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "PHP Zip extension is not enabled in your system"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2

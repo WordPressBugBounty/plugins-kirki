@@ -985,7 +985,7 @@ class TemplateImport {
 				}
 				return array( $key, $v );
 			case '_wp_page_template':
-				return array( $key, KIRKI_FULL_CANVAS_TEMPLATE_PATH );
+				return array( $key, HelperFunctions::get_kirki_full_canvas_template_path() );
 
 			case 'kirki_variable_mode':
 				return array( $key, '' );// TODO: need to get template mode or selected mode by user

@@ -165,7 +165,7 @@ class PluginInitEvents {
 	 * @return array  $templates  The modified list of page templates.
 	 */
 	public function add_page_template_to_dropdown( $templates ) {
-		$templates[ KIRKI_FULL_CANVAS_TEMPLATE_PATH ] = 'Kirki Full Canvas';
+		$templates[ HelperFunctions::get_kirki_full_canvas_template_path() ] = 'Kirki Full Canvas';
 		return $templates;
 	}
 }
