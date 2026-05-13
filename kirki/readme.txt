@@ -3,7 +3,7 @@ Contributors: themeum
 Tags: page builder, website builder, drag and drop, form builder, freeform canvas
 Requires at least: 5.3
 Tested up to: 6.9
-Stable tag: 6.0.5
+Stable tag: 6.0.6
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -186,6 +186,12 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 ---
 
 == Changelog ==
+
+= 6.0.6 =
+* Update: Enhanced the inline text editing and styling experience.
+* Update: Added support for variable mode selection in components.
+* Fix: Fixed a security vulnerability in media search.
+* Fix: Improved code preview and code editor functionality.
 
 = 6.0.5 =
 * Update: Improved element comment coordinate positioning

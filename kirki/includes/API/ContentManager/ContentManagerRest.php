@@ -441,7 +441,8 @@ class ContentManagerRest extends WP_REST_Controller {
 	 * @return \WP_Error|WP_REST_Response
 	 */
 	public function handle_post_type_item_bulk_action( $request ) {
-		$post_ids    = json_decode( $request['post_ids'], true );
+		$input_post_ids = HelperFunctions::sanitize_text( isset( $request['post_ids'] ) ? $request['post_ids'] : [] );
+		$post_ids    = json_decode( $input_post_ids, true );
 		$action      = HelperFunctions::sanitize_text( isset( $request['action'] ) ? $request['action'] : '' );
 		$post_parent = HelperFunctions::sanitize_text( isset( $request['post_parent'] ) ? $request['post_parent'] : '' );
 

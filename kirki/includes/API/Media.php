@@ -178,7 +178,7 @@ class Media extends WP_REST_Controller {
 			}
 		}
 
-		$args['number'] = $args['per_page'];
+		$args['number'] = HelperFunctions::sanitize_text( isset( $args['per_page'] ) ? $args['per_page'] : 20 );
     //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$args['offset'] = HelperFunctions::sanitize_text( isset( $_GET['offset'] ) ? $_GET['offset'] : 0 );
     //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
@@ -388,7 +388,8 @@ class Media extends WP_REST_Controller {
 	 * @return \WP_REST_Response|WP_Error
 	 */
 	public function trash_or_restore_item( $request ) {
-		$post_id = $this->bx_trash_restore_media( $request['post_id'] );
+		$input_post_id = HelperFunctions::sanitize_text( isset( $request['post_id'] ) ? $request['post_id'] : '' );
+		$post_id = $this->bx_trash_restore_media( $input_post_id );
 
 		if ( $post_id === -1 ) {
 			return new WP_Error(
@@ -617,20 +618,28 @@ class Media extends WP_REST_Controller {
 
 		$args = wp_parse_args( $args, $defaults );
 
-		$limit_plus_one = $args['number'] + 1;
+		$limit_plus_one = (int) HelperFunctions::sanitize_text( $args['number'] ) + 1;
+		$sarch_query    = HelperFunctions::sanitize_text( $args['search'] );
+		$mime_types_str = HelperFunctions::sanitize_text( $mime_types_str );
 
 		$post_status_condition = $media_type === 'normal' ? $wpdb->prepare( 'post_status<>%s', 'trash' ) : $wpdb->prepare( 'post_status=%s', 'trash' );
 		$base_condition        = $wpdb->prepare( 'post_type=%s', 'attachment' ) . " AND {$post_status_condition}";
 		$where_conditions      = $mime_types_str ? $base_condition . " AND post_mime_type IN ($mime_types_str)" : $base_condition;
-		$where_conditions      = $args['search'] ? $where_conditions . " AND post_name LIKE '%%{$args['search']}%%'" : $where_conditions;
+		$where_conditions      = $args['search']
+			? $where_conditions . $wpdb->prepare(
+				' AND post_name LIKE %s',
+				'%' . $wpdb->esc_like( $sarch_query ) . '%'
+			)
+			: $where_conditions;
 
-		$sql = "SELECT * FROM {$wpdb->prefix}posts WHERE {$where_conditions}" . $wpdb->prepare(
-			' ORDER BY %1s %1s LIMIT %d, %d',
-			$args['orderby'],
-			$args['order'],
-			$args['offset'],
+		$order_by = HelperFunctions::sanitize_text( $args['orderby'] );
+		$offset = (int) HelperFunctions::sanitize_text( $args['offset'] );
+
+		$sql = $wpdb->prepare(
+			"SELECT * FROM {$wpdb->prefix}posts WHERE {$where_conditions} ORDER BY {$order_by} {$order} LIMIT %d, %d",
+			$offset,
 			$limit_plus_one
-		);
+		);	
 		//phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 		$media = $wpdb->get_results( $sql );
 

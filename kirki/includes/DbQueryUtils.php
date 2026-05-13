@@ -85,7 +85,8 @@ class DbQueryUtils {
 	 */
 	public static function is( $column, $str ) {
 		global $wpdb;
-		return $wpdb->prepare( '%1s=%s', array( $column, $str ) );
+		$esc_str = $wpdb->esc_like( $str );
+		return $wpdb->prepare( '%1s LIKE %s', array( $column, $esc_str ) );
 	}
 
 	/**
@@ -97,7 +98,8 @@ class DbQueryUtils {
 	 */
 	public static function is_not( $column, $str ) {
 		global $wpdb;
-		return $wpdb->prepare( '%1s <> %s', array( $column, $str ) );
+		$esc_str = $wpdb->esc_like( $str );
+		return $wpdb->prepare( '%1s NOT LIKE %s', array( $column, $esc_str ) );
 	}
 
 	/**
@@ -176,7 +178,9 @@ class DbQueryUtils {
 	 */
 	public static function between( $column, $start, $end ) {
 		global $wpdb;
-		return $wpdb->prepare( '%1s BETWEEN %s AND %s', array( $column, $start, $end ) );
+		$start_time = gmdate( 'Y-m-d', strtotime( $start ) );
+		$end_time   = gmdate( 'Y-m-d', strtotime( $end ) );
+		return $wpdb->prepare( '%1s BETWEEN %s AND %s', array( $column, $start_time, $end_time ) );
 	}
 
 	/**
@@ -188,6 +192,7 @@ class DbQueryUtils {
 	 */
 	public static function before( $column, $date ) {
 		global $wpdb;
+		$date = gmdate( 'Y-m-d', strtotime( $date ) );
 		return $wpdb->prepare( 'DATE(%1s) < %s', array( $column, $date ) );
 	}
 
@@ -200,6 +205,7 @@ class DbQueryUtils {
 	 */
 	public static function after( $column, $date ) {
 		global $wpdb;
-		return $wpdb->prepare( '%1s > %s', array( $column, $date ) );
+		$date = gmdate( 'Y-m-d', strtotime( $date ) );
+		return $wpdb->prepare( 'DATE(%1s) > %s', array( $column, $date ) );
 	}
 }
