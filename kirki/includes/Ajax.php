@@ -309,7 +309,7 @@ class Ajax {
 		//phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$endpoint = HelperFunctions::sanitize_text( isset( $_GET['endpoint'] ) ? $_GET['endpoint'] : null );
 		if ( in_array( $endpoint, array( 'collect-collaboration-actions', 'delete-collaboration-connection' ), true ) ) {
-			if ( ! $this->user_can_access_collaboration() ) {
+			if ( ! $this->user_can_access_wp_apis() ) {
 				wp_send_json_error( 'Not authorized' );
 			}
 		} else {
@@ -609,11 +609,11 @@ class Ajax {
 	}
 
 	/**
-	 * Check if the current request can access collaboration endpoints.
+	 * Check if the current request can access wp endpoints.
 	 *
 	 * @return bool
 	 */
-	private function user_can_access_collaboration() {
+	private function user_can_access_wp_apis() {
 		return is_user_logged_in() && HelperFunctions::has_access(
 			array(
 				KIRKI_ACCESS_LEVELS['FULL_ACCESS'],
@@ -704,7 +704,11 @@ class Ajax {
 	 */
 	public function kirki_wp_admin_get_apis() {
 		if ( ! is_admin() ) {
-			wp_send_json_error( 'Not authorized' );
+			wp_send_json_error( 'Not authorized', 401 );
+		}
+
+		if ( ! HelperFunctions::has_access( KIRKI_ACCESS_LEVELS['FULL_ACCESS'] ) ) {
+			wp_send_json_error( 'Not authorized', 401 );
 		}
 
 		//phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized

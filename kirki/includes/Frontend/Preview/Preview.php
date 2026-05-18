@@ -893,9 +893,71 @@ class Preview extends ExceptionalElements {
 			}
 
 			foreach ( $props as $prop_name => $prop_value ) {
-				if ( is_array( $prop_value ) && isset( $prop_value['value'], $prop_value['unit'] ) ) {
-					$css_declarations .= $prop_name . ':' . $prop_value['value'] . $prop_value['unit'] . ';';
-				} elseif ( is_string( $prop_value ) || is_numeric( $prop_value ) ) {
+
+				// font-feature-settings
+				if (
+					$prop_name === 'font-feature-settings' &&
+					is_array( $prop_value ) &&
+					isset( $prop_value['value'] ) &&
+					is_array( $prop_value['value'] )
+				) {
+					$css_string = implode(
+						', ',
+						array_map(
+							function( $key ) {
+								return '"' . $key . '"';
+							},
+							array_keys( $prop_value['value'] )
+						)
+					);
+			
+					$css_declarations .= $prop_name . ':' . $css_string . ';';
+					continue;
+				}
+			
+				// value + unit object
+				if (
+					is_array( $prop_value ) &&
+					isset( $prop_value['value'], $prop_value['unit'] )
+				) {
+			
+					// font-size clamp
+					if (
+						$prop_name === 'font-size' &&
+						isset( $prop_value['type'] ) &&
+						str_contains( $prop_value['type'], 'clamp-' )
+					) {
+			
+						$min_value = isset($prop_value['min'], $prop_value['min']['value'] ) ? $prop_value['min']['value'] : 0;
+						$min_unit  = isset($prop_value['min'], $prop_value['min']['unit'] ) ? $prop_value['min']['unit'] : 'px';
+			
+						$base_value = isset($prop_value['base'], $prop_value['base']['value'] ) ? $prop_value['base']['value'] : 0;
+						$base_unit  = isset($prop_value['base'], $prop_value['base']['unit'] ) ? $prop_value['base']['unit'] : 'px';
+			
+						$max_value = isset($prop_value['max'], $prop_value['max']['value'] ) ? $prop_value['max']['value'] : 0;
+						$max_unit  = isset($prop_value['max'], $prop_value['max']['unit'] ) ? $prop_value['max']['unit'] : 'px';
+			
+						$css_declarations .= "{$prop_name}:clamp({$min_value}{$min_unit}, {$base_value}{$base_unit}, {$max_value}{$max_unit});";
+			
+					// special max-width values
+					} elseif (
+						$prop_name === 'max-width' &&
+						in_array( $prop_value['value'], array(  'none', 'fit-content', 'max-content', 'min-content' ), true )
+					) {
+			
+						$css_declarations .= $prop_name . ':' . $prop_value['value'] . ';';
+			
+					} else {
+			
+						$css_declarations .= $prop_name . ':' . $prop_value['value'] . $prop_value['unit'] . ';';
+					}
+			
+				// string or number
+				} elseif (
+					( is_string( $prop_value ) && $prop_value !== '' ) ||
+					is_numeric( $prop_value )
+				) {
+			
 					$css_declarations .= $prop_name . ':' . $prop_value . ';';
 				}
 			}
@@ -1174,7 +1236,7 @@ class Preview extends ExceptionalElements {
 		if ( isset( $element['properties'] ) ) {
 			$properties = $element['properties'];
 
-			if ( isset( $properties['interactions'] ) && ( ! isset( $element['stylePanels'] ) || ( isset( $element['stylePanels'], $element['stylePanels']['interaction'] ) && $element['stylePanels']['interaction'] ) ) ) {
+			if ( isset( $properties['interactions'] ) ) {
 				$this->interactions[ $id ] = $this->updateClassListForInteractionFromStyleBlockId( $properties['interactions'], $element );
 			}
 
@@ -1917,10 +1979,10 @@ class Preview extends ExceptionalElements {
 					}
 
 					if ( $dynamic_content['type'] === 'post' ) {
-						if ( isset( $options['post'] ) && isset( $options['post']->{$dynamic_content['value']} ) ) {
+						if ( isset( $options['post'], $dynamic_content['value'] ) && isset( $options['post']->{$dynamic_content['value']} ) ) {
 							$href = $options['post']->{$dynamic_content['value']};
 						} else {
-							$href = HelperFunctions::get_post_dynamic_content( $dynamic_content['value'], isset( $options['post'] ) ? $options['post'] : null );
+							$href = HelperFunctions::get_post_dynamic_content( isset($dynamic_content['value']) ? $dynamic_content['value'] : false, isset( $options['post'] ) ? $options['post'] : null );
 						}
 					} elseif ( $dynamic_content['type'] === 'term' && isset( $options['term'], $options['term']['term_id'] ) ) {
 
@@ -2278,15 +2340,6 @@ class Preview extends ExceptionalElements {
 
 		$ele_class_names = isset( $this_element['className'] ) ? explode( ' ', $this_element['className'] ) : array();
 		$class_array     = array_merge( $ele_class_names, $class_array );
-
-		// Check for disabled styles panels.
-		if ( isset( $this_element['stylePanels'] ) && is_array( $this_element['stylePanels'] ) ) {
-			foreach ( $this_element['stylePanels'] as $name => $value ) {
-				if ( ! $value ) {
-					array_push( $class_array,'kirki-disabled-' . $name );
-				}
-			}
-		}
 
 		if ( in_array( $this_element['name'], $this->inline_elements, true ) ) {
 			array_push( $class_array, 'kirki-inline-element' );

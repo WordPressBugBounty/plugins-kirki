@@ -2969,6 +2969,10 @@ class HelperFunctions {
 	 * @param string|string[] $access_level The access level to check access.
 	 */
 	public static function has_access( $access_level ) {
+		if ( ! function_exists( 'wp_get_current_user' ) ) {
+			return false;
+		}
+
 		$user       = wp_get_current_user();
 		$roles      = $user->roles;
 		$has_access = false;

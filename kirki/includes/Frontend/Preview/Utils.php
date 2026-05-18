@@ -289,7 +289,7 @@ class Utils {
 			return $html;
 		}
 		// Post excerpt length for frontend. If post excerpt is used.
-		if ( $dynamic_content['value'] === 'post_excerpt' && isset( $dynamic_content['postExcerptLength'] ) ) {
+		if (isset($dynamic_content['value']) && $dynamic_content['value'] === 'post_excerpt' && isset( $dynamic_content['postExcerptLength'] ) ) {
 			$post_excerpt_length                  = $dynamic_content['postExcerptLength'] ?? 55;
 			$GLOBALS['kirki_post_excerpt_length'] = $post_excerpt_length;
 		}
@@ -309,10 +309,15 @@ class Utils {
 			return $content;
 		}
 
+		// fix warning
+		if(!isset($dynamic_content['value'])){
+			$dynamic_content['value'] = false;
+		}
+
 		if ( $dynamic_content['type'] === 'post' ) {
 			$dynamic_options = array();
 			$cm_field_type   = isset( $dynamic_content['cmFieldType'] ) ? $dynamic_content['cmFieldType'] : '';
-			if ( 'post_date' === $dynamic_content['value'] && isset( $dynamic_content['format'] ) ) {
+			if ( isset( $dynamic_content['format'] ) && 'post_date' === $dynamic_content['value'] ) {
 				$dynamic_options['format'] = $dynamic_content['format'];
 			} elseif ( ( 'post_time' === $dynamic_content['value'] || 'time' === $cm_field_type ) && isset( $dynamic_content['timeFormat'] ) ) {
 				$dynamic_options['timeFormat'] = $dynamic_content['timeFormat'];

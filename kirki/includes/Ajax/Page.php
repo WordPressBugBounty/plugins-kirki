@@ -18,6 +18,9 @@ use Kirki\Staging;
  */
 class Page {
 
+	const TYPE_FORGOT_PASSWORD = 'forgot_password';
+	const TYPE_RESET_PASSWORD = 'reset_password';
+
 	/**
 	 * Save page data
 	 *

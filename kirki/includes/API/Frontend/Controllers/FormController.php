@@ -639,6 +639,11 @@ class FormController extends FrontendRESTController {
 			foreach ( $form_data as $name => $value ) {
 				$type = isset( $form_data_types[ $name ]['type'] ) ? $form_data_types[ $name ]['type'] : 'text';
 
+				// Handle array values by serializing them
+				if (is_array($value)) {
+					$value = serialize($value);
+				}
+
 				array_push(
 					$values,
 					$form_id,
@@ -646,7 +651,7 @@ class FormController extends FrontendRESTController {
 					$session_id,
 					$timestamp,
 					"$name",
-					"$value",
+					$value,
 					"$type"
 				);
 

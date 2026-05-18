@@ -30,12 +30,8 @@ class API {
 	 * @return void
 	 */
 	public function __construct() {
-		 add_action( 'rest_api_init', array( $this, 'register_api' ) );
-
-		if ( isset( $_GET['page-export'], $_GET['file-name'] ) && $_GET['page-export'] === 'true' ) {
-			// TODO: need to check nonce
-			$this->downloadZIP();
-		}
+		add_action( 'rest_api_init', array( $this, 'register_api' ) );
+		add_action( 'init', array( $this, 'download_zip_endpoint' ) );
 	}
 
 	/**
@@ -57,12 +53,28 @@ class API {
 		FrontendApi::register();
 	}
 
+	public function download_zip_endpoint() {
+		if (
+			! isset( $_GET['page-export'], $_GET['file-name'] ) ||
+			'true' !== $_GET['page-export']
+		) {
+			return;
+		}
+
+		if ( ! HelperFunctions::has_access( KIRKI_ACCESS_LEVELS['FULL_ACCESS'] ) ) {
+			wp_send_json_error( 'Not authorized', 401 );
+		}
+
+		// TODO: need to check nonce
+		$this->downloadZIP();
+	}
+
 	private function downloadZIP() {
 		$upload_dir = wp_upload_dir();
 		$file_name  = HelperFunctions::sanitize_text( $_GET['file-name'] );
 		$file_name  = basename( $file_name );
 		// Check if the file has a .zip extension
-		if ( ! pathinfo( $file_name, PATHINFO_EXTENSION ) === 'zip' ) {
+		if ( pathinfo( $file_name, PATHINFO_EXTENSION ) !== 'zip' ) {
 			echo 'Invalid file type.';
 			die();
 		}

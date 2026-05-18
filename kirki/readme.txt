@@ -3,7 +3,7 @@ Contributors: themeum
 Tags: page builder, website builder, drag and drop, form builder, freeform canvas
 Requires at least: 5.3
 Tested up to: 6.9
-Stable tag: 6.0.6
+Stable tag: 6.0.7
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -17,6 +17,10 @@ Freeform page builder & website builder for WordPress. Infinite canvas for compl
 Unlike traditional page builders, Kirki uses an **infinite freeform canvas**, giving you full creative freedom without rigid grids or layout restrictions.
 
 Build landing pages, business websites, blogs, and full websites with responsive controls, dynamic content, and powerful design tools — all inside WordPress.
+
+**Watch Kirki in action:**
+
+https://www.youtube.com/watch?v=ofDMD1j4A2Y
 
 ---
 
@@ -186,6 +190,28 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 ---
 
 == Changelog ==
+
+= 6.0.7 =
+* Update: Centralized symbol edit canvas positioning across all symbols.
+* Update: Added viewport-aware symbol editing for tablet and mobile.
+* Update: Improved typography controls and CSS unit handling.
+* Update: Added support for special max-width values and clamp() parsing.
+* Update: Added CSS variable duplication support.
+* Update: Refactored SVG rendering with dedicated InlineSvg handling.
+* Update: Improved Liquid Glass rendering and viewport isolation.
+* Fix: Unauthenticated Limited Arbitrary File Read and Deletion via downloadZIP
+* Fix: Missing Authorization to Authenticated (Subscriber+) Sensitive Form Submission Data Exposure via 'kirki_wp_admin_get_apis' Action Description
+* Fix: Unauthenticated Privilege Escalation via 'handle_forgot_password'
+* Fix: Fixed auto-scroll for unmounted selected elements in the Layers panel.
+* Fix: Rich text editing no longer blocks canvas zoom and scroll across viewports.
+* Fix: Improved overlay behavior during typing and dragging interactions.
+* Fix: Prevented tall symbol content from being clipped in symbol edit mode.
+* Fix: Resolved forgot password content and reset URL issues.
+* Fix: Corrected margin and padding value normalization.
+* Fix: Improved border width and mixed unit handling.
+* Fix: Fixed viewport activation and device delete flow issues.
+* Fix: Improved Form submission data array serialization and multiple select handling.
+* Fix: Interaction ScrollHeight and ScrollWidth property set issue.
 
 = 6.0.6 =
 * Update: Enhanced the inline text editing and styling experience.

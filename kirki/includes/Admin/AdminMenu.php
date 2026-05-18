@@ -110,7 +110,11 @@ class AdminMenu {
 	 * @return void
 	 */
 	public function admin_menu() {
-		\add_menu_page( 'Kirki - Home', 'Kirki', 'edit_posts', 'kirki', array( $this, 'plugin_page' ), 'dashicons-kirki', 25 );
+		/* FREE_START */
+		$menu_title = 'Kirki';
+		/* FREE_END */
+		
+		\add_menu_page( 'Kirki - Home', $menu_title, 'edit_posts', 'kirki', array( $this, 'plugin_page' ), 'dashicons-kirki', 25 );
 
 		foreach ( $this->dashboard_toolbar_submenus as $slug => $submenu ) {
 			\add_submenu_page(

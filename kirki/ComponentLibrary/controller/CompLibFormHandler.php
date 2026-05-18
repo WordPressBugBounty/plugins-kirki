@@ -6,6 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
+use Kirki\Ajax\Page;
 use Kirki\HelperFunctions;
 use WP_REST_Server;
 use WP_REST_Controller;
@@ -267,14 +268,16 @@ class CompLibFormHandler extends WP_REST_Controller {
 
 		if ( strlen( $username ) === 0 && isset( $form_data['email'] ) && strlen( $email ) > 0 ) {
 			$user = get_user_by( 'email', $email );
-			if ( $user ) {
-				$username = $user->get( 'user_login' );
-			} else {
-				$response = array(
-					'message' => 'User not found',
-				);
-				return new WP_REST_Response( $response, 404 );
+
+			if ( ! $user ) {
+				return new WP_REST_Response( array( 'message' => 'User not found' ), 404 );
 			}
+
+			$username = $user->get( 'user_login' );
+		}
+
+		if ( empty( $username ) ) {
+			return new WP_REST_Response( array( 'message' => 'Invalid request' ), 400 );
 		}
 
 		if ( isset( $username ) && strlen( $username ) > 0 ) {
@@ -287,6 +290,15 @@ class CompLibFormHandler extends WP_REST_Controller {
 				return new WP_REST_Response( $response, 404 );
 			}
 
+			$user_email = $user->get( 'user_email' );
+			if($email !== $user_email) {
+				$response = array(
+					'message' => 'Invalid email address',
+				);
+				return new WP_REST_Response( $response, 404 );
+			}
+			$email = $user_email;
+
 			$key = get_password_reset_key( $user );
 			if ( is_wp_error( $key ) ) {
 				$response = array(
@@ -296,7 +308,7 @@ class CompLibFormHandler extends WP_REST_Controller {
 			}
 
 			// Prepare email content.
-			$url = HelperFunctions::get_utility_page_url( 'reset_password' );
+			$url = HelperFunctions::get_utility_page_url( Page::TYPE_FORGOT_PASSWORD );
 
 			$username  = $user->user_login;
 			$chip_data = array(
@@ -311,12 +323,12 @@ class CompLibFormHandler extends WP_REST_Controller {
 			$email_body    = '';
 
 			if ( isset( $form_data['emailBody'] ) ) {
-				$email_body = json_decode( $form_data['emailBody'], true );
-				foreach ( $email_body as $key => $body_data ) {
+				$email_body_array = json_decode( $form_data['emailBody'], true );
+				foreach ( $email_body_array as $key => $body_data ) {
 					if ( isset( $body_data['type'] ) && isset( $body_data['value'] ) && $body_data['type'] === 'text' ) {
-						$email_body = $email_body . $body_data['value'];
+						$email_body .= $body_data['value'];
 					} elseif ( isset( $body_data['type'] ) && isset( $body_data['value'] ) && $body_data['type'] === 'chip' ) {
-						$email_body = $email_body . $chip_data[ $body_data['value'] ];
+						$email_body .= $chip_data[ $body_data['value'] ];
 					}
 				}
 			}

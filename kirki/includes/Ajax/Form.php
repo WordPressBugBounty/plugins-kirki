@@ -804,11 +804,17 @@ class Form {
 					$data[ $form_data_item['timestamp'] ]['id'] = $form_data_item['timestamp'];
 				}
 
+				// Handle array values by unserializing them
+				$input_value = $form_data_item['input_value'];
+				if (is_string($input_value) && @unserialize($input_value) !== false) {
+					$input_value = unserialize($input_value);
+				}
+
 				if ( isset( $data[ $form_data_item['timestamp'] ] ) ) {
-					$data[ $form_data_item['timestamp'] ][ $form_data_item['input_key'] ] = $form_data_item['input_value'];
+					$data[$form_data_item['timestamp']][$form_data_item['input_key']] = $input_value;
 				} else {
 					$data[ $form_data_item['timestamp'] ] = array(
-						$form_data_item['input_key'] => $form_data_item['input_value'],
+						$form_data_item['input_key'] => $input_value,
 					);
 				}
 
