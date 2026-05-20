@@ -815,11 +815,11 @@ class Preview extends ExceptionalElements {
 		return $s;
 	}
 
-	public static function getVariableCssCode( $key = 'global', $selector = ':root', $mode = false ) {
+	public static function getVariableCssCode( $key = 'global', $selector = ':root', $mode = false, $style_tag = true ) {
 		$k = "$key-$selector-$mode";
-		if ( isset( self::$printed_variable_tracker[ $k ] ) && self::$printed_variable_tracker[ $k ] ) {
-			return '';
-		}
+		// if ( isset( self::$printed_variable_tracker[ $k ] ) && self::$printed_variable_tracker[ $k ] ) {
+		// 	return '';
+		// }
 		$variables = UserData::get_kirki_variable_data();
 
 		if ( $mode === 'inherit' ) {
@@ -834,7 +834,7 @@ class Preview extends ExceptionalElements {
 		}
 
 
-		$s = "<style id='kirki-variables-" . $key . "'>".$selector."{";
+		$s = $style_tag ? "<style id='kirki-variables-" . $key . "'>".$selector."{" : $selector."{";
 		$view_ports     = UserData::get_view_port_list();
 
 		foreach ($variables['data'] as $key2 => $group) {
@@ -862,7 +862,7 @@ class Preview extends ExceptionalElements {
 			}
 		}
 
-		$s .= '}</style>';
+		$s .= $style_tag ? '}</style>' : '}';
 
 		self::$printed_variable_tracker[ $k ] = true;
 		return $s;

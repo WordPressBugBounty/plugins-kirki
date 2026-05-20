@@ -11,6 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
+use Kirki\Ajax\Page;
+use Kirki\Frontend\Preview\Preview;
 use Kirki\HelperFunctions;
 
 /**
@@ -99,6 +101,15 @@ class TheFrontendHooks {
 
 		wp_enqueue_script( 'kirki', KIRKI_ASSETS_URL . 'js/kirki.min.js', array( 'wp-i18n' ), KIRKI_VERSION, true );
 		wp_enqueue_style( 'kirki', KIRKI_ASSETS_URL . 'css/kirki.min.css', null, KIRKI_VERSION );
+		
+		$this->load_variables();
+	}
+
+	private function load_variables(){
+		$variable_post_id = HelperFunctions::get_post_id_if_possible_from_url();
+		$variable_mode = Page::get_variable_mode($variable_post_id);
+		$variable_css = Preview::getVariableCssCode('global', ':root', $variable_mode, false);
+		wp_add_inline_style( 'kirki', $variable_css );
 	}
 
 	/**

@@ -98,9 +98,9 @@ class CollectionController extends FrontendRESTController {
 		$page                     = absint( $request->get_param( 'page' ) );
 		$page                     = empty( $page ) ? 1 : $page;
 		$collection_id            = HelperFunctions::sanitize_text( $request->get_param( 'collection_id' ) );
-		$collection_param_filters = json_decode( wp_unslash( $request->get_param( 'filters' ) ), true );
-		$kirki_data               = json_decode( wp_unslash( $request->get_param( 'kirki_data' ) ), true );
-		$context                  = json_decode( wp_unslash( $request->get_param( 'context' ) ), true );
+		$collection_param_filters = json_decode( $request->get_param( 'filters' ), true );
+		$kirki_data               = json_decode( $request->get_param( 'kirki_data' ), true );
+		$context                  = json_decode( $request->get_param( 'context' ), true );
 		$query                    = HelperFunctions::sanitize_text( $request->get_param( 'q' ) );
 
 		$collection_param_filters = is_array( $collection_param_filters ) ? $collection_param_filters : array();

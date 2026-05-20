@@ -2,8 +2,8 @@
 Contributors: themeum
 Tags: page builder, website builder, drag and drop, form builder, freeform canvas
 Requires at least: 5.3
-Tested up to: 6.9
-Stable tag: 6.0.7
+Tested up to: 7.0
+Stable tag: 6.0.8
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -190,6 +190,11 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 ---
 
 == Changelog ==
+
+= 6.0.8 =
+* Fix: Resolved css variable enqueue issue on the custom template pages.
+* Fix: Fixed collection pagination issue for filtered data.
+* Fix: Solved random issues.
 
 = 6.0.7 =
 * Update: Centralized symbol edit canvas positioning across all symbols.

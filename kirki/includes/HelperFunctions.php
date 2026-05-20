@@ -1259,7 +1259,7 @@ class HelperFunctions {
 			$s                      .= $preview->getCustomFontsLinks();
 		}
 
-		if($get_variable){
+		if($get_variable && false){ // this is maintained from: TheFrontendHooks
 			$variable_post_id = $post_id ? $post_id : HelperFunctions::get_post_id_if_possible_from_url();
 			$variable_mode = Page::get_variable_mode($variable_post_id);
 			$s 									 .= Preview::getVariableCssCode('global', ':root', $variable_mode);
@@ -3261,11 +3261,11 @@ class HelperFunctions {
 	 * @return void
 	 */
 	public static function store_error_log( $error_text ) {
-		$kirki_version = KIRKI_VERSION;
+		// $kirki_version = KIRKI_VERSION;
 
-		self::http_get(
-			KIRKI_CORE_PLUGIN_URL . "?log_data=error&version=$kirki_version&error_type=php&error_text=$error_text"
-		);
+		// self::http_get(
+		// 	KIRKI_CORE_PLUGIN_URL . "?log_data=error&version=$kirki_version&error_type=php&error_text=$error_text"
+		// );
 	}
 
 	/**
