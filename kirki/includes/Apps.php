@@ -105,11 +105,29 @@ class Apps {
 	 * Retrieve app settings by app_slug
 	 *
 	 * @param string $app_slug The app ID
-	 * @return array|null App settings or null if not found
+	 * @return array|null App settings or null if not found / not installed
 	 */
 	private static function get_app_settings_by_slug( $app_slug ) {
-		// Example logic to fetch app settings (e.g., from a database or configuration file)
-		// Replace this with your own implementation
+		// Check if the app is installed
+		$installed_apps = HelperFunctions::get_global_data_using_key( 'kirki_installed_apps' );
+
+		if ( ! $installed_apps || ! is_array( $installed_apps ) ) {
+			return null;
+		}
+
+		$is_installed = false;
+		foreach ( $installed_apps as $app ) {
+			if ( isset( $app['app_slug'] ) && $app['app_slug'] === $app_slug ) {
+				$is_installed = true;
+				break;
+			}
+		}
+
+		if ( ! $is_installed ) {
+			return null;
+		}
+
+		// Fetch app settings
 		$app_settings = HelperFunctions::get_global_data_using_key( 'kirki_app_settings_' . $app_slug );
 
 		return $app_settings ? $app_settings : null;

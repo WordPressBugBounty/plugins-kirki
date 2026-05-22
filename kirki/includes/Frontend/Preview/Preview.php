@@ -229,7 +229,7 @@ class Preview extends ExceptionalElements {
 	/**
 	 * List anchor attrs.
 	 */
-	private $anchor_attrs = array( 'href', 'target', 'rel' );
+	private $anchor_attrs = array( 'href', 'target', 'rel', 'kirki-anchor' );
 
 
 	/**
@@ -1942,7 +1942,7 @@ class Preview extends ExceptionalElements {
 			$rel    = isset( $properties['attributes'], $properties['attributes']['rel'] ) ? "rel={$properties['attributes']['rel']}" : '';
 
 			if ( isset( $properties['type'] ) ) {
-				$html = "<a href={$href} {$target} {$rel}>{$html}</a>";
+				$html = "<a href={$href} {$target} {$rel} kirki-anchor='true'>{$html}</a>";
 			}
 		}
 

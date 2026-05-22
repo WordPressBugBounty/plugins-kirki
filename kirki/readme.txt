@@ -3,7 +3,7 @@ Contributors: themeum
 Tags: page builder, website builder, drag and drop, form builder, freeform canvas
 Requires at least: 5.3
 Tested up to: 7.0
-Stable tag: 6.0.8
+Stable tag: 6.0.9
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -190,6 +190,22 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 ---
 
 == Changelog ==
+
+= 6.0.9 =
+* New: Added support for custom timing editing in slider animations.
+* Update: Updated the custom interaction timeline behavior for smoother editing and playback.
+* Update: Improved color picker performance and responsiveness.
+* Update: Improved comment behavior and shortcut handling.
+* Update: Updated the Kirki Apps settings design.
+* Fix: Fixed drawing issues caused by excessively large canvas sizes.
+* Fix: Fixed inconsistencies with dragging cursor and controller interactions.
+* Fix: Fixed device selection behavior when clicking outside elements.
+* Fix: Fixed fill and gradient controller positioning issues.
+* Fix: Fixed layer panel icon reset and undo behavior issues.
+* Fix: Fixed nested rich text editing and selection behavior.
+* Fix: Fixed symbol editing freeze issues after style synchronization.
+* Fix: Fixed issues caused by deleting elements during active color picking.
+* Fix: Fixed textarea height styling issues in form blocks.
 
 = 6.0.8 =
 * Fix: Resolved css variable enqueue issue on the custom template pages.
