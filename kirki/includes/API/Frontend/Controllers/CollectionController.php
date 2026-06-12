@@ -146,6 +146,7 @@ class CollectionController extends FrontendRESTController {
 				$options,
 				$context
 			),
+			'search_related_collection_ids' => [$collection_id => true],
 		);
 
 		$collection_wrapper_html_string = HelperFunctions::get_html_using_preview_script( $params );

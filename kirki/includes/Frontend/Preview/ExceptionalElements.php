@@ -20,8 +20,6 @@ use Kirki\Ajax\WordpressData;
  * ExceptionalElements Class
  */
 class ExceptionalElements {
-private $anchor_default_attribute = 'kirki-anchor="true"';
-
 	/**
 	 * Get this exceptional element
 	 *
@@ -386,10 +384,6 @@ private $anchor_default_attribute = 'kirki-anchor="true"';
 
 		$tag = isset( $this_data['properties'], $this_data['properties']['tag'] ) ? $this_data['properties']['tag'] : 'a';
 
-		if ( $tag === 'a' ) {
-			$attributes .= ' ' . $this->anchor_default_attribute;
-		}
-
 		$children_markup = $this->construct_children_markup( isset( $this_data['children'] ) ? $this_data['children'] : array(), $options );
 
 		return "<$tag $attributes id=\"$id\">
@@ -399,10 +393,6 @@ private $anchor_default_attribute = 'kirki-anchor="true"';
 
 	private function navigation_element( $this_data, $attributes, $options ) {
 		$tag       = isset( $this_data['properties'], $this_data['properties']['tag'] ) ? $this_data['properties']['tag'] : 'a';
-
-		if ( $tag === 'a' ) {
-			$attributes .= ' ' . $this->anchor_default_attribute;
-		}
 
 		$hamburger = isset($this_data['properties']['navigation']['hamburger']) ? $this_data['properties']['navigation']['hamburger'] : false;
 
@@ -434,10 +424,6 @@ private $anchor_default_attribute = 'kirki-anchor="true"';
 	private function navigation_item_element($this_data, $attributes, $options)
 	{
 		$tag = isset($this_data['properties'], $this_data['properties']['tag']) ? $this_data['properties']['tag'] : 'a';
-
-		if ( $tag === 'a' ) {
-			$attributes .= ' ' . $this->anchor_default_attribute;
-		}
 
 		$children_markup = $this->construct_children_markup(isset($this_data['children']) ? $this_data['children'] : array(), $options);
 
@@ -483,10 +469,6 @@ private $anchor_default_attribute = 'kirki-anchor="true"';
 	{
 
 		$tag = isset($this_data['properties'], $this_data['properties']['tag']) ? $this_data['properties']['tag'] : 'a';
-
-		if ( $tag === 'a' ) {
-			$attributes .= ' ' . $this->anchor_default_attribute;
-		}
 
 		$extra_attr = isset($options['inside_navigation']) && $options['inside_navigation'] ? 'kirki-navigation-hide="true"' : '';
 
@@ -645,7 +627,7 @@ private $anchor_default_attribute = 'kirki-anchor="true"';
 			$preload_link = $this->get_preload_link( $href, $this_data );
 		}
 
-		return '<a ' . $attributes . ' ' . $this->anchor_default_attribute . ' href="' . $href . '" >' . $this->construct_children_markup( isset( $this_data['children'] ) ? $this_data['children'] : array(), $options ) . '</a>' . $preload_link;
+		return '<a ' . $attributes . ' ' . ' href="' . $href . '" >' . $this->construct_children_markup( isset( $this_data['children'] ) ? $this_data['children'] : array(), $options ) . '</a>' . $preload_link;
 	}
 
 	private function button_element( $this_data, $attributes, $options ) {
@@ -665,7 +647,6 @@ private $anchor_default_attribute = 'kirki-anchor="true"';
 		$tag             = isset( $this_data['properties'], $this_data['properties']['tag'] ) ? $this_data['properties']['tag'] : 'button';
 		if ( $href ) {
 			$tag = 'a';
-			$attributes .= ' ' . $this->anchor_default_attribute;
 		}
 
 		return "<$tag $attributes href=\"$href\">
@@ -701,6 +682,10 @@ private $anchor_default_attribute = 'kirki-anchor="true"';
 		$show_pagination = isset( $dynamic_content['pagination'] ) ? $dynamic_content['pagination'] : true;
 		$pagination_type = isset( $dynamic_content['pagination_type'] ) ? $dynamic_content['pagination_type'] : 'numeric';
 
+		if ( ! $options ) {
+			$options = array();
+		}
+
 		$items_data = Utils::get_items_data_from_dynamic_contents( $dynamic_content, $options );
 
 		$data       = $items_data['data'];
@@ -718,10 +703,6 @@ private $anchor_default_attribute = 'kirki-anchor="true"';
 			if ( isset( $_GET['taxonomy'][ $dynamic_content['taxonomy'] ] ) && is_array( $_GET['taxonomy'][ $dynamic_content['taxonomy'] ] ) ) {
 				$additional_options['selected_taxonomies'] = $_GET['taxonomy'][ $dynamic_content['taxonomy'] ];
 			}
-		}
-
-		if ( ! $options ) {
-			$options = array();
 		}
 
 		$additional_options['relation_type'] = $collection_type;
@@ -785,12 +766,6 @@ private $anchor_default_attribute = 'kirki-anchor="true"';
 		);
 
 		DataHelper::get_data_and_styles_from_root( $this_data['id'], $data_n_styles, $this->data, $this->style_blocks );
-
-		$id_attr = $element_name === 'slider' ? 'kirki_slider_random_id' : 'kirki_collection_random_id';
-
-		$element_id = $this_data['id'];
-
-		$attributes .= ' ' . $id_attr . '="' . $element_id . '"';
 
 		if ( is_array( $children ) ) {
 			return $this->get_template(

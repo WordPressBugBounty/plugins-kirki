@@ -328,11 +328,11 @@ class UserData {
 		die();
 	}
 
-	private static function normalize_variable_data( $raw_data ) {
+	public static function normalize_variable_data( $raw_data ) {
 
-		// if(isset( $raw_data['data'] ) && is_array( $raw_data['data'] ) && count($raw_data['data']) > 0 && isset($raw_data['data'][0]['key'])  ) {
-		// 	return $raw_data; // thats means already normalized.	
-		// }
+		if(isset( $raw_data['data'] ) && is_array( $raw_data['data'] ) && count($raw_data['data']) > 0 && isset($raw_data['data'][0]['key'])  ) {
+			return $raw_data; // thats means already normalized.	
+		}
 		// Start from clean base
 		$organized = self::initial_variable_data();
 
@@ -416,6 +416,27 @@ class UserData {
 		return $organized;
 	}
 
+	public static function sort_variable_data( $data ) {
+		// Enforce deterministic group order: Color, Number, Text style, Font family
+		$order_map = array(
+			'color'       => 0,
+			'size'        => 1,
+			'text-style'  => 2,
+			'font-family' => 3,
+		);
+
+		usort(
+			$data['data'],
+			function ( $a, $b ) use ( $order_map ) {
+				$a_order = isset( $order_map[ $a['key'] ] ) ? $order_map[ $a['key'] ] : 99;
+				$b_order = isset( $order_map[ $b['key'] ] ) ? $order_map[ $b['key'] ] : 99;
+				return $a_order - $b_order;
+			}
+		);
+
+		return $data;
+	}
+
 
 
 	public static function initial_variable_data() {
@@ -480,7 +501,110 @@ class UserData {
 			$variables = self::initial_variable_data();
 		}
 
+		$variables = self::normalize_old_variable_data(	$variables );
+
+		// sort variable data
+		$variables = self::sort_variable_data( $variables );
+
 		return $variables;
+	}
+
+	private static function normalize_old_variable_data( $variables ) {
+		// Check if data needs normalization
+		if ( ! isset( $variables['data'] ) || ! is_array( $variables['data'] ) ) {
+			return $variables;
+		}
+
+		// Create fresh groups
+		$normalized = array(
+			'data' => array(
+				array(
+					'title'     => 'Colors',
+					'key'       => 'color',
+					'modes'     => array(),
+					'variables' => array(),
+				),
+				array(
+					'title'     => 'Numbers',
+					'key'       => 'size',
+					'modes'     => array(),
+					'variables' => array(),
+				),
+				array(
+					'title'     => 'Text Styles',
+					'key'       => 'text-style',
+					'modes'     => array(),
+					'variables' => array(),
+				),
+				array(
+					'title'     => 'Font Family',
+					'key'       => 'font-family',
+					'modes'     => array(),
+					'variables' => array(),
+				),
+			),
+		);
+
+		// Index for quick access
+		$groups = array();
+		foreach ( $normalized['data'] as $index => &$group ) {
+			$groups[ $group['key'] ] = &$normalized['data'][ $index ];
+		}
+
+		// Track modes per type
+		$modes_per_type = array(
+			'color'       => array(),
+			'size'        => array(),
+			'text-style'  => array(),
+			'font-family' => array(),
+		);
+
+		// Single pass: process all variables
+		foreach ( $variables['data'] as $section ) {
+			if ( empty( $section['variables'] ) ) {
+				continue;
+			}
+
+			foreach ( $section['variables'] as $variable ) {
+				// Determine correct group based on variable's type
+				$var_type = isset( $variable['type'] ) ? $variable['type'] : null;
+				
+				if ( ! $var_type || ! isset( $groups[ $var_type ] ) ) {
+					continue;
+				}
+
+				// Add variable to correct group (move if in wrong section)
+				$groups[ $var_type ]['variables'][] = $variable;
+
+				// Collect modes for this type
+				if ( isset( $variable['value'] ) && is_array( $variable['value'] ) ) {
+					foreach ( array_keys( $variable['value'] ) as $mode_key ) {
+						if ( ! isset( $modes_per_type[ $var_type ][ $mode_key ] ) ) {
+							$modes_per_type[ $var_type ][ $mode_key ] = array(
+								'key'   => $mode_key,
+								'title' => ucfirst( $mode_key ),
+							);
+						}
+					}
+				}
+			}
+		}
+
+		// Assign collected modes to groups
+		foreach ( $modes_per_type as $type => $modes ) {
+			if ( isset( $groups[ $type ] ) ) {
+				$groups[ $type ]['modes'] = array_values( $modes );
+				// Ensure default mode exists
+				if ( empty( $groups[ $type ]['modes'] ) ) {
+					$groups[ $type ]['modes'][] = array(
+						'key'   => 'default',
+						'title' => 'Default',
+					);
+				}
+			}
+		}
+
+		return $normalized;
 	}
 
 	/**

@@ -39,8 +39,6 @@ class TemplateRedirection {
 		add_action( 'login_form_resetpass', array( $this, 'redirect_to_custom_resetpass_if_has_kirki_utility_page' ) );
 
 		add_filter( 'post_link', array( $this, 'custom_utility_page_link' ), 10, 2 );
-
-		add_action( 'init', array( $this, 'kirki_utility_pages_rewrite_rules' ) );
 		add_filter( 'query_vars', array( $this, 'kirki_utility_pages_query_vars' ) );
 	}
 
@@ -100,19 +98,6 @@ class TemplateRedirection {
 		$vars[] = 'kirki_utility_page_type';
 		$vars[] = 'kirki_utility_page_id';
 		return $vars;
-	}
-	public function kirki_utility_pages_rewrite_rules() {
-		$utility_pages = Page::fetch_list('kirki_utility', true, array( 'publish' ) );
-		foreach ( $utility_pages as $key => $page ) {
-			$utility_page_type = $page['utility_page_type'];
-			$id                = $page['id'];
-			$slug              = $page['slug'];
-			if ( $utility_page_type !== '404' ) {
-				// Add custom rewrite rule for login
-				add_rewrite_rule( "^$slug$", "index.php?kirki_utility_page_type=$utility_page_type&kirki_utility_page_id=$id", 'top' );
-			}
-		}
-		flush_rewrite_rules( true );
 	}
 
 	/**

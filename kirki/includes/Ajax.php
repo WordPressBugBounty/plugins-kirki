@@ -289,6 +289,15 @@ class Ajax {
 			if ( $endpoint === 'restore-staging-version' && HelperFunctions::has_access( KIRKI_ACCESS_LEVELS['FULL_ACCESS'] ) ) {
 				Staging::restore_stage_version();
 			}
+
+			if ( $endpoint === 'get-dynamic-content-batch' ) {
+				DynamicContent::get_dynamic_element_data_batch();
+			}
+
+			if ( $endpoint === 'get-collection-batch' ) {
+				Collection::get_collection_batch();
+			}
+
 		}
 
 		if ( $endpoint === 'get-single-symbol' ) {

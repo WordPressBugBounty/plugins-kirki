@@ -64,7 +64,11 @@ class Page {
 	public static function delete_page() {
         //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$id = (int) HelperFunctions::sanitize_text( isset( $_POST['id'] ) ? $_POST['id'] : '' );
+		$post = get_post( $id );
 		wp_delete_post( $id );
+		if ( $post && $post->post_type === 'kirki_utility' ) {
+			self::flush_utility_rewrite_rules();
+		}
 		wp_send_json( array( 'status' => 'Page deleted' ) );
 	}
 
@@ -115,6 +119,7 @@ class Page {
 
 			if ( $options['post_type'] ==='kirki_utility' ) {
 				self::initialize_predefine_template_data( $post_id, $options['utility_page_type'] );
+				self::flush_utility_rewrite_rules();
 			}
 
 			if ( isset( $options['custom_template'] ) && ! empty( $options['custom_template'] ) &&
@@ -199,7 +204,10 @@ class Page {
 				update_post_meta( $post_id, 'kirki_variable_mode', $options['variableMode'] );
 			}
 			if ( isset( $options['post_name'] ) ) {
-				flush_rewrite_rules( true );
+				$post = get_post( $post_id );
+				if ( $post && $post->post_type === 'kirki_utility' ) {
+					self::flush_utility_rewrite_rules();
+				}
 			}
 			wp_send_json( ( new self() )->format_single_post( $post_id ) );
 			die();
@@ -256,7 +264,9 @@ class Page {
 			update_post_meta( $new_post_id, KIRKI_META_NAME_FOR_USED_FONT_LIST, $used_fonts );
 		}
 
-		flush_rewrite_rules( true );
+		if ( $post && $post->post_type === 'kirki_utility' ) {
+			self::flush_utility_rewrite_rules();
+		}
 
 		wp_send_json( ( new self() )->format_single_post( $new_post_id ) );
 	}
@@ -846,6 +856,10 @@ class Page {
 				'data'   => HelperFunctions::validate_slug( $post_id, $post_type, $post_name ),
 			)
 		);
+	}
+
+	private static function flush_utility_rewrite_rules() {
+		flush_rewrite_rules( false );
 	}
 
 	public static function get_editor_read_only_access_data() {

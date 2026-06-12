@@ -268,19 +268,21 @@ class FormController extends FrontendRESTController {
 			if ( $field_config ) {
 				// Check MIME/type allowlist
 				if ( ! empty( $field_config['allowed_types'] ) && ! in_array( $file_type, $field_config['allowed_types'], true ) ) {
-					$form_data[ $name ] = new WP_Error(
-						'invalid_file_type',
-						sprintf( __( 'File type "%s" is not allowed for this field.', 'kirki' ), $file_type )
-					);
+				$form_data[ $name ] = new WP_Error(
+					'invalid_file_type',
+					/* translators: %s: file type */
+					sprintf( __( 'File type "%s" is not allowed for this field.', 'kirki' ), $file_type )
+				);
 					continue;
 				}
 
 				// Check max size
 				if ( ! empty( $field_config['max_size'] ) && $file_size > $field_config['max_size'] ) {
-					$form_data[ $name ] = new WP_Error(
-						'file_too_large',
-						sprintf( __( 'File size exceeds the maximum allowed for this field (%s bytes).', 'kirki' ), $field_config['max_size'] )
-					);
+				$form_data[ $name ] = new WP_Error(
+					'file_too_large',
+					/* translators: %s: maximum file size in bytes */
+					sprintf( __( 'File size exceeds the maximum allowed for this field (%s bytes).', 'kirki' ), $field_config['max_size'] )
+				);
 					continue;
 				}
 			}

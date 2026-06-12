@@ -33,7 +33,7 @@ class PluginActiveEvents {
 		HelperFunctions::set_kirki_version_in_db();
 		$this->deactivate_droip_plugin();
 
-		$this->update_rbac();
+		self::update_rbac();
 		self::create_custom_tables();
 		
 	}
@@ -72,9 +72,9 @@ class PluginActiveEvents {
 	 *
 	 * @return void
 	 */
-	private function update_rbac() {
+	public static function update_rbac() {
 		global $wp_roles;
-		$role_names = $wp_roles->role_names;
+		$role_names = $wp_roles ? $wp_roles->role_names : [];
 
 		if ( is_array( $role_names ) && count( $role_names ) ) {
 			foreach ( $role_names as $key => $value ) {

@@ -804,18 +804,21 @@ class TemplateImport {
 			$filter_variable = $this->filter_variables_by_prefix( $variables['data'], $this->batch_id );
 		}
 
-		$new_data = $new_variables['data']; // variables
-		foreach ( $new_data as $key => $g ) {
-			$prefix = '';
-			if ( isset( $variable_prefix ) && ! empty( $variable_prefix ) ) {
-				$prefix = trim( $variable_prefix ) . ' ';
-			} else {
-				$prefix = 'Template ';
+		// Normalize new variables if they are in old structure (groups lack 'key')
+		$is_old_structure = ! empty( $new_variables['data'] ) && ! isset( $new_variables['data'][0]['key'] );
+		if ( $is_old_structure ) {
+			$new_variables = UserData::normalize_variable_data( $new_variables );
+		}
+
+		$new_data = $new_variables['data'];
+
+		// Apply prefix + var reference rewrites to all variables in all groups
+		foreach ( $new_data as &$group ) {
+			if ( empty( $group['variables'] ) ) {
+				continue;
 			}
 
-			$new_data[ $key ]['title'] = $prefix . trim( $new_data[ $key ]['title'] );
-
-			foreach ( $new_data[ $key ]['variables'] as $key2 => $v ) {
+			foreach ( $group['variables'] as &$v ) {
 				$new_id                                = $this->add_prefix( $v['id'] );
 				$this->variable_id_tracker[ $v['id'] ] = $new_id;
 				$v['id']                               = $new_id;
@@ -831,21 +834,40 @@ class TemplateImport {
 					$mode_value        = 'var(--' . $new_variable_name . ')';
 				}
 
-				$v['value']                             = array( 'default' => $mode_value );
-				$new_data[ $key ]['variables'][ $key2 ] = $v;
+				$v['value'] = array( 'default' => $mode_value );
 			}
-			$new_data[ $key ]['modes'] = array(
-				array(
-					'title' => 'Default',
-					'key'   => 'default',
-				),
-			);
+			unset( $v );
 		}
-		$variables['data'] = array_merge( (array) $filter_variable, (array) $new_data );
+		unset( $group );
+
+		// Merge by group key so same-type groups are combined
+		$merged = array();
+		foreach ( array_merge( (array) $filter_variable, (array) $new_data ) as $group ) {
+			$group_key = isset( $group['key'] ) ? $group['key'] : '';
+			if ( ! isset( $merged[ $group_key ] ) ) {
+				$merged[ $group_key ] = $group;
+				continue;
+			}
+
+			// Deduplicate variables by ID
+			$existing_ids = array();
+			foreach ( $merged[ $group_key ]['variables'] as $var ) {
+				$existing_ids[ $var['id'] ] = true;
+			}
+			foreach ( $group['variables'] as $var ) {
+				if ( ! isset( $existing_ids[ $var['id'] ] ) ) {
+					$merged[ $group_key ]['variables'][] = $var;
+				}
+			}
+		}
+
+		$variables['data'] = array_values( $merged );
 		$saved_data        = HelperFunctions::get_global_data_using_key( KIRKI_USER_SAVED_DATA_META_KEY );
 		if ( ! is_array( $saved_data ) ) {
 			$saved_data = array();
 		}
+		// sort variable data 
+		$variables = UserData::sort_variable_data( $variables );
 		$saved_data['variableData'] = $variables;
 
 		HelperFunctions::update_global_data_using_key( KIRKI_USER_SAVED_DATA_META_KEY, $saved_data );
@@ -1249,12 +1271,20 @@ class TemplateImport {
 	}
 
 	private function update_collection_settings_for_kirki_block( $block ) {
-		if ( ! $block || ! isset( $block['properties'], $block['properties']['dynamicContent'] ) ) {
+		if(!$block) return $block;
+
+		$dynamic_content_key = 'dynamicContent';
+		if($block['name'] === 'slider'){
+			$dynamic_content_key = 'dynamicSliderContent';
+		}
+
+		if ( ! isset( $block['properties'], $block['properties'][$dynamic_content_key] ) ) {
 			return $block;
 		}
-		$dc = $block['properties']['dynamicContent'];
 
-		if ( $block['name'] === 'collection' ) {
+		$dc = $block['properties'][$dynamic_content_key];
+
+		if ( $block['name'] === 'collection' || $block['name'] === 'slider' ) {
 			if ( isset( $dc['collectionType'], $dc['type'] ) && $dc['collectionType'] === 'posts' && str_contains( $dc['type'], 'kirki_cm_' ) ) {
 				$post_parent = str_replace( 'kirki_cm_', '', $dc['type'] );
 
@@ -1262,13 +1292,13 @@ class TemplateImport {
 					$dc['type'] = ContentManagerHelper::get_child_post_post_type_value( $this->post_id_tracker[ $post_parent ] );
 				}
 
-				$block['properties']['dynamicContent'] = $dc;
+				$block['properties'][$dynamic_content_key] = $dc;
 			} elseif ( isset( $dc['collectionType'], $dc['type'] ) && $dc['collectionType'] === KIRKI_CONTENT_MANAGER_PREFIX . '_multi_reference' ) {
 				$post_parent = isset( $dc['cm_ref_collection_id'] ) ? $dc['cm_ref_collection_id'] : '';
 				if ( isset( $this->post_id_tracker[ $post_parent ] ) ) {
 					$dc['cm_ref_collection_id'] = $this->post_id_tracker[ $post_parent ];
 				}
-				$block['properties']['dynamicContent'] = $dc;
+				$block['properties'][$dynamic_content_key] = $dc;
 			}
 		} elseif ( isset( $dc['type'] ) && $dc['type'] === 'reference' ) {
 			$post_parent = isset( $dc['cm_post_id'] ) ? $dc['cm_post_id'] : '';
@@ -1277,7 +1307,7 @@ class TemplateImport {
 				$dc['cm_post_id'] = $this->post_id_tracker[ $post_parent ];
 			}
 
-			$block['properties']['dynamicContent'] = $dc;
+			$block['properties'][$dynamic_content_key] = $dc;
 		}
 
 		return $block;

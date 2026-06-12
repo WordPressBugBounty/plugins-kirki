@@ -144,7 +144,10 @@ class Utils {
 			$args['filters'] = $dynamic_content['filters'];
 		}
 
-		if ( isset( $dynamic_content['collectionRandomId'] ) ) {
+		$search_related_collection_ids = isset( $options['search_related_collection_ids'] ) ? $options['search_related_collection_ids'] : array();
+		$is_searchable_collection_element = isset($search_related_collection_ids[$options['element_id']]);
+
+		if ( ! isset( $dynamic_content['relatedCollection'] ) && $is_searchable_collection_element ) {
 
 			// This code is for taxonomy filter START
 			$filters    = array();
@@ -268,12 +271,11 @@ class Utils {
 			$args['q'] = $options['q'];
 		}
 
-
 		if(empty($args['q'])){
 			$args['q'] = HelperFunctions::sanitize_text(isset($_REQUEST['q']) ?$_REQUEST['q']:'' );
 		}
 		
-		if(isset($options['inside_collection']) && $options['inside_collection'] === true){
+		if( (isset($options['inside_collection']) && $options['inside_collection'] === true) || !$is_searchable_collection_element ) {
 			// this is for nested collection like: terms, multiref etc
 			$args['current_page'] = 1;
 			$args['pagination'] = false;
@@ -338,7 +340,7 @@ class Utils {
 			$content = HelperFunctions::get_user_dynamic_content(
 				$dynamic_content['value'],
 				$options['user']['ID'] ?? null,
-				$dynamic_content['meta'] ?? '',
+				$dynamic_content['meta'] ?? ''
 			);
 
 				// Date may need to format

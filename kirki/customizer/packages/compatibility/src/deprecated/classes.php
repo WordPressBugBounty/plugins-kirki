@@ -1,6 +1,10 @@
 <?php
 // phpcs:ignoreFile
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 if ( ! class_exists( 'Kirki_Active_Callback' ) ) {
 	// Removed in https://github.com/aristath/kirki/pull/1682/files
 	class Kirki_Active_Callback {

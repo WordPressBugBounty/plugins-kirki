@@ -1,15 +1,15 @@
 # Copyright (C) 2026 Kirki
-# This file is distributed under the same license as the Kirki plugin.
+# This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Kirki 6.0.9\n"
+"Project-Id-Version: Kirki 6.0.10\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/kirki\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-05-22T09:25:13+00:00\n"
+"POT-Creation-Date: 2026-06-12T12:29:59+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: kirki\n"
@@ -1534,6 +1534,21 @@ msgid "User common data saved failed."
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+#: assets/js/kirki.min.js:2
+msgid "Configure an AI provider from Settings > AI."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+#: assets/js/kirki.min.js:2
+msgid "The connected AI provider does not support text generation."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+#: assets/js/kirki.min.js:2
+msgid "Install and activate the WordPress AI plugin to use AI content."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "This field is required"
 msgstr ""
 
@@ -1623,6 +1638,10 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Invalid color"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Draft"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2046,10 +2065,6 @@ msgid "Ref. Coll..."
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Integrate chatgpt from the Kirki WordPress dashboard."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Loading"
 msgstr ""
 
@@ -2079,6 +2094,14 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Word count"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "No generated text was returned."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Something went wrong"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2692,14 +2715,6 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Library"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Undo"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Redo"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -3573,11 +3588,47 @@ msgid "Search templates..."
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+msgid "Existing Content Detected"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "Import & Replace"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+msgid "This will overwrite existing pages, settings, and other items. Do you wish to continue?"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Please wait until the import is complete."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "Import in Progress"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Please wait while the files are scanned and imported."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "This template includes"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Import Failed"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Your template import has failed."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Import Successful"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Your template has been imported successfully."
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -3586,6 +3637,10 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Proceed"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "This template includes the following"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -3803,10 +3858,6 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Scheduled"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Draft"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2

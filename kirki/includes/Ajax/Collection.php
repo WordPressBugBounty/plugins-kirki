@@ -42,6 +42,47 @@ class Collection {
 		$context_param       = HelperFunctions::sanitize_text( isset( $_GET['context'] ) ? $_GET['context'] : null );
 		$query               = HelperFunctions::sanitize_text( isset( $_GET['q'] ) ? $_GET['q'] : '' );
 
+		$data = self::resolve_collection(
+			$collection_type,
+			$name,
+			$taxonomy,
+			$sorting_param,
+			$filter_param,
+			$inherit,
+			$related,
+			$post_parent,
+			$related_post_parent,
+			$item_per_page,
+			$current_page,
+			$offset,
+			$context_param,
+			$query
+		);
+
+		wp_send_json( $data );
+	}
+
+	/**
+	 * Resolve collection data.
+	 *
+	 * @return mixed
+	 */
+	private static function resolve_collection(
+		$collection_type,
+		$name,
+		$taxonomy,
+		$sorting_param,
+		$filter_param,
+		$inherit,
+		$related,
+		$post_parent,
+		$related_post_parent,
+		$item_per_page,
+		$current_page,
+		$offset,
+		$context_param,
+		$query
+	) {
 		$sorting = null;
 		$filters = null;
 		$context = null;
@@ -51,15 +92,15 @@ class Collection {
 		$related = $related === 'true' ? true : false;
 
 		if ( isset( $sorting_param ) ) {
-			$sorting = json_decode( stripslashes( $sorting_param ), true );
+			$sorting = $sorting_param;
 		}
 
 		if ( isset( $filter_param ) ) {
-			$filters = json_decode( stripslashes( $filter_param ), true );
+			$filters = $filter_param;
 		}
 
 		if ( isset( $context_param ) ) {
-			$context = json_decode( stripslashes( $context_param ), true );
+			$context = $context_param;
 		}
 
 		$args = array(
@@ -79,13 +120,10 @@ class Collection {
 		);
 
 		if ( $collection_type === 'posts' ) {
-			$posts = HelperFunctions::get_posts( $args );
-			wp_send_json( $posts );
+			return HelperFunctions::get_posts( $args );
 		} elseif ( $collection_type === 'users' ) {
-			$users = Users::get_users( $args );
-			wp_send_json( $users );
+			return Users::get_users( $args );
 		} elseif ( $collection_type === 'terms' ) {
-			// $taxonomies = get_the_terms( $post_parent, $taxonomy );
 			$args  = array(
 				'taxonomy'      => $taxonomy,
 				'hide_empty'    => false,
@@ -95,13 +133,55 @@ class Collection {
 				'current_page'  => $current_page,
 				'offset'        => $offset,
 			);
-			$terms = HelperFunctions::get_terms( $args );
-			wp_send_json( $terms );
+			return HelperFunctions::get_terms( $args );
 		} else {
-			$collection = apply_filters( 'kirki_collection_' . $collection_type, false, $args );
-			wp_send_json( $collection );
+			return apply_filters( 'kirki_collection_' . $collection_type, false, $args );
+		}
+	}
+
+	/**
+	 * Get batched collection data.
+	 *
+	 * @return void wpjson response
+	 */
+	public static function get_collection_batch() {         //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		$items = HelperFunctions::sanitize_text( isset( $_POST['items'] ) ? $_POST['items'] : null );
+		$items = json_decode( stripslashes( $items ), true );
+
+		if ( ! is_array( $items ) ) {
+			wp_send_json( array() );
 		}
 
+		$results = array();
+
+		foreach ( $items as $item ) {
+			$id      = isset( $item['id'] ) ? $item['id'] : '';
+			$payload = isset( $item['payload'] ) ? $item['payload'] : array();
+
+			$data = self::resolve_collection(
+				isset( $payload['collectionType'] ) ? $payload['collectionType'] : null,
+				isset( $payload['name'] ) ? $payload['name'] : null,
+				isset( $payload['taxonomy'] ) ? $payload['taxonomy'] : null,
+				isset( $payload['sorting'] ) ? $payload['sorting'] : null,
+				isset( $payload['filters'] ) ? $payload['filters'] : null,
+				isset( $payload['inherit'] ) ? $payload['inherit'] : false,
+				isset( $payload['related'] ) ? $payload['related'] : false,
+				isset( $payload['post_parent'] ) ? $payload['post_parent'] : null,
+				isset( $payload['related_post_parent'] ) ? $payload['related_post_parent'] : false,
+				isset( $payload['items'] ) ? $payload['items'] : 3,
+				isset( $payload['current_page'] ) ? $payload['current_page'] : 1,
+				isset( $payload['offset'] ) ? $payload['offset'] : 0,
+				isset( $payload['context'] ) ? $payload['context'] : null,
+				isset( $payload['q'] ) ? $payload['q'] : ''
+			);
+
+			$results[] = array(
+				'id'   => $id,
+				'data' => $data,
+			);
+		}
+
+		wp_send_json( $results );
 	}
 
 	public static function get_external_collection_options() {

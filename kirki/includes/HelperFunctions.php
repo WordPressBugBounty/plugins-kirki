@@ -36,6 +36,8 @@ class HelperFunctions {
 	public static $custom_sections = [];
 	public static $global_session_id = false;
 	private static $printed_font_family_tracker = array();
+
+	private static $posts_where_filter_params = array();
 	/**
 	 * Load assets for Editor
 	 *
@@ -1235,6 +1237,10 @@ class HelperFunctions {
     $prefix = $params['prefix'] ?? false;
     $get_all_style_forcefully_if_get_style_true = $params['get_all_style_forcefully_if_get_style_true'] ?? false;
 
+		if($blocks){
+			$options['search_related_collection_ids'] = isset($params['search_related_collection_ids']) ? $params['search_related_collection_ids'] : self::collect_search_related_collection_ids( $blocks );
+		}
+
 		//set initial context data start
 		if(!isset($options['post'])){
 			$post = get_post(get_the_ID());
@@ -1259,11 +1265,6 @@ class HelperFunctions {
 			$s                      .= $preview->getCustomFontsLinks();
 		}
 
-		if($get_variable && false){ // this is maintained from: TheFrontendHooks
-			$variable_post_id = $post_id ? $post_id : HelperFunctions::get_post_id_if_possible_from_url();
-			$variable_mode = Page::get_variable_mode($variable_post_id);
-			$s 									 .= Preview::getVariableCssCode('global', ':root', $variable_mode);
-		}
 		if($get_style){
 			//style will be false when it calls from collection single item. only first item will generate style. others item will be same.
 			$s                   .= $preview->getStyleTag( $only_used_style_blocks );
@@ -1278,6 +1279,19 @@ class HelperFunctions {
 		return $s;
 	}
 
+	private static function collect_search_related_collection_ids( $data ) {
+		$result = array();
+    foreach ($data as $item) {
+        if (
+            isset($item['properties']['dynamicContent']['related']) &&
+            $item['properties']['dynamicContent']['related'] === true &&
+            !empty($item['properties']['dynamicContent']['relatedCollection'])
+        ) {
+				$result[$item['properties']['dynamicContent']['relatedCollection']] = true;
+			}
+    }
+    return $result;
+	}
 
 	public static function get_custom_fonts_tags(){
 		$custom_fonts = HelperFunctions::get_global_data_using_key( KIRKI_USER_CUSTOM_FONTS_META_KEY );
@@ -1995,6 +2009,41 @@ class HelperFunctions {
 		return $new_filters;
 	 }
 
+	 	/**
+	 * Static callback for posts_where filter to allow removal with remove_filter.
+	 *
+	 * @param string $where The WHERE clause.
+	 * @return string Modified WHERE clause.
+	 */
+	public static function posts_where_filter_callback($where) {
+		global $wpdb;
+		
+		$params = self::$posts_where_filter_params;
+		if (empty($params)) {
+			return $where;
+		}
+	
+		$query = $params['query'];
+		$reference_where_sql = $params['reference_where_sql'];
+		$post_parent = $params['post_parent'];
+	
+		$search = esc_sql($wpdb->esc_like($query));
+	
+		$where .= $wpdb->prepare(
+			" OR (
+				({$wpdb->posts}.post_title LIKE %s OR {$wpdb->posts}.post_content LIKE %s)
+				AND {$wpdb->posts}.post_parent = %d
+			)",
+			"%{$search}%", "%{$search}%", $post_parent
+		);
+	
+		if (!empty($reference_where_sql)) {
+			$where .= " {$reference_where_sql}";
+		}
+	
+		return $where;
+	}
+
 	/**
 	 * Get dynamic collection data
 	 *
@@ -2038,6 +2087,8 @@ class HelperFunctions {
 
 		if (!empty($query)) {
 			self::search_posts_by_query($name, $query, $post_parent, $args);
+		} else{
+			remove_filter('posts_where', [HelperFunctions::class, 'posts_where_filter_callback']);
 		}
 
 		if(count($IDs) > 0){
@@ -2437,24 +2488,14 @@ class HelperFunctions {
 			$args['meta_query'] = $meta_query_args;
 		}
 	
-		add_filter('posts_where', function($where) use ($query, $reference_where_sql, $post_parent) {
-			global $wpdb;
-			$search = esc_sql($wpdb->esc_like($query));
-	
-			$where .= $wpdb->prepare(
-				" OR (
-					({$wpdb->posts}.post_title LIKE %s OR {$wpdb->posts}.post_content LIKE %s)
-					AND {$wpdb->posts}.post_parent = %d
-				)",
-				"%{$search}%", "%{$search}%", $post_parent
-			);
-	
-			if (!empty($reference_where_sql)) {
-				$where .= " {$reference_where_sql}";
-			}
-	
-			return $where;
-		});
+			// Store filter parameters for the callback
+		self::$posts_where_filter_params = [
+			'query' => $query,
+			'reference_where_sql' => $reference_where_sql,
+			'post_parent' => $post_parent,
+		];
+
+		add_filter('posts_where', [__CLASS__, 'posts_where_filter_callback']);
 	}
 	
 	public static function get_matched_post_ids_recursive($post_parent, $query, $depth = 0, $max_depth = 5) {
@@ -2612,10 +2653,10 @@ class HelperFunctions {
 			if (is_array($t)) {
 				$total_terms = count($t);
 			} else {
-				$total_terms = wp_count_terms($params['taxonomy'], array_merge($params, ['offset' => 0, 'number' => 0]));
+				$total_terms = wp_count_terms( ['taxonomy' => $params['taxonomy']] );
 			}
 		} else {
-			$total_terms = wp_count_terms($params['taxonomy'], array_merge($params, ['offset' => 0, 'number' => 0]));
+			$total_terms = wp_count_terms( ['taxonomy' => $params['taxonomy']] );
 		}
 
 		$total_pages = ($item_per_page > 0) ? ceil($total_terms / $item_per_page) : 1;
@@ -4317,5 +4358,18 @@ class HelperFunctions {
 			$path = str_replace('kirki-pro', 'kirki', $path);
 		}
 		return $path;
+	}
+	public static function normalize_variable_mode($mode){
+		if (!$mode) {
+			return ['color' => 'inherit', 'size' => 'inherit', 'text-style' => 'inherit', 'font-family' => 'inherit'];
+		}
+		// if v is string
+		if (is_string($mode)) {
+			return ['color' => $mode, 'size' => $mode, 'text-style' => $mode, 'font-family' => $mode];
+		}
+		if (is_array($mode)) {
+			return $mode;
+		}
+		return $mode;
 	}
 }

@@ -229,7 +229,7 @@ class Preview extends ExceptionalElements {
 	/**
 	 * List anchor attrs.
 	 */
-	private $anchor_attrs = array( 'href', 'target', 'rel', 'kirki-anchor' );
+	private $anchor_attrs = array( 'href', 'target', 'rel' );
 
 
 	/**
@@ -806,38 +806,39 @@ class Preview extends ExceptionalElements {
 
 	public function getElementWiseVariableCssCodes() {
 		$s = '';
-		foreach ( $this->ele_variable_modes as $ele_id => $mode ) {
-			if ( $mode === 'inherit' ) {
-				continue;
-			}
-			$s .= self::getVariableCssCode( $ele_id, '[data-kirki="' . $ele_id . '"]', $mode );
+		foreach ( $this->ele_variable_modes as $ele_id => $modes ) {
+			// if ( $mode === 'inherit' ) {
+			// 	continue;
+			// }
+			$s .= self::getVariableCssCode( $ele_id, '[data-kirki="' . $ele_id . '"]', $modes );
 		}
 		return $s;
 	}
 
-	public static function getVariableCssCode( $key = 'global', $selector = ':root', $mode = false, $style_tag = true ) {
+	public static function getVariableCssCode( $key = 'global', $selector = ':root', $modes = [], $style_tag = true ) {
+		$modes = HelperFunctions::normalize_variable_mode( $modes );
+		$s = '';
+		foreach ( $modes as $mode_type => $mode ) {
+			$s .= self::generateSingleVariableModeCssCode($mode_type, $key, $selector, $mode, $style_tag );
+		}
+		return $s;
+	}
+
+	private static function generateSingleVariableModeCssCode($mode_type,$key = 'global', $selector = ':root', $mode=false, $style_tag = true){
 		$k = "$key-$selector-$mode";
-		// if ( isset( self::$printed_variable_tracker[ $k ] ) && self::$printed_variable_tracker[ $k ] ) {
-		// 	return '';
-		// }
 		$variables = UserData::get_kirki_variable_data();
 
-		if ( $mode === 'inherit' ) {
-			$mode = false;
-		}
-		if ( ! $mode ) {
-			if ( isset( $variables['defaultMode'] ) ) {
-				$mode = $variables['defaultMode'];
-			} else {
+		if ( ! $mode || $mode === 'inherit' ) {
 				$mode = 'default';
-			}
 		}
-
 
 		$s = $style_tag ? "<style id='kirki-variables-" . $key . "'>".$selector."{" : $selector."{";
 		$view_ports     = UserData::get_view_port_list();
 
 		foreach ($variables['data'] as $key2 => $group) {
+			if($group['key'] !== $mode_type) {
+				continue;
+			}
 			foreach ( $group['variables'] as $key3 => $variable) {
 				if ( ! isset( $variable['value'][ $mode ] ) ) {
 					continue;
@@ -845,7 +846,7 @@ class Preview extends ExceptionalElements {
 
 				$name = '--' . $variable['id'];
 
-				switch ( $variable['type'] ) {
+				switch ( $variable['type']  ) {
 					case 'size':
 						$s .= "$name:" . $variable['value'][$mode]['value'] . $variable['value'][$mode]['unit'] . ";";
 						break;
@@ -1285,7 +1286,12 @@ class Preview extends ExceptionalElements {
 			}
 
 			if ( $element['name'] === 'collection' ) {
-				$this->collections[ $id ] = $properties['dynamicContent'];
+				$this->collections[$id] = array_merge(
+					$properties['dynamicContent'],
+					array(
+						'isSearchableCollection' => isset($options['search_related_collection_ids'][$id]) ? true : false,
+					)
+				);
 			}
 
 			// navigation properties.
@@ -1792,6 +1798,11 @@ class Preview extends ExceptionalElements {
 			}
 		}
 
+		$options = array_merge(
+			$options,
+			['element_id' => $id]
+		);
+
 		$this->insertElementRelatedConfig( $this_data, $options );
 
 		if ( isset( $this_data['source'] ) && $this_data['source'] !== 'kirki' ) {
@@ -1942,7 +1953,7 @@ class Preview extends ExceptionalElements {
 			$rel    = isset( $properties['attributes'], $properties['attributes']['rel'] ) ? "rel={$properties['attributes']['rel']}" : '';
 
 			if ( isset( $properties['type'] ) ) {
-				$html = "<a href={$href} {$target} {$rel} kirki-anchor='true'>{$html}</a>";
+				$html = "<a href={$href} {$target} {$rel}>{$html}</a>";
 			}
 		}
 

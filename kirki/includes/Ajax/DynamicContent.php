@@ -28,23 +28,28 @@ class DynamicContent {
 	 *
 	 * @return void wpjson response
 	 */
+	/**
+	 * Get Dynamic element data
+	 *
+	 * @return void wpjson response
+	 */
 	public static function get_dynamic_element_data() {         //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		// $content_type = HelperFunctions::sanitize_text( isset( $_GET['content_type'] ) ? $_GET['content_type'] : null );
-		// //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		// $content_value = HelperFunctions::sanitize_text( isset( $_GET['content_value'] ) ? $_GET['content_value'] : null );
-		// //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		// $meta_name = HelperFunctions::sanitize_text( isset( $_GET['meta_name'] ) ? $_GET['meta_name'] : null );
-		// //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		// $post_id = (int) HelperFunctions::sanitize_text( isset( $_GET['post_id'] ) ? $_GET['post_id'] : null );
-		// $settings = HelperFunctions::sanitize_text( isset( $_GET['settings'] ) ? $_GET['settings'] : null );
-
 		$content_info = HelperFunctions::sanitize_text( isset( $_GET['contentInfo'] ) ? $_GET['contentInfo'] : null );
-
 		$content_info = json_decode( stripslashes( $content_info ), true );
+		$content      = self::resolve_dynamic_element_data( $content_info );
+		wp_send_json( $content );
+	}
 
+	/**
+	 * Resolve dynamic element data for a single content info.
+	 *
+	 * @param array $content_info The content info array.
+	 * @return mixed The resolved content.
+	 */
+	private static function resolve_dynamic_element_data( $content_info ) {
 		$content = apply_filters( 'kirki_dynamic_content', false, $content_info );
 		if ( $content !== false ) {
-			wp_send_json( $content );
+			return $content;
 		}
 
 		$dynamic_content = isset( $content_info['dynamicContent'] ) ? $content_info['dynamicContent'] : array();
@@ -63,77 +68,96 @@ class DynamicContent {
 
 		switch ( $content_type ) {
 			case 'post': {
-					$post = null;
-
+				$post = null;
 				if ( ! empty( $post_id ) ) {
 					$post = get_post( $post_id );
 				} elseif ( isset( $content_info['collectionItem'], $content_info['collectionItem']['ID'] ) ) {
 					$post = get_post( $content_info['collectionItem']['ID'] );
 				}
-
-					$dynamic_options = array();
-
+				$dynamic_options = array();
 				if ( $cm_field_type === 'time' || $content_value === 'post_time' ) {
 					$dynamic_options['timeFormat'] = $time_format;
 				}
 				if ( $cm_field_type === 'date' || $content_value === 'post_date' ) {
 					$dynamic_options['format'] = $date_format;
 				}
-
-					$content = HelperFunctions::get_post_dynamic_content( $content_value, $post, $meta_name, $dynamic_options );
-
-					wp_send_json( $content );
-				break;
+				return HelperFunctions::get_post_dynamic_content( $content_value, $post, $meta_name, $dynamic_options );
 			}
 
 			case 'author': {
-					$post = null;
-
+				$post = null;
 				if ( ! empty( $post_id ) ) {
 					$post = get_post( $post_id );
 				} elseif ( isset( $content_info['collectionItem'], $content_info['collectionItem']['ID'] ) ) {
 					$post = get_post( $content_info['collectionItem']['ID'] );
 				}
-					$content = HelperFunctions::get_post_dynamic_content( $content_value, $post );
-					wp_send_json( $content );
-				break;
+				return HelperFunctions::get_post_dynamic_content( $content_value, $post );
 			}
 
 			case 'user': {
-					$user_id = get_current_user_id();
+				$user_id = get_current_user_id();
 				if ( isset( $content_info['collectionItem'], $content_info['collectionItem']['ID'] ) ) {
 					$user_id = $content_info['collectionItem']['ID'];
 				}
-
-					$dynamic_options = array();
-
+				$dynamic_options = array();
 				if ( $content_value === 'registered_date' ) {
 					$dynamic_options['format'] = $date_format;
 				}
-
-					$content = HelperFunctions::get_user_dynamic_content( $content_value, $user_id, $meta_name, $dynamic_options );
-					wp_send_json( $content );
-				break;
+				return HelperFunctions::get_user_dynamic_content( $content_value, $user_id, $meta_name, $dynamic_options );
 			}
 
 			case 'site': {
-					$content = HelperFunctions::get_post_dynamic_content( $content_value );
-					wp_send_json( $content );
-					break;
+				return HelperFunctions::get_post_dynamic_content( $content_value );
 			}
 
 			case 'term': {
-					$term_id = $post_id; // here post_id mean term_id based on content_type, here set term_id;
-					$content = HelperFunctions::get_term_dynamic_content( $content_value, $term_id, $meta_name );
-					wp_send_json( $content );
-					break;
+				$term_id = $post_id;
+				return HelperFunctions::get_term_dynamic_content( $content_value, $term_id, $meta_name );
 			}
 
 			default: {
-					wp_send_json( false );
-					break;
+				return false;
 			}
 		}
+	}
+
+	/**
+	 * Get batched dynamic element data
+	 *
+	 * @return void wpjson response
+	 */
+	public static function get_dynamic_element_data_batch() {         //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		$items = HelperFunctions::sanitize_text( isset( $_POST['items'] ) ? $_POST['items'] : null );
+		$items = json_decode( stripslashes( $items ), true );
+
+		if ( ! is_array( $items ) ) {
+			wp_send_json( array() );
+		}
+
+		$results = array();
+
+		foreach ( $items as $item ) {
+			$id           = isset( $item['id'] ) ? $item['id'] : '';
+			$content_info = isset( $item['payload'] ) ? $item['payload'] : array();
+
+			// Isolate excerpt-length global so it does not leak across batch items
+			$old_excerpt_length = isset( $GLOBALS['kirki_post_excerpt_length'] ) ? $GLOBALS['kirki_post_excerpt_length'] : null;
+
+			$data = self::resolve_dynamic_element_data( $content_info );
+
+			if ( null !== $old_excerpt_length ) {
+				$GLOBALS['kirki_post_excerpt_length'] = $old_excerpt_length;
+			} else {
+				unset( $GLOBALS['kirki_post_excerpt_length'] );
+			}
+
+			$results[] = array(
+				'id'   => $id,
+				'data' => $data,
+			);
+		}
+
+		wp_send_json( $results );
 	}
 
 

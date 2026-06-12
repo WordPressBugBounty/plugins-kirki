@@ -210,6 +210,7 @@ return array(
     'Kirki\\Util\\Setting\\Site_Option' => $baseDir . '/customizer/packages/utils/src/Setting/Site_Option.php',
     'Kirki\\Util\\Setting\\User_Meta' => $baseDir . '/customizer/packages/utils/src/Setting/User_Meta.php',
     'Kirki\\Util\\Util' => $baseDir . '/customizer/packages/utils/src/Util.php',
+    'Kirki\\View' => $baseDir . '/includes/View.php',
     'enshrined\\svgSanitize\\ElementReference\\Resolver' => $vendorDir . '/enshrined/svg-sanitize/src/ElementReference/Resolver.php',
     'enshrined\\svgSanitize\\ElementReference\\Subject' => $vendorDir . '/enshrined/svg-sanitize/src/ElementReference/Subject.php',
     'enshrined\\svgSanitize\\ElementReference\\Usage' => $vendorDir . '/enshrined/svg-sanitize/src/ElementReference/Usage.php',

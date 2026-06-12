@@ -396,6 +396,7 @@ class ComposerStaticInitKirkiFree
         'Kirki\\Util\\Setting\\Site_Option' => __DIR__ . '/../..' . '/customizer/packages/utils/src/Setting/Site_Option.php',
         'Kirki\\Util\\Setting\\User_Meta' => __DIR__ . '/../..' . '/customizer/packages/utils/src/Setting/User_Meta.php',
         'Kirki\\Util\\Util' => __DIR__ . '/../..' . '/customizer/packages/utils/src/Util.php',
+        'Kirki\\View' => __DIR__ . '/../..' . '/includes/View.php',
         'enshrined\\svgSanitize\\ElementReference\\Resolver' => __DIR__ . '/..' . '/enshrined/svg-sanitize/src/ElementReference/Resolver.php',
         'enshrined\\svgSanitize\\ElementReference\\Subject' => __DIR__ . '/..' . '/enshrined/svg-sanitize/src/ElementReference/Subject.php',
         'enshrined\\svgSanitize\\ElementReference\\Usage' => __DIR__ . '/..' . '/enshrined/svg-sanitize/src/ElementReference/Usage.php',

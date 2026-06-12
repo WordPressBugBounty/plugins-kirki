@@ -12,6 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use Kirki\Ajax\Media;
+use Kirki\Ajax\Page;
 use Kirki\Ajax\WpAdmin;
 use Kirki\Frontend\Preview\Preview;
 use Kirki\HelperFunctions;
@@ -34,6 +35,7 @@ class PluginInitEvents {
 		add_filter( 'wp_check_filetype_and_ext', array( $this, 'fix_filetype_check' ), 10, 5 );
 		add_filter( 'big_image_size_threshold', '__return_false' );
 		add_theme_support( 'post-thumbnails' );
+		add_filter( 'rewrite_rules_array', array( $this, 'kirki_utility_pages_rewrite_rules' ) );
 
 		add_filter( 'wp_handle_upload_prefilter', array( new Media(), 'kirki_handle_upload_prefilter' ) );
 		add_filter( 'wp_generate_attachment_metadata', array( new Media(), 'kirki_convert_sizes_to_webp' ) );
@@ -155,6 +157,28 @@ class PluginInitEvents {
 		}
 
 		return $wp_check_filetype_and_ext;
+	}
+
+	/**
+	 * Add rewrite rules for Kirki utility pages.
+	 *
+	 * @param  array $rules  The list of rewrite rules.
+	 *
+	 * @return array  $rules  The modified list of rewrite rules.
+	 */
+	public function kirki_utility_pages_rewrite_rules( $rules ) {
+		$utility_pages = Page::fetch_list('kirki_utility', true, array( 'publish' ) );
+		$new_rules     = array();
+		foreach ( $utility_pages as $key => $page ) {
+			$slug = ! empty( $page['slug'] ) ? preg_quote( $page['slug'], '/' ) : '';
+			if ( empty( $slug ) ) {
+				continue;
+			}
+			if ( $page['utility_page_type'] !== '404' ) {
+				$new_rules[ "^$slug$" ] = "index.php?kirki_utility_page_type={$page['utility_page_type']}&kirki_utility_page_id={$page['id']}";
+			}
+		}
+		return $new_rules + ( is_array( $rules ) ? $rules : array() );
 	}
 
 	/**

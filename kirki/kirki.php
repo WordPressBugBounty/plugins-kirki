@@ -7,13 +7,15 @@
  * Plugin Name: Kirki
  * Plugin URI: https://kirki.com
  * Description: Kirki is an all-in-one no-code builder that empowers users to build professional-grade WordPress sites without writing any code. It’s a promising glimpse into the future of website development.
- * Version: 6.0.9
+ * Version: 6.0.10
  * Author: Kirki
  * Author URI: https://kirki.com
+ * License: GPLv2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: kirki
  * Domain Path: /languages
- * Requires at least: 5.0
- * Requires PHP: 7.0
+ * Requires at least: 5.9
+ * Requires PHP: 7.4
  */
 
 use Kirki\HelperFunctions;
@@ -24,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // Define KIRKI_VERSION early to prevent bundled Kirki versions from loading.
 if ( ! defined( 'KIRKI_VERSION' ) ) {
-	define( 'KIRKI_VERSION', '6.0.9' );
+	define( 'KIRKI_VERSION', '6.0.10' );
 }
 
 
