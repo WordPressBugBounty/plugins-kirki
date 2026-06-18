@@ -72,7 +72,7 @@ class Ajax {
 	 */
 	public function kirki_post_apis_nopriv() {      //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$endpoint = HelperFunctions::sanitize_text( isset( $_POST['endpoint'] ) ? $_POST['endpoint'] : null );
-		if ( HelperFunctions::is_api_call_from_editor_preview() && ! HelperFunctions::is_api_header_post_editor_preview_token_valid() ) {
+		if ( ! HelperFunctions::is_api_header_post_editor_preview_token_valid() ) {
 			wp_send_json_error( 'Not authorized' );
 		}
 		/**

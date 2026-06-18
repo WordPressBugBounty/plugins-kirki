@@ -2985,7 +2985,7 @@ class HelperFunctions {
 		// Check the Editor-Preview-Token header
 		$headers = self::getallheaders();
 		$editor_preview_token = isset($headers['Editor-Preview-Token']) ? $headers['Editor-Preview-Token'] : null;
-		if(HelperFunctions::is_post_editor_preview_token_valid( $editor_preview_token)){
+		if($editor_preview_token && HelperFunctions::is_post_editor_preview_token_valid( $editor_preview_token)){
 			return true;
 		}
 		return false;

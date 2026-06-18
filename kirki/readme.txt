@@ -3,7 +3,7 @@ Contributors: themeum
 Tags: page builder, website builder, drag and drop, form builder, freeform canvas
 Requires at least: 5.9
 Tested up to: 7.0
-Stable tag: 6.0.10
+Stable tag: 6.0.11
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -190,6 +190,16 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 ---
 
 == Changelog ==
+
+= 6.0.11 =
+* New: Added multi-select support in the canvas
+* Update: Improved grid controller functionality
+* Update: Design enhancements
+* Update: Hide non-active outlines while dragging controllers
+* Update: Refined component edit top bar
+* Update: Support wrapping elements across different parents
+* Update: Improved sibling element outline behavior
+* Update: Fixed Safari copy-paste issues when importing from Figma or copying elements within Kirki
 
 = 6.0.10 =
 * New: Added timeline scrubbing support for previewing custom animations.

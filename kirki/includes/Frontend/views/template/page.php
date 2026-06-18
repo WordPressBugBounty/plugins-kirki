@@ -9,7 +9,7 @@
 
 use Kirki\Frontend\Preview\Preview;
 use Kirki\HelperFunctions;
-use Kirki\View;
+// use Kirki\View;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -60,7 +60,8 @@ if ( ! $kirki_custom_header && locate_template( 'header.php' ) ) {
 	<?php
 	if ( $the_content ) {
 		$the_content = do_shortcode( $the_content );
-		View::echo_safe_html( $the_content );
+		// View::echo_safe_html( $the_content );
+		echo $the_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	} else {
 		the_content();
 	}
