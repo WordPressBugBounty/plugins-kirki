@@ -1936,7 +1936,9 @@ class Preview extends ExceptionalElements {
 				$content_count = count( $content );
 				for ( $i = 0; $i < $content_count; $i++ ) {
 					if ( is_array( $content[ $i ] ) ) {
-						$html .= $this->recGenHTML( $content[ $i ]['id'], $options );
+						if( isset($content[ $i ]['id']) ){
+							$html .= $this->recGenHTML( $content[ $i ]['id'], $options );
+						}
 					} else {
 						$html .= htmlspecialchars( $content[ $i ] );
 					}

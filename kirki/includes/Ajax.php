@@ -337,6 +337,9 @@ class Ajax {
 		}
 
 		if ( $endpoint === 'get-wp-single-post' ) {
+			if ( ! HelperFunctions::has_access( KIRKI_ACCESS_LEVELS['FULL_ACCESS'] ) ) {
+				wp_send_json_error( 'Not authorized', 401 );
+			}
 			$post_id = (int) HelperFunctions::sanitize_text( isset( $_GET['post_id'] ) ? $_GET['post_id'] : null );
 			$post    = get_post( $post_id );
 
@@ -424,15 +427,18 @@ class Ajax {
 			Symbol::fetch_list( false, true );
 		}
 
-        if ($endpoint === 'get-page-custom-section') {
-            $type = HelperFunctions::sanitize_text(isset($_GET['type']) ? $_GET['type'] : '');
-            wp_send_json(HelperFunctions::get_page_custom_section($type, true));
-        }
+		if ($endpoint === 'get-page-custom-section') {
+			$type = HelperFunctions::sanitize_text(isset($_GET['type']) ? $_GET['type'] : '');
+			wp_send_json(HelperFunctions::get_page_custom_section($type, true));
+		}
 
 		/**
 		 * GET Single prebuilt html API
 		 */
 		if ( $endpoint === 'get-pre-built-html' ) {
+			if ( ! HelperFunctions::has_access( KIRKI_ACCESS_LEVELS['FULL_ACCESS'] ) ) {
+				wp_send_json_error( 'Not authorized', 401 );
+			}
 			Symbol::get_pre_built_html_using_url();
 		}
 
@@ -549,6 +555,9 @@ class Ajax {
 		 * AUTHOR LIST
 		 */
 		if ( 'get-authors' === $endpoint ) {
+			if ( ! HelperFunctions::has_access( KIRKI_ACCESS_LEVELS['FULL_ACCESS'] ) ) {
+				wp_send_json_error( 'Not authorized', 401 );
+			}
 			WordpressData::get_author_list();
 		}
 
@@ -557,6 +566,9 @@ class Ajax {
 		 */
 
 		if ( 'get-roles' === $endpoint ) {
+			if ( ! HelperFunctions::has_access( KIRKI_ACCESS_LEVELS['FULL_ACCESS'] ) ) {
+				wp_send_json_error( 'Not authorized', 401 );
+			}
 			WordpressData::get_role_list();
 		}
 
@@ -566,6 +578,9 @@ class Ajax {
 		if (
 			'get-users' === $endpoint
 		) {
+			if ( ! HelperFunctions::has_access( KIRKI_ACCESS_LEVELS['FULL_ACCESS'] ) ) {
+				wp_send_json_error( 'Not authorized', 401 );
+			}
 			WordpressData::get_user_list();
 		}
 
@@ -584,6 +599,9 @@ class Ajax {
 		}
 
 		if ( $endpoint === 'get-common-data' ) {
+			if ( ! HelperFunctions::has_access( KIRKI_ACCESS_LEVELS['FULL_ACCESS'] ) ) {
+				wp_send_json_error( 'Not authorized', 401 );
+			}
 			WpAdmin::get_common_data();
 		}
 
@@ -755,6 +773,9 @@ class Ajax {
 		// From manipulation from admin dashboard.
 
 		if ( $endpoint === 'get-editor-read-only-access-data' ) {
+			if ( ! HelperFunctions::has_access( KIRKI_ACCESS_LEVELS['FULL_ACCESS'] ) ) {
+				wp_send_json_error( 'Not authorized', 401 );
+			}
 			Page::get_editor_read_only_access_data();
 		}
 	}

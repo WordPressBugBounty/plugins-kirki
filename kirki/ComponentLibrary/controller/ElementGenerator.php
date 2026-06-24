@@ -40,22 +40,57 @@ class ElementGenerator {
 
 
 	private function add_element_config() {
-		$id = $this->element['id'];
-		if (
-		$this->element['name'] === 'kirki-login' || $this->element['name'] === 'kirki-register' ||
-		$this->element['name'] === 'kirki-forgot-password' || $this->element['name'] === 'kirki-change-password' ||
-		$this->element['name'] === 'kirki-retrieve-username' || $this->element['name'] === 'kirki-comment'
-		) {
-			$nonce                            = $this->add_nonce_to_element( $this->element );
-			$this->component_lib_forms[ $id ] = array_merge(
-				$this->properties['attributes'],
-				$this->setting,
-				array(
-					'name'  => $this->element['name'],
-					'nonce' => $nonce,
-				)
-			);
-		}
+    $id = $this->element['id'];
+    if (
+        $this->element['name'] === 'kirki-login' || $this->element['name'] === 'kirki-register' ||
+        $this->element['name'] === 'kirki-forgot-password' || $this->element['name'] === 'kirki-change-password' ||
+        $this->element['name'] === 'kirki-retrieve-username' || $this->element['name'] === 'kirki-comment'
+    ) {
+        $nonce  = $this->add_nonce_to_element( $this->element );
+        $config = array_merge(
+					$this->properties['attributes'],
+					$this->setting,
+					array(
+						'name'  => $this->element['name'],
+						'nonce' => $nonce,
+					)
+        );
+
+        // SECURITY FIX: Sign the email template so the REST handler can verify
+        // it was not tampered with — without any extra DB queries.
+        // Always generate a signature for these element types, even when
+        // settings are empty, so the client always has a value to send.
+        if ( in_array( $this->element['name'], array( 'kirki-forgot-password', 'kirki-retrieve-username' ), true ) ) {
+					if ( ! isset( $config['emailSubject'] ) ) {
+							$config['emailSubject'] = '';
+					}
+					if ( ! isset( $config['emailBody'] ) ) {
+							$config['emailBody'] = array();
+					}
+					$config['emailSignature'] = $this->sign_email_template(
+							$config['emailSubject'],
+							$config['emailBody']
+					);
+        }
+
+        $this->component_lib_forms[ $id ] = $config;
+    }
+	}
+
+	/**
+	 * Produce an HMAC signature over the admin-configured email template.
+	 * Uses WordPress AUTH_KEY + AUTH_SALT so it is server-secret and
+	 * never reproducible by an external attacker.
+	 *
+	 * @param string       $subject
+	 * @param array|string $body
+	 * @return string  Hex HMAC-SHA256 signature.
+	 */
+	private function sign_email_template( $subject, $body ) {
+    $body_string = is_array( $body ) ? wp_json_encode( $body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) : (string) $body;
+    $payload     = $subject . '|' . $body_string;
+    $secret      = AUTH_KEY . AUTH_SALT;
+    return hash_hmac( 'sha256', $payload, $secret );
 	}
 
 	public function generate_common_element( $hide = false, $children_html = false ) {

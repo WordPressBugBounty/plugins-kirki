@@ -3,7 +3,7 @@ Contributors: themeum
 Tags: page builder, website builder, drag and drop, form builder, freeform canvas
 Requires at least: 5.9
 Tested up to: 7.0
-Stable tag: 6.0.11
+Stable tag: 6.0.12
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -190,6 +190,16 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 ---
 
 == Changelog ==
+
+= 6.0.12 =
+* Update: Added real-time canvas controls when focusing on Padding, Margin, and Gap inputs.
+* Update: Improved Grid Controller functionality.
+* Update: Automatically open the Element Settings panel when dropping Image, Icon, Video, Lottie, or SVG elements.
+* Update: Context menu functionality improvements.
+* Fix: Unauthenticated arbitrary comment modification and moderation bypass.
+* Fix: Unauthenticated Server-Side Request Forgery vulnerability.
+* Fix: Resolved the reset password email body issue by implementing hash validation.
+* Fix: Addressed multiple random issues to improve overall stability.
 
 = 6.0.11 =
 * New: Added multi-select support in the canvas

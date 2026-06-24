@@ -349,12 +349,43 @@ class Symbol {
 	}
 
 	public static function get_pre_built_html_using_url() {
-		$url     = isset( $_GET['elementUrl'] ) ? $_GET['elementUrl'] : null;
-		$new_url = sanitize_url( $url );
+		 $raw_url = isset( $_GET['elementUrl'] ) ? wp_unslash( $_GET['elementUrl'] ) : '';
 
-		$data = HelperFunctions::http_get( $new_url, array( 'sslverify' => false ) );
+    if ( empty( $raw_url ) ) {
+        wp_send_json_error( 'Missing elementUrl', 400 );
+    }
+		$allowed_host = wp_parse_url( home_url(), PHP_URL_HOST );
+    $requested    = wp_parse_url( $raw_url );
 
-		$data = json_decode( $data, true );
+    if (
+			! $requested ||
+			empty( $requested['host'] ) ||
+			strtolower( $requested['host'] ) !== strtolower( $allowed_host )
+    ) {
+        wp_send_json_error( 'URL not permitted', 403 );
+    }
+
+		$resolved_ip = gethostbyname( $requested['host'] );
+
+		if ( self::is_private_or_loopback_ip( $resolved_ip ) ) {
+      wp_send_json_error( 'URL not permitted', 403 );
+    }
+
+		$safe_url = self::rebuild_url( $requested );
+
+		$response = HelperFunctions::http_get( $safe_url, array(
+			'timeout'   => 30,
+			'sslverify' => false,   
+			'redirection' => 0,  
+    ));
+
+		if ( is_wp_error( $response ) ) {
+      wp_send_json_error( 'Request failed', 502 );
+    }
+
+		$body = wp_remote_retrieve_body( $response );
+    $data = json_decode( $body, true );
+
 
 		$params = array(
 			'blocks'                 => $data['blocks'],
@@ -370,5 +401,35 @@ class Symbol {
 		$html = HelperFunctions::get_html_using_preview_script( $params );
 
 		wp_send_json_success( $html );
+	}
+
+	/**
+ 	* Returns true for any IP that should never be reached from a server-side fetch.
+ 	* Covers loopback, RFC 1918, link-local (APIPA / cloud metadata), and IPv6 equivalents.
+ 	*/
+	private static function is_private_or_loopback_ip( string $ip ): bool {
+		if ( ! filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+			return true;
+		}
+
+		return ! filter_var(
+			$ip,
+			FILTER_VALIDATE_IP,
+			FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+		);
+	}
+
+
+	/**
+	 * Reconstructs a URL from wp_parse_url parts so the raw user string
+	 * is never passed directly to the HTTP client.
+	 */
+	private static function rebuild_url( array $parts ): string {
+		$scheme = isset( $parts['scheme'] ) && strtolower( $parts['scheme'] ) === 'https' ? 'https' : 'https';
+		$host   = $parts['host'];
+		$path   = isset( $parts['path'] ) ? $parts['path'] : '/';
+		$query  = isset( $parts['query'] ) ? '?' . $parts['query'] : '';
+
+		return "{$scheme}://{$host}{$path}{$query}";
 	}
 }

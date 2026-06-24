@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Kirki 6.0.11\n"
+"Project-Id-Version: Kirki 6.0.12\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/kirki\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-06-18T11:11:23+00:00\n"
+"POT-Creation-Date: 2026-06-24T11:24:25+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: kirki\n"
@@ -2261,416 +2261,43 @@ msgid "Unwrap elements"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "CSS Styles"
+msgid "Add class"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Add CSS"
+msgid "Please select an existing folder or create a new one component folder"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Rename"
+msgid "You can not create a component using component."
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Detach"
+msgid "Component created success."
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "CSS Preview"
+msgid "Please enter a name and a category"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Enter subclass name"
+msgid "Update component"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Clean up Unused Class."
+msgid "Create new component"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Failed Clean up Unused Class."
+msgid "Update"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-#, js-format
-msgid "Clean up %d Unused Class"
+msgid "Create"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Are sure you want to clean up unused classes?"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Inheritance"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Subclass"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Nav Items"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Tab Transitions"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Slider Animation"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Popup Animation"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Dynamic"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Link"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Custom Code"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Add item"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Hide at Each End"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Content"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Indicators"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Arrows"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Hamburger menu"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Add Caption"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Caption"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "The text will expand into multiple lines"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Add media"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Video"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Max IP entries"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Response Limit"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Recipient"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Enter recipient email..."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Reply to"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Enter reply to email..."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Enter reply to name..."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Subject"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Enter email subject..."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Body"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "URL"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Enter an URL"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Method"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Success"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Fail"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Success URL"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Fail URL"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Open in new tab"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Enter form name"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Add actions"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "More Options"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Enter name..."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Placeholder"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Placeholder text..."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Enter value..."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Checked by default"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Types"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Video url"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Upload Video"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Thumbnail"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Search location..."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Style"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Zoom buttons"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Street button"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Full Screen button"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Draggable"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Show marker"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "No results found"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Please fill all the fields"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Offsets"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "pop-up name"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Conditions"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Triggers"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Show after"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Show count"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "\"X\" icon"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Close buttons"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Close by clicking outside"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Set as Default"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Option Settings"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Something"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Options"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Multiple select"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Open on"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "On Hover"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "On Click"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "State"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Padding"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Margin"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Display"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Backface visibility"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "3D transformation"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Self Perspective"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Children Perspective"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Transform options"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Object Position"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Radius"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Opacity"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Border"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Blur"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Spread"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Text Shadow"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Offset"
+msgid "Create component"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2718,330 +2345,6 @@ msgid "Trigger the effect right after a user scrolls the page up or down."
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Library"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Preview"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Loops & Repeats"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Move"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Skew"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Scale"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Border Color"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Class Change"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Class name"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Smoothing"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Viewport Only"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Snap Items"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Apply to all elements with selected class."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Apply to only trigger element's childrens with selected class."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Apply to selected target's siblings with selected class."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Apply to triggered siblings with selected class."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Apply to only trigger element with selected class."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Apply to Class"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "The item is already present in your list."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Change Target"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Duplicate Target"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Delete Target"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Unset as initial"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Set as initial"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Copy timing"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Copy properties"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Copy Interaction"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Paste timing"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Paste properties"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Paste Interaction"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Group"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Ungroup"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Custom Timing Editor"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Loop"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Repeats"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Fill Mode"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Action"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Container"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Direction"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Wait"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Apply To"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Add trigger"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Template Update Required"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "This template doesn’t have a designated area for post content."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Back"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Edit Template"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Safely Migrate to Kirki"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Safely migrate your current content to Kirki. Your content will be 100% safe and you can rollback anytime you want."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Start from Blank"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Converting"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Convert"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Version saved successfully"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Version published successfully"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Page Settings"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Save as draft"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Publish"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Restore"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Published"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Zoom to 50%"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Zoom to 100%"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Zoom to 200%"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Zoom in"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Zoom out"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Meta description missing"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Open graph image missing"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Audit"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Canvas"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Quick Essentials!"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Create text styles"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Set variables"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Use Template"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Add class"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Please select an existing folder or create a new one component folder"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "You can not create a component using component."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Component created success."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Please enter a name and a category"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Update component"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Create new component"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Update"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Create"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Create component"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Interaction"
 msgstr ""
 
@@ -3079,6 +2382,42 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Add Map Location"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Template Update Required"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "This template doesn’t have a designated area for post content."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Back"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Edit Template"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Safely Migrate to Kirki"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Safely migrate your current content to Kirki. Your content will be 100% safe and you can rollback anytime you want."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Start from Blank"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Converting"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Convert"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -3232,6 +2571,14 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Settings"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Rename"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Preview"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -3417,6 +2764,26 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Apps"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Zoom to 50%"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Zoom to 100%"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Zoom to 200%"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Zoom in"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Zoom out"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -3721,6 +3088,14 @@ msgid "Upload Image"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+msgid "Upload Video"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Set as Default"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "Field Name"
 msgstr ""
 
@@ -3829,6 +3204,10 @@ msgid "Enter default file url..."
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+msgid "Options"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "Add New Option"
 msgstr ""
 
@@ -3865,6 +3244,10 @@ msgid "Create Collection"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+msgid "Published"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "Scheduled"
 msgstr ""
 
@@ -3894,6 +3277,14 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Edit fields"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Save as draft"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Publish"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -3942,6 +3333,615 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Are sure you want to delete all selected elements?"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "CSS Styles"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Add CSS"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Detach"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "CSS Preview"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Enter subclass name"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Clean up Unused Class."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Failed Clean up Unused Class."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+#, js-format
+msgid "Clean up %d Unused Class"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Are sure you want to clean up unused classes?"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Inheritance"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Subclass"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Nav Items"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Tab Transitions"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Slider Animation"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Popup Animation"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Dynamic"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Link"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Custom Code"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Add item"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Hide at Each End"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Content"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Indicators"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Arrows"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Hamburger menu"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Add Caption"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Caption"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "The text will expand into multiple lines"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Add media"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Video"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Max IP entries"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Response Limit"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Recipient"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Enter recipient email..."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Reply to"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Enter reply to email..."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Enter reply to name..."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Subject"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Enter email subject..."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Body"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "URL"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Enter an URL"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Method"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Success"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Fail"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Success URL"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Fail URL"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Open in new tab"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Enter form name"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Add actions"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "More Options"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Enter name..."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Placeholder"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Placeholder text..."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Enter value..."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Checked by default"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Types"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Video url"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Thumbnail"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Search location..."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Style"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Zoom buttons"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Street button"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Full Screen button"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Draggable"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Show marker"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "No results found"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Please fill all the fields"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Offsets"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "pop-up name"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Conditions"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Triggers"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Show after"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Show count"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "\"X\" icon"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Close buttons"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Close by clicking outside"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Option Settings"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Something"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Multiple select"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Open on"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "On Hover"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "On Click"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "State"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Padding"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Margin"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Display"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Backface visibility"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "3D transformation"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Self Perspective"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Children Perspective"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Transform options"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Object Position"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Radius"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Opacity"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Border"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Blur"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Spread"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Text Shadow"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Offset"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Library"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Loops & Repeats"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Move"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Skew"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Scale"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Border Color"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Class Change"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Class name"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Smoothing"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Viewport Only"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Snap Items"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Apply to all elements with selected class."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Apply to only trigger element's childrens with selected class."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Apply to selected target's siblings with selected class."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Apply to triggered siblings with selected class."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Apply to only trigger element with selected class."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Apply to Class"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "The item is already present in your list."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Change Target"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Duplicate Target"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Delete Target"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Unset as initial"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Set as initial"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Copy timing"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Copy properties"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Copy Interaction"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Paste timing"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Paste properties"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Paste Interaction"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Group"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Ungroup"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Custom Timing Editor"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Loop"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Repeats"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Fill Mode"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Action"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Container"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Direction"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Wait"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Apply To"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Add trigger"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Version saved successfully"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Version published successfully"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Page Settings"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Restore"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Meta description missing"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Open graph image missing"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Audit"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Canvas"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Quick Essentials!"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Create text styles"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Set variables"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Use Template"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
