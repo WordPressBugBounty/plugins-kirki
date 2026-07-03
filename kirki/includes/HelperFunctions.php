@@ -7,7 +7,7 @@
 
 namespace Kirki;
 
-if ( ! defined( 'ABSPATH' ) ) {
+if (!defined('ABSPATH')) {
 	exit; // Exit if accessed directly.
 }
 
@@ -31,7 +31,8 @@ use WP_User;
 /**
  * HelperFunctions Class
  */
-class HelperFunctions {
+class HelperFunctions
+{
 
 	public static $custom_sections = [];
 	public static $global_session_id = false;
@@ -44,43 +45,50 @@ class HelperFunctions {
 	 * @param string $for TheFrontend | null.
 	 * @return false || array
 	 */
-	public static function is_kirki_type_data( $post_id = false, $staging_version = false ) {
-		if(!$post_id){
+	public static function is_kirki_type_data($post_id = false, $staging_version = false)
+	{
+		if (!$post_id) {
 			$post_id = self::get_post_id_if_possible_from_url();
-			if(!$post_id)return false;
+			if (!$post_id)
+				return false;
 		}
 
-		if ( ! self::is_editor_mode_is_kirki( $post_id ) ) {
+		if (!self::is_editor_mode_is_kirki($post_id)) {
 			return false;
 		}
-		if($staging_version) {
+		if ($staging_version) {
 			return Staging::get_page_staging_data($post_id, $staging_version);
 		}
 
-		$kirki_data = get_post_meta( $post_id, 'kirki', true );
-		if ( ! $kirki_data ) {
-			$kirki_data           = array();
+		$kirki_data = get_post_meta($post_id, 'kirki', true);
+		if (!$kirki_data) {
+			$kirki_data = array();
 			$kirki_data['blocks'] = null;
 		}
 
-		$styles = self::get_page_styleblocks( $post_id, $staging_version );
+		$styles = self::get_page_styleblocks($post_id, $staging_version);
 
-		$kirki_data['styles'] = isset( $styles ) ? $styles : '';
+		$kirki_data['styles'] = isset($styles) ? $styles : '';
 
 		return $kirki_data;
 	}
 
-	public static function get_post_id_if_possible_from_url() {
-		if ( isset( $GLOBALS['wp']->query_vars[KIRKI_CONTENT_MANAGER_PREFIX . '_child_post'] ) ) {
+	/**
+	 * @deprecated
+	 * @see \Kirki\App\Utils\PostUtil::get_post_id_from_url()
+	 */
+	public static function get_post_id_if_possible_from_url()
+	{
+		if (isset($GLOBALS['wp']->query_vars[KIRKI_CONTENT_MANAGER_PREFIX . '_child_post'])) {
 			return $GLOBALS['wp']->query_vars[KIRKI_CONTENT_MANAGER_PREFIX . '_child_post'];
-		}else if(isset( $GLOBALS['wp']->query_vars[KIRKI_CONTENT_MANAGER_PREFIX . '_parent_post'] ) && false){//disable content manager archive page logic
+		} else if (isset($GLOBALS['wp']->query_vars[KIRKI_CONTENT_MANAGER_PREFIX . '_parent_post']) && false) {//disable content manager archive page logic
 			return $GLOBALS['wp']->query_vars[KIRKI_CONTENT_MANAGER_PREFIX . '_parent_post'];
 		}
 
 		$post_id = get_the_ID();
-		$post_id = self::sanitize_text( isset( $_GET['post_id'] ) ? $_GET['post_id'] : $post_id );
-		$post_id = self::sanitize_text( isset( $_POST['post_id'] ) ? $_POST['post_id'] : $post_id );
-		$post_id = self::sanitize_text( isset( $_GET['p'] ) ? $_GET['p'] : $post_id );
+		$post_id = self::sanitize_text(isset($_GET['post_id']) ? $_GET['post_id'] : $post_id);
+		$post_id = self::sanitize_text(isset($_POST['post_id']) ? $_POST['post_id'] : $post_id);
+		$post_id = self::sanitize_text(isset($_GET['p']) ? $_GET['p'] : $post_id);
 
 		return (int) $post_id;
 	}
@@ -165,90 +173,95 @@ class HelperFunctions {
 		return (int) $term_id;
 	}
 
-	public static function save_kirki_data_to_db($post_id, $page_data, $is_staging = false){
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Services\PageService::save_page_data()
+	 */
+	public static function save_kirki_data_to_db($post_id, $page_data, $is_staging = false)
+	{
 		$version_where_saved = false;
-		if($is_staging) {
+		if ($is_staging) {
 			$data = Staging::save_page_staging_data_to_db($post_id, $page_data);
 			$page_data = $data['page_data'];
-			$version_where_saved = $data['version'];
+			$version_where_saved = $data['version'];			
 		}
-		
-		if ( isset( $page_data['styles'] ) ) {
+
+		if (isset($page_data['styles'])) {
 			$global_style_blocks_for_collaboration = [];
-			foreach ( $page_data['styles'] as $key => $sb ) {
-				if ( ( isset( $sb['isDefault'] ) && $sb['isDefault'] === true ) || ( isset( $sb['isGlobal'] ) && $sb['isGlobal'] === true ) ) {
-					if(isset($sb['fromStage'])){
+			foreach ($page_data['styles'] as $key => $sb) {
+				if ((isset($sb['isDefault']) && $sb['isDefault'] === true) || (isset($sb['isGlobal']) && $sb['isGlobal'] === true)) {
+					if (isset($sb['fromStage'])) {
 						unset($page_data['styles'][$key]['fromStage']);
 						$global_style_blocks_for_collaboration[$key] = $page_data['styles'][$key];
-					}
-					else unset($page_data['styles'][$key]);
+					} else
+						unset($page_data['styles'][$key]);
 				}
 			}
-			if(count($global_style_blocks_for_collaboration) > 0){
+			if (count($global_style_blocks_for_collaboration) > 0) {
 				$session_id = self::sanitize_text(isset($_REQUEST['session_id']) ? $_REQUEST['session_id'] : '');
-				if($session_id && $is_staging === false){
+				if ($session_id && $is_staging === false) {
 					// cause template import also called this method without session_id
 					$data = array(
-						'type'    => 'COLLABORATION_UPDATE_GLOBAL_STYLE',
-						'payload' => array( 'styleBlock' => $global_style_blocks_for_collaboration ),
+						'type' => 'COLLABORATION_UPDATE_GLOBAL_STYLE',
+						'payload' => array('styleBlock' => $global_style_blocks_for_collaboration),
 					);
-					Collaboration::save_action_to_db( 'global', 0, $data, 1, $session_id);
+					Collaboration::save_action_to_db('global', 0, $data, 1, $session_id);
 				}
 			}
 
-			self::update_page_styleblocks( $post_id, $page_data['styles'] );
-			unset( $page_data['styles'] );
+			self::update_page_styleblocks($post_id, $page_data['styles']);
+			unset($page_data['styles']);
 		}
 
-		if ( isset( $page_data['usedStyles'] ) ) {
-			update_post_meta( $post_id, KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS, $page_data['usedStyles'] );
-			unset( $page_data['usedStyles'] );
+		if (isset($page_data['usedStyles'])) {
+			update_post_meta($post_id, KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS, $page_data['usedStyles']);
+			unset($page_data['usedStyles']);
 		}
 
-		if ( isset( $page_data['usedStyleIdsRandom'] ) ) {
-			update_post_meta( $post_id, KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS . '_random', $page_data['usedStyleIdsRandom'] );
-			unset( $page_data['usedStyleIdsRandom'] );
+		if (isset($page_data['usedStyleIdsRandom'])) {
+			update_post_meta($post_id, KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS . '_random', $page_data['usedStyleIdsRandom']);
+			unset($page_data['usedStyleIdsRandom']);
 		}
 
-		if ( isset( $page_data['usedFonts'] ) ) {
-			update_post_meta( $post_id, KIRKI_META_NAME_FOR_USED_FONT_LIST, $page_data['usedFonts'] );
-			unset( $page_data['usedFonts'] );
+		if (isset($page_data['usedFonts'])) {
+			update_post_meta($post_id, KIRKI_META_NAME_FOR_USED_FONT_LIST, $page_data['usedFonts']);
+			unset($page_data['usedFonts']);
 		}
 
-		if ( isset( $page_data['customFonts'] ) ) {
+		if (isset($page_data['customFonts'])) {
 			//save others data if isset. this is for template import
-			$custom_fonts = self::get_global_data_using_key( KIRKI_USER_CUSTOM_FONTS_META_KEY );
+			$custom_fonts = self::get_global_data_using_key(KIRKI_USER_CUSTOM_FONTS_META_KEY);
 			foreach ($page_data['customFonts'] as $key => $cf) {
 				$custom_fonts[$key] = $cf;
 			}
-			self::update_global_data_using_key( KIRKI_USER_CUSTOM_FONTS_META_KEY, $custom_fonts );
-			unset( $page_data['customFonts'] );
+			self::update_global_data_using_key(KIRKI_USER_CUSTOM_FONTS_META_KEY, $custom_fonts);
+			unset($page_data['customFonts']);
 		}
-		
-		if ( isset( $page_data['viewportList'] ) ) {
+
+		if (isset($page_data['viewportList'])) {
 			//save others data if isset. this is for template import
-			$controller_data = self::get_global_data_using_key( KIRKI_USER_CONTROLLER_META_KEY );
-			if ( ! $controller_data ) {
-				$init = array( 
-					'active' =>'md',
-					'defaults'=> ["md", "tablet", "mobileLandscape", "mobile"],
+			$controller_data = self::get_global_data_using_key(KIRKI_USER_CONTROLLER_META_KEY);
+			if (!$controller_data) {
+				$init = array(
+					'active' => 'md',
+					'defaults' => ["md", "tablet", "mobileLandscape", "mobile"],
 					'list' => $page_data['viewportList'],
-					'mdWidth'=> 1200,
-					"scale"=>1,
-					"width"=>2484,
-					"zoom"=>1
+					'mdWidth' => 1200,
+					"scale" => 1,
+					"width" => 2484,
+					"zoom" => 1
 				);
-				$controller_data = array('viewport'=> $init);
-			}else if(isset($controller_data['viewport'], $controller_data['viewport']['list'])){
+				$controller_data = array('viewport' => $init);
+			} else if (isset($controller_data['viewport'], $controller_data['viewport']['list'])) {
 				$controller_data['viewport']['list'] = $page_data['viewportList'];
 			}
 
-			HelperFunctions::update_global_data_using_key( KIRKI_USER_CONTROLLER_META_KEY, $controller_data );
-			unset( $page_data['viewportList'] );
+			HelperFunctions::update_global_data_using_key(KIRKI_USER_CONTROLLER_META_KEY, $controller_data);
+			unset($page_data['viewportList']);
 		}
 
-		if ( isset( $page_data['blocks'] ) ) {
-			update_post_meta( $post_id, 'kirki', array('blocks'=>$page_data['blocks']) );
+		if (isset($page_data['blocks'])) {
+			update_post_meta($post_id, 'kirki', array('blocks' => $page_data['blocks']));
 			// $data = array(
 			// 	'type'    => 'COLLABORATION_PAGE_DATA',
 			// 	'payload' => array( 'data' => $page_data['blocks'] ),
@@ -256,10 +269,17 @@ class HelperFunctions {
 			//Collaboration::save_action_to_db( 'post', $post_id, $data, 1 );
 		}
 
-		
 
-		update_post_meta( $post_id, KIRKI_META_NAME_FOR_POST_EDITOR_MODE, 'kirki' );
+
+		update_post_meta($post_id, KIRKI_META_NAME_FOR_POST_EDITOR_MODE, 'kirki');
 		return $version_where_saved;
+	}
+
+	/**
+	 * 
+	 */
+	function abc() {
+
 	}
 
 	/**
@@ -268,110 +288,125 @@ class HelperFunctions {
 	 *
 	 * @param int $post_id post id.
 	 * @return object
+	 * 
+	 * @todo: 
+	 * 
+	 * @deprecated
+	 * @see Kirki\App\Managers\PageManager::get_page_styleblocks()
 	 */
-	public static function get_page_styleblocks( $post_id, $stage_version = false ) {
-		$random_style_blocks = get_post_meta( $post_id, KIRKI_GLOBAL_STYLE_BLOCK_META_KEY . '_random', true );
-		$global_style_blocks = self::get_global_data_using_key( KIRKI_GLOBAL_STYLE_BLOCK_META_KEY );
+	public static function get_page_styleblocks($post_id, $stage_version = false)
+	{
+		$random_style_blocks = get_post_meta($post_id, KIRKI_GLOBAL_STYLE_BLOCK_META_KEY . '_random', true);
+		$global_style_blocks = self::get_global_data_using_key(KIRKI_GLOBAL_STYLE_BLOCK_META_KEY);
 
 		$random_style_blocks = self::fix_duplicate_class_name_from_random_sbs($random_style_blocks, $global_style_blocks);
 
 		$merged_style_blocks = array();
-		if ( $random_style_blocks ) {
-			$merged_style_blocks = array_merge( $merged_style_blocks, $random_style_blocks );
+		if ($random_style_blocks) {
+			$merged_style_blocks = array_merge($merged_style_blocks, $random_style_blocks);
 		}
-		if ( $global_style_blocks ) {
-			$merged_style_blocks = array_merge( $merged_style_blocks, $global_style_blocks );
+		if ($global_style_blocks) {
+			$merged_style_blocks = array_merge($merged_style_blocks, $global_style_blocks);
 		}
 
 		$published_version = Staging::get_published_stage_version($post_id);
-		if($published_version && $stage_version !== $published_version) {
+		if ($published_version && $stage_version !== $published_version) {
 			$staging_style_blocks = array();
 			$meta_key = Staging::get_staged_meta_name(KIRKI_GLOBAL_STYLE_BLOCK_META_KEY, $post_id, $stage_version);
-			$stage_style = get_post_meta( $post_id, $meta_key, true );
-			if($stage_style)
-				$staging_style_blocks = array_merge( $staging_style_blocks, $stage_style );
+			$stage_style = get_post_meta($post_id, $meta_key, true);
+			if ($stage_style)
+				$staging_style_blocks = array_merge($staging_style_blocks, $stage_style);
 
 			$meta_key = $meta_key . '_random';
-			$stage_style = get_post_meta( $post_id, $meta_key, true );
-			if($stage_style)
-				$staging_style_blocks = array_merge( $staging_style_blocks, $stage_style );
-			if($stage_version)
-				$merged_style_blocks = self::merge_style_blocks( $merged_style_blocks, $staging_style_blocks );
-			else 
-				$merged_style_blocks = self::merge_style_blocks( $staging_style_blocks, $merged_style_blocks );
+			$stage_style = get_post_meta($post_id, $meta_key, true);
+			if ($stage_style)
+				$staging_style_blocks = array_merge($staging_style_blocks, $stage_style);
+			if ($stage_version)
+				$merged_style_blocks = self::merge_style_blocks($merged_style_blocks, $staging_style_blocks);
+			else
+				$merged_style_blocks = self::merge_style_blocks($staging_style_blocks, $merged_style_blocks);
 		}
 
 		return $merged_style_blocks;
 	}
 
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Managers\PageManager::merge_style_blocks()
+	 */
 	public static function merge_style_blocks($a, $b)
 	{
-    $names_in_a = [];
-    foreach ($a as $val) {
-        if (!empty($val['name']) && is_string($val['name'])) {
-            $names_in_a[strtolower($val['name'])] = true;
-        }
-    }
+		$names_in_a = [];
+		foreach ($a as $val) {
+			if (!empty($val['name']) && is_string($val['name'])) {
+				$names_in_a[strtolower($val['name'])] = true;
+			}
+		}
 
-    $names_in_b = [];
-    foreach ($b as $val) {
-        if (!empty($val['name']) && is_string($val['name'])) {
-            $names_in_b[strtolower($val['name'])] = true;
-        }
-    }
+		$names_in_b = [];
+		foreach ($b as $val) {
+			if (!empty($val['name']) && is_string($val['name'])) {
+				$names_in_b[strtolower($val['name'])] = true;
+			}
+		}
 
-    foreach ($b as $id_b => &$value_b) {
+		foreach ($b as $id_b => &$value_b) {
 			if (empty($value_b['name']) || !is_string($value_b['name'])) {
-					continue;
+				continue;
 			}
 
 			$b_name = strtolower($value_b['name']);
 
 			// If same ID exists in A, remove it first (old behavior)
 			if (isset($a[$id_b])) {
-					unset($a[$id_b]);
-					if (isset($names_in_a[$b_name])) {
-							unset($names_in_a[$b_name]);
-					}
+				unset($a[$id_b]);
+				if (isset($names_in_a[$b_name])) {
+					unset($names_in_a[$b_name]);
+				}
 			}
 
 			// If name already exists in A, make it unique
 			if (isset($names_in_a[$b_name])) {
-					$i = 1;
-					while (isset($names_in_a[$b_name . '_' . $i]) || isset($names_in_b[$b_name . '_' . $i])) {
-							$i++;
-					}
-					$new_name = $value_b['name'] . '_' . $i;
+				$i = 1;
+				while (isset($names_in_a[$b_name . '_' . $i]) || isset($names_in_b[$b_name . '_' . $i])) {
+					$i++;
+				}
+				$new_name = $value_b['name'] . '_' . $i;
 
-					foreach ($b as &$v) {
-							if (isset($v['name']) && is_array($v['name'])) {
-									$v['name'] = array_map(fn($item) => $item === $value_b['name'] ? $new_name : $item, $v['name']);
-							}
+				foreach ($b as &$v) {
+					if (isset($v['name']) && is_array($v['name'])) {
+						$v['name'] = array_map(fn($item) => $item === $value_b['name'] ? $new_name : $item, $v['name']);
 					}
+				}
 
-					$value_b['name'] = $new_name;
-					unset($names_in_b[$b_name]);
-					$names_in_b[strtolower($new_name)] = true;
+				$value_b['name'] = $new_name;
+				unset($names_in_b[$b_name]);
+				$names_in_b[strtolower($new_name)] = true;
 			}
+		}
+		unset($value_b);
+
+		// Use array_merge to keep old semantics
+		return array_merge($a, $b);
 	}
-	unset($value_b);
-
-	// Use array_merge to keep old semantics
-	return array_merge($a, $b);
-}
 
 
-	private static function fix_duplicate_class_name_from_random_sbs( $random_style_blocks, $global_style_blocks ){
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Managers\PageManager::fix_duplicate_class_name_from_random_sbs()
+	 */
+	private static function fix_duplicate_class_name_from_random_sbs( $random_style_blocks, $global_style_blocks )
+	{
 		$global_class_names = [];
 		$random_class_names = [];
-		if($global_style_blocks){
+		if ($global_style_blocks) {
 			foreach ($global_style_blocks as $key => $value) {
 				if (isset($value['name']) && is_string($value['name'])) {
 					$global_class_names[self::get_class_name_from_string($value['name'])] = true;
 				}
 			}
 		}
-		if($random_style_blocks){
+		if ($random_style_blocks) {
 			foreach ($random_style_blocks as $key => $value) {
 				if (isset($value['name']) && is_string($value['name'])) {
 					$random_class_names[self::get_class_name_from_string($value['name'])] = true;
@@ -381,25 +416,25 @@ class HelperFunctions {
 
 		$class_match = [];
 		foreach ($random_class_names as $key => $value) {
-			if( isset($global_class_names[$key]) ){
+			if (isset($global_class_names[$key])) {
 				$class_match[$key] = true;
 			}
 		}
 
-		$class_match = self::check_or_generate_new_class_names( $class_match, $global_class_names, $random_class_names );
+		$class_match = self::check_or_generate_new_class_names($class_match, $global_class_names, $random_class_names);
 
-		if ( count($class_match) > 0) {
+		if (count($class_match) > 0) {
 			foreach ($random_style_blocks as $key => $value) {
-				if (isset($value['name']) && is_string($value['name']) ) {
-					$class_name = self::get_class_name_from_string( $value['name'] );
-					if (isset($class_match[$class_name])){
+				if (isset($value['name']) && is_string($value['name'])) {
+					$class_name = self::get_class_name_from_string($value['name']);
+					if (isset($class_match[$class_name])) {
 						$random_style_blocks[$key]['name'] = $class_match[$class_name];
 					}
-				} else if(isset($value['name']) && is_array($value['name'])){
+				} else if (isset($value['name']) && is_array($value['name'])) {
 					//array
 					foreach ($value['name'] as $key2 => $v2) {
-						$class_name = self::get_class_name_from_string( $v2 );
-						if (isset($class_match[$class_name])){
+						$class_name = self::get_class_name_from_string($v2);
+						if (isset($class_match[$class_name])) {
 							$random_style_blocks[$key]['name'][$key2] = $class_match[$class_name];
 						}
 					}
@@ -409,12 +444,17 @@ class HelperFunctions {
 		return $random_style_blocks;
 	}
 
-	private static function check_or_generate_new_class_names($class_match, $global_class_names, $random_class_names){
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Managers\PageManager::check_or_generate_new_class_names()
+	 */
+	private static function check_or_generate_new_class_names($class_match, $global_class_names, $random_class_names)
+	{
 		foreach ($class_match as $key => $value) {
 			$temp_class = $key;
 			$found = true;
-			while($found){
-				if ( isset($global_class_names[$temp_class]) || isset($random_class_names[$temp_class]) ) {
+			while ($found) {
+				if (isset($global_class_names[$temp_class]) || isset($random_class_names[$temp_class])) {
 					$temp_class = $temp_class . '-copy';
 				} else {
 					$found = false;
@@ -425,19 +465,26 @@ class HelperFunctions {
 		return $class_match;
 	}
 
-	public static function get_class_name_from_string($s){
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Managers\PageManager::get_class_name_from_string()
+	 */
+	public static function get_class_name_from_string($s)
+	{
 		$s = strtolower( str_replace( ' ', '-', $s ) );
 		return $s;
 	}
 
-	public static function get_selector_from_sb_name($name){
-		if(!$name) return '';
+	public static function get_selector_from_sb_name($name)
+	{
+		if (!$name)
+			return '';
 		$class_name = '';
-		if (is_string($name) ) {
-			$class_name = '.'.self::get_class_name_from_string( $name );
+		if (is_string($name)) {
+			$class_name = '.' . self::get_class_name_from_string($name);
 		} else {
 			foreach ($name as $key2 => $cn) {
-				$class_name .= '.'.self::get_class_name_from_string( $cn );
+				$class_name .= '.' . self::get_class_name_from_string($cn);
 			}
 		}
 		return $class_name;
@@ -449,21 +496,25 @@ class HelperFunctions {
 	 *
 	 * @param int    $post_id post id.
 	 * @param object $style_blocks styleblocks.
+	 * 
+	 * @deprecated
+	 * @see Kirki\App\Managers\PageManager::update_page_styleblocks()
 	 */
-	public static function update_page_styleblocks( $post_id, $style_blocks ) {
-		$prev_style_blocks = self::get_page_styleblocks( $post_id );
-		$style_blocks      = array_merge( $prev_style_blocks, $style_blocks );
+	public static function update_page_styleblocks($post_id, $style_blocks)
+	{
+		$prev_style_blocks = self::get_page_styleblocks($post_id);
+		$style_blocks = array_merge($prev_style_blocks, $style_blocks);
 
 		$global_style_blocks = array();
-		foreach ( $style_blocks as $key => $sb ) {
-			if ( ( isset( $sb['isDefault'] ) && $sb['isDefault'] === true ) || ( isset( $sb['isGlobal'] ) && $sb['isGlobal'] === true ) ) {
-				$global_style_blocks[ $sb['id'] ] = $sb;
-				unset( $style_blocks[ $key ] );
+		foreach ($style_blocks as $key => $sb) {
+			if ((isset($sb['isDefault']) && $sb['isDefault'] === true) || (isset($sb['isGlobal']) && $sb['isGlobal'] === true)) {
+				$global_style_blocks[$sb['id']] = $sb;
+				unset($style_blocks[$key]);
 			}
 		}
 
-		self::save_global_style_blocks( $global_style_blocks );
-		self::save_random_style_blocks( $post_id, $style_blocks );
+		self::save_global_style_blocks($global_style_blocks);
+		self::save_random_style_blocks($post_id, $style_blocks);
 	}
 
 	/**
@@ -471,10 +522,13 @@ class HelperFunctions {
 	 *
 	 * @param array $style //take styleblocs if isDefault and isGlobal key is true.
 	 * @return void
+	 * @deprecated
+	 * @see Kirki\App\Managers\GlobalDataManager::update_global_style_blocks()
 	 */
-	public static function save_global_style_blocks( $style ) {
+	public static function save_global_style_blocks($style)
+	{
 		// $session_id = self::sanitize_text(isset($_REQUEST['session_id']) ? $_REQUEST['session_id'] : '');
-		self::update_global_data_using_key( KIRKI_GLOBAL_STYLE_BLOCK_META_KEY, $style );
+		self::update_global_data_using_key(KIRKI_GLOBAL_STYLE_BLOCK_META_KEY, $style);
 
 		// if($session_id){
 		// 	// cause template import also called this method without session_id
@@ -492,9 +546,12 @@ class HelperFunctions {
 	 * @param array $post_id //current post id.
 	 * @param array $style //take styleblocs if not isDefault and isGlobal key is true.
 	 * @return void
+	 * @deprecated
+	 * @see Kirki\App\Managers\PageManager::save_random_global_style_blocks()
 	 */
-	public static function save_random_style_blocks( $post_id, $style ) {
-		update_post_meta( $post_id, KIRKI_GLOBAL_STYLE_BLOCK_META_KEY . '_random', $style );
+	public static function save_random_style_blocks($post_id, $style)
+	{
+		update_post_meta($post_id, KIRKI_GLOBAL_STYLE_BLOCK_META_KEY . '_random', $style);
 		// $data = array(
 		// 	'type'    => 'COLLABORATION_UPDATE_GLOBAL_STYLE',
 		// 	'payload' => array( 'styleBlock' => $style ),
@@ -508,8 +565,13 @@ class HelperFunctions {
 	 * @param int    $post_id   Post ID.
 	 * @param string $meta_key  Staged meta key (can be normal or random).
 	 * @param array  $styles    Styles array to save.
+	 * 
+	 * @deprecated
+	 * @see \Kirki\App\Managers\PageManager::save_global_style_blocks()
+	 * @see \Kirki\App\Managers\PageManager::save_random_global_style_blocks()
 	 */
-	public static function save_staged_style_blocks($post_id, $meta_key, $styles) {
+	public static function save_staged_style_blocks($post_id, $meta_key, $styles)
+	{
 		update_post_meta($post_id, $meta_key, $styles);
 		// $data = array(
 		// 	'type'    => 'COLLABORATION_UPDATE_GLOBAL_STYLE',
@@ -523,20 +585,21 @@ class HelperFunctions {
 	 *
 	 * @return array
 	 */
-	public static function get_custom_code_block_element() {
+	public static function get_custom_code_block_element()
+	{
 		return array(
-			'name'       => 'custom-code',
-			'title'      => 'Code',
+			'name' => 'custom-code',
+			'title' => 'Code',
 			'visibility' => true,
 			'properties' => array(
-				'tag'       => 'div',
-				'content'   => '',
+				'tag' => 'div',
+				'content' => '',
 				'data-type' => 'code',
 			),
-			'styleIds'   => array(),
-			'className'  => '',
-			'id'         => 'kirki' . uniqid(),
-			'parentId'   => 'body',
+			'styleIds' => array(),
+			'className' => '',
+			'id' => 'kirki' . uniqid(),
+			'parentId' => 'body',
 		);
 	}
 	/**
@@ -545,9 +608,10 @@ class HelperFunctions {
 	 * @param int $post_id post id.
 	 * @return bool true if kirki.
 	 */
-	public static function is_editor_mode_is_kirki( $post_id ) {
-		$editor_mode = get_post_meta( $post_id, KIRKI_META_NAME_FOR_POST_EDITOR_MODE, true );
-		if ( 'kirki' === $editor_mode ) {
+	public static function is_editor_mode_is_kirki($post_id)
+	{
+		$editor_mode = get_post_meta($post_id, KIRKI_META_NAME_FOR_POST_EDITOR_MODE, true);
+		if ('kirki' === $editor_mode) {
 			return true;
 		}
 		return false;
@@ -559,75 +623,79 @@ class HelperFunctions {
 	 *
 	 * @param int $post_id post id.
 	 * @return array
+	 * 
+	 * @deprecated
+	 * @see \Kirki\App\Supports\PageUrl::class
 	 */
-	public static function get_post_url_arr_from_post_id( $post_id, $options = array() ) {
+	public static function get_post_url_arr_from_post_id($post_id, $options = array())
+	{
 		$post_perma_link = self::get_page_perma_url($post_id);
-		
+
 		$obj = ['post_url' => $post_perma_link, 'post_id' => $post_id];
-		if(isset($options['ajax_url']) && $options['ajax_url']){
+		if (isset($options['ajax_url']) && $options['ajax_url']) {
 			$protocol = strpos(home_url(), 'https://') !== false ? 'https' : 'http';
-			$obj['ajax_url'] = admin_url( 'admin-ajax.php', $protocol );
+			$obj['ajax_url'] = admin_url('admin-ajax.php', $protocol);
 		}
 
-		if(isset($options['preview_url']) && $options['preview_url']){
+		if (isset($options['preview_url']) && $options['preview_url']) {
 			$preview_url = self::get_page_preview_url($post_id);
 			$obj['preview_url'] = $preview_url;
 		}
-		
-		if(isset($options['editor_url']) && $options['editor_url']){
+
+		if (isset($options['editor_url']) && $options['editor_url']) {
 			$obj['editor_url'] = add_query_arg(
 				array(
-					'action'  => KIRKI_EDITOR_ACTION,
+					'action' => KIRKI_EDITOR_ACTION,
 				),
 				$post_perma_link
 			);
 
-			if(HelperFunctions::is_api_call_from_editor_preview() && HelperFunctions::is_api_header_post_editor_preview_token_valid()){
+			if (HelperFunctions::is_api_call_from_editor_preview() && HelperFunctions::is_api_header_post_editor_preview_token_valid()) {
 				$headers = self::getallheaders();
 				$obj['editor_url'] = add_query_arg(
 					array(
-					'editor-preview-token'  => isset($headers['Editor-Preview-Token']) ? $headers['Editor-Preview-Token'] : null,
+						'editor-preview-token' => isset($headers['Editor-Preview-Token']) ? $headers['Editor-Preview-Token'] : null,
 					),
 					$obj['editor_url']
 				);
 			}
 		}
-		if(isset($options['iframe_url']) && $options['iframe_url']){
+		if (isset($options['iframe_url']) && $options['iframe_url']) {
 			$iframe_url_params = array(
-				'action'   => KIRKI_EDITOR_ACTION,
+				'action' => KIRKI_EDITOR_ACTION,
 				'load_for' => 'kirki-iframe',
-				'post_id'  => $post_id,
+				'post_id' => $post_id,
 			);
-			if(isset($_GET['editor-preview-token'])){
-				$iframe_url_params['editor-preview-token'] = self::sanitize_text( $_GET['editor-preview-token']);
+			if (isset($_GET['editor-preview-token'])) {
+				$iframe_url_params['editor-preview-token'] = self::sanitize_text($_GET['editor-preview-token']);
 			}
 			$obj['iframe_url'] = add_query_arg(
 				$iframe_url_params,
 				$post_perma_link
 			);
 		}
-		
-		if(isset($options['nonce']) && $options['nonce']){
-			$obj['nonce'] = wp_create_nonce( 'wp_rest' );
+
+		if (isset($options['nonce']) && $options['nonce']) {
+			$obj['nonce'] = wp_create_nonce('wp_rest');
 		}
-		
-		if(isset($options['editor_preview_token']) && $options['editor_preview_token']){
-			$obj['editor_preview_token'] = isset($_GET['editor-preview-token']) ? self::sanitize_text( $_GET['editor-preview-token']):false;
+
+		if (isset($options['editor_preview_token']) && $options['editor_preview_token']) {
+			$obj['editor_preview_token'] = isset($_GET['editor-preview-token']) ? self::sanitize_text($_GET['editor-preview-token']) : false;
 		}
-		
-		if(isset($options['site_url']) && $options['site_url']){
+
+		if (isset($options['site_url']) && $options['site_url']) {
 			$obj['site_url'] = get_site_url();
 		}
-		
-		if(isset($options['admin_url']) && $options['admin_url']){
+
+		if (isset($options['admin_url']) && $options['admin_url']) {
 			$obj['admin_url'] = get_admin_url();
 		}
-		
-		if(isset($options['core_plugin_url']) && $options['core_plugin_url']){
+
+		if (isset($options['core_plugin_url']) && $options['core_plugin_url']) {
 			$obj['core_plugin_url'] = KIRKI_CORE_PLUGIN_URL;
 		}
-		
-		if(isset($options['rest_url']) && $options['rest_url']){
+
+		if (isset($options['rest_url']) && $options['rest_url']) {
 			try {
 				$rest_url = rest_url();
 				$obj['rest_url'] = $rest_url;
@@ -639,58 +707,74 @@ class HelperFunctions {
 		return $obj;
 	}
 
-	private static function get_page_preview_url($post_id){
+	/**
+	 * @deprecated
+	 * @see \Kirki\App\Supports\PageUrl::get_preview_url()
+	 */
+	private static function get_page_preview_url($post_id)
+	{
 		$post = get_post($post_id);
-		if($post && $post->post_type === 'kirki_template'){
-			$conditions = get_post_meta( $post->ID,'kirki_template_conditions', true );
+		if ($post && $post->post_type === 'kirki_template') {
+			$conditions = get_post_meta($post->ID, 'kirki_template_conditions', true);
 
 			$d = self::get_collection_items_from_conditions($conditions);
-			if( $d['type'] === 'post' && count($d['data']) > 0 ){
-				return self::get_page_perma_url( $d['data'][0]['ID'] );
+			if ($d['type'] === 'post' && count($d['data']) > 0) {
+				return self::get_page_perma_url($d['data'][0]['ID']);
 			}
-			if( $d['type'] === 'user' && count($d['data']) > 0 ){
-				return get_author_posts_url( $d['data'][0]['ID'] );
+			if ($d['type'] === 'user' && count($d['data']) > 0) {
+				return get_author_posts_url($d['data'][0]['ID']);
 			}
-			if( $d['type'] === 'term' && count($d['data']) > 0 ){
-				return get_term_link( $d['data'][0]['ID'] );
+			if ($d['type'] === 'term' && count($d['data']) > 0) {
+				return get_term_link($d['data'][0]['ID']);
 			}
 		}
 		return self::get_page_perma_url($post_id);
 	}
-	private static function get_page_perma_url($post_id){
-		$post_perma_link = get_permalink( $post_id );
+
+	/**
+	 * @deprecated
+	 * @see \Kirki\App\Supports\PageUrl::get_page_permalink()
+	 */
+	private static function get_page_perma_url($post_id)
+	{
+		$post_perma_link = get_permalink($post_id);
 		$protocol = strpos(home_url(), 'https://') !== false ? 'https' : 'http';
-		if ( $protocol === 'https' ) {
-			$post_perma_link = str_replace( 'http://', 'https://', $post_perma_link );
+		if ($protocol === 'https') {
+			$post_perma_link = str_replace('http://', 'https://', $post_perma_link);
 		} else {
-			$post_perma_link = str_replace( 'https://', 'http://', $post_perma_link );
+			$post_perma_link = str_replace('https://', 'http://', $post_perma_link);
 		}
 
 		return $post_perma_link;
 	}
 
-	public static function get_collection_items_from_conditions($conditions, $query=''){
+	/**
+	 * @deprecated
+	 * @see \Kirki\App\Supports\CollectionItem::get_items_from_condition()
+	 */
+	public static function get_collection_items_from_conditions($conditions, $query = '')
+	{
 		$data = [];
 		$type = 'post';
 		$post_type = 'post';
 		$role = '';
 
-		if(is_array($conditions) && count($conditions) > 0) {
-			if(isset($conditions[0]['type'])){
+		if (is_array($conditions) && count($conditions) > 0) {
+			if (isset($conditions[0]['type'])) {
 				$type = $conditions[0]['type'];
-				
-				if($type === 'post'){
+
+				if ($type === 'post') {
 					$post_type = $conditions[0]['post_type'];
-				
+
 					// if the conditions has from key then it is term. then it will be term type.
-					if(isset($conditions[0]['from']) && $conditions[0]['from'] === 'term'){
+					if (isset($conditions[0]['from']) && $conditions[0]['from'] === 'term') {
 						$type = 'term';
 					}
-				} 
-				if($type === 'user'){
+				}
+				if ($type === 'user') {
 					$role = $conditions[0]['to'];
 				}
-			}else{
+			} else {
 				//legacy support
 				$post_type = $conditions[0]['category'];
 			}
@@ -702,11 +786,11 @@ class HelperFunctions {
 
 		if ($type === 'post' && HelperFunctions::user_has_post_edit_access()) { // type will be wordpress post type
 			$arg = array(
-				'post_type'   => $post_type,
+				'post_type' => $post_type,
 				'post_status' => $post_status,
 				'numberposts' => $numberposts,
-				'orderby'     => 'ID',
-				'order'       => 'DESC',
+				'orderby' => 'ID',
+				'order' => 'DESC',
 			);
 			if ($query) {
 				$arg['s'] = $query;
@@ -747,7 +831,7 @@ class HelperFunctions {
 			$taxonomy = [];
 
 			foreach ($conditions as $key => $condition) {
-				if($condition['from'] === 'term'){
+				if ($condition['from'] === 'term') {
 					$taxonomy[] = $condition['where'];
 				}
 			}
@@ -779,7 +863,7 @@ class HelperFunctions {
 			}
 		}
 
-		return ['data'=> $data, 'type' => $type];
+		return ['data' => $data, 'type' => $type];
 	}
 	/**
 	 * Get post content from content value. like => id, title, description, content
@@ -791,59 +875,60 @@ class HelperFunctions {
 	 */
 	public static function get_post_dynamic_content($content_value, $post = null, $meta_name = '', $dynamic_options = [])
 	{
-		if ( isset( $post ) && ! empty( $post ) ) {
+		if (isset($post) && !empty($post)) {
 			$post_id = $post->ID;
 		}
 
-		if ( empty( $post_id ) ) {
+		if (empty($post_id)) {
 			$post_id = self::get_post_id_if_possible_from_url();
 		}
 
 		$content = null;
 
-		switch ( $content_value ) {
+		switch ($content_value) {
 			case 'post_id': {
-					$content = $post_id;
-					break;
+				$content = $post_id;
+				break;
 			}
 
 			case 'post_title': {
-					$content = get_the_title( $post_id );
-					break;
+				$content = get_the_title($post_id);
+				break;
 			}
 
 			case 'post_excerpt': {
 
-					// Excerpt length global variable is only for kirki editor but not for the frontend.
-					if (isset($GLOBALS['kirki_post_excerpt_length']) && $GLOBALS['kirki_post_excerpt_length'] > 0) {
-						$content = wp_trim_words(get_the_excerpt($post_id), $GLOBALS['kirki_post_excerpt_length'], '[...]');
-					} else {
-						$content = get_the_excerpt($post_id);
-					}
-					break;
+				// Excerpt length global variable is only for kirki editor but not for the frontend.
+				if (isset($GLOBALS['kirki_post_excerpt_length']) && $GLOBALS['kirki_post_excerpt_length'] > 0) {
+					$content = wp_trim_words(get_the_excerpt($post_id), $GLOBALS['kirki_post_excerpt_length'], '[...]');
+				} else {
+					$content = get_the_excerpt($post_id);
 				}
+				break;
+			}
 
 			case 'post_author': {
-					$post    = get_post( $post_id );
-					if(!$post)return "";
-					$content = get_the_author_meta( 'display_name', $post->post_author );
-					break;
+				$post = get_post($post_id);
+				if (!$post)
+					return "";
+				$content = get_the_author_meta('display_name', $post->post_author);
+				break;
 			}
 
 			case 'post_date': {
-					$content = get_the_date('', $post_id);
-					if(isset($dynamic_options['format'])){
-						$content = HelperFunctions::format_date($content, $dynamic_options['format']);
-					}
-					break;
+				$content = get_the_date('', $post_id);
+				if (isset($dynamic_options['format'])) {
+					$content = HelperFunctions::format_date($content, $dynamic_options['format']);
+				}
+				break;
 			}
 
 			case 'post_time': {
-					$content = get_the_time( '', $post_id );
-					if(isset($dynamic_options['timeFormat'])){
-						$content = HelperFunctions::convert_time_format($content, $dynamic_options['timeFormat']);
-					}
-					break;
+				$content = get_the_time('', $post_id);
+				if (isset($dynamic_options['timeFormat'])) {
+					$content = HelperFunctions::convert_time_format($content, $dynamic_options['timeFormat']);
+				}
+				break;
 			}
 
 			case 'post_content': {
@@ -852,65 +937,65 @@ class HelperFunctions {
 			}
 
 			case 'post_status': {
-					$content = get_post_status( $post_id );
-					break;
+				$content = get_post_status($post_id);
+				break;
 			}
 
 			case 'featured_image': {
-					$content = array(
-						'wp_attachment_id' => get_post_thumbnail_id( $post_id ),
-						'src' => get_the_post_thumbnail_url( $post_id )
-					);
-					break;
+				$content = array(
+					'wp_attachment_id' => get_post_thumbnail_id($post_id),
+					'src' => get_the_post_thumbnail_url($post_id)
+				);
+				break;
 			}
 
 			case 'site_name': {
-					$content = get_bloginfo( 'name' );
-					break;
+				$content = get_bloginfo('name');
+				break;
 			}
 			case 'site_description': {
-					$content = get_bloginfo( 'description' );
-					break;
+				$content = get_bloginfo('description');
+				break;
 			}
 			case 'site_url': {
-					$content = get_site_url();
-					break;
+				$content = get_site_url();
+				break;
 			}
-			
+
 			case 'site_logo': {
 				$content = '';
-				
+
 				// Try site icon first
-				$site_icon_id = get_option( 'site_icon' );
-				if ( $site_icon_id ) {
-						$content = wp_get_attachment_url( $site_icon_id );
+				$site_icon_id = get_option('site_icon');
+				if ($site_icon_id) {
+					$content = wp_get_attachment_url($site_icon_id);
 				}
-				
+
 				// If no site icon, try get_site_icon_url()
-				if ( ! $content ) {
-						$content = get_site_icon_url( 512 );
+				if (!$content) {
+					$content = get_site_icon_url(512);
 				}
-				
+
 				// If still nothing, try custom logo
-				if ( ! $content ) {
-						$custom_logo_id = get_theme_mod( 'custom_logo' );
-						if ( $custom_logo_id ) {
-								$imgs = wp_get_attachment_image_src( $custom_logo_id, 'full' );
-								if ( $imgs && isset( $imgs[0] ) ) {
-										$content = $imgs[0];
-								}
+				if (!$content) {
+					$custom_logo_id = get_theme_mod('custom_logo');
+					if ($custom_logo_id) {
+						$imgs = wp_get_attachment_image_src($custom_logo_id, 'full');
+						if ($imgs && isset($imgs[0])) {
+							$content = $imgs[0];
 						}
+					}
 				}
-				
+
 				break;
 			}
 
 			case 'author_profile_picture': {
-					$post = get_post( $post_id );
+				$post = get_post($post_id);
 
-				if ( ! empty( $post ) ) {
+				if (!empty($post)) {
 					$post_author = $post->post_author;
-					$content     = get_avatar_url( $post_author );
+					$content = get_avatar_url($post_author);
 				} else {
 					$content = 'Something wrong!';
 				}
@@ -919,29 +1004,29 @@ class HelperFunctions {
 			}
 
 			case 'user_profile_picture': {
-					$content = get_avatar_url( get_current_user_id() );
-					break;
+				$content = get_avatar_url(get_current_user_id());
+				break;
 			}
 
 			case 'post_page_link': {
-					$url     = \get_permalink( $post_id );
-					$content = ! empty( $url ) ? $url : '';
-					break;
+				$url = \get_permalink($post_id);
+				$content = !empty($url) ? $url : '';
+				break;
 			}
 
 			case 'author_posts_page_link': {
-					$post    = \get_post( $post_id );
-					$url     = \get_author_posts_url( $post->post_author );
-					$content = ! empty( $url ) ? $url : '';
-					break;
+				$post = \get_post($post_id);
+				$url = \get_author_posts_url($post->post_author);
+				$content = !empty($url) ? $url : '';
+				break;
 			}
 
 			case 'post_meta': {
-				if ( ! empty( $meta_name ) ) {
-					$meta = get_post_meta( $post_id, $meta_name, true );
+				if (!empty($meta_name)) {
+					$meta = get_post_meta($post_id, $meta_name, true);
 
 					// For now, only string is supported!
-					if ( is_string( $meta ) ) {
+					if (is_string($meta)) {
 						$content = $meta;
 					}
 				}
@@ -950,40 +1035,40 @@ class HelperFunctions {
 			}
 
 			default: {
-				$post    = get_post( $post_id );
+				$post = get_post($post_id);
 				if (isset($post) && 0 !== strpos(KIRKI_CONTENT_MANAGER_PREFIX, $post->post_type)) {
 					$meta_key = ContentManagerHelper::get_child_post_meta_key_using_field_id($post->post_parent, $content_value);
 					$content = get_post_meta($post->ID, $meta_key, true);
 					$fields = ContentManagerHelper::get_post_type_custom_field_keys($post->post_parent);
 
-					if(!$content && isset($fields[$content_value], $fields[$content_value]['default_value'])){
+					if (!$content && isset($fields[$content_value], $fields[$content_value]['default_value'])) {
 						$content = $fields[$content_value]['default_value'];
 					}
 
-					if(isset($fields[$content_value]) && $fields[$content_value]['type'] === 'date'){
+					if (isset($fields[$content_value]) && $fields[$content_value]['type'] === 'date') {
 						$content = self::format_date($content, $fields[$content_value]['default_format']); //TODO: need to check with editor format
 					}
-					if ( isset($fields[$content_value]['type']) && $fields[$content_value]['type'] === 'image' ) {
+					if (isset($fields[$content_value]['type']) && $fields[$content_value]['type'] === 'image') {
 						$content = array(
-							'wp_attachment_id' =>  $content['id'] ?? '',
+							'wp_attachment_id' => $content['id'] ?? '',
 							'src' => $content['url'] ?? '',
 						);
 					}
-					if(isset($fields[$content_value]['type']) && $fields[$content_value]['type'] === 'time') {
+					if (isset($fields[$content_value]['type']) && $fields[$content_value]['type'] === 'time') {
 						$time = "";
 
-						if(isset($fields[$content_value], $fields[$content_value]['default_value']) && $fields[$content_value]['default_value']){
-								$default_time = $fields[$content_value]['default_value'];
+						if (isset($fields[$content_value], $fields[$content_value]['default_value']) && $fields[$content_value]['default_value']) {
+							$default_time = $fields[$content_value]['default_value'];
 
-								$value = isset($default_time['value']) ? $default_time['value'] : '00:00';
-								$unit = isset($default_time['unit']) ? strtolower($default_time['unit']) : 'am';
+							$value = isset($default_time['value']) ? $default_time['value'] : '00:00';
+							$unit = isset($default_time['unit']) ? strtolower($default_time['unit']) : 'am';
 
-								$time = $value . ' ' . $unit;
+							$time = $value . ' ' . $unit;
 						}
 
-						$content = $content ? $content['value'] . ' '. $content['unit'] : $time;
+						$content = $content ? $content['value'] . ' ' . $content['unit'] : $time;
 
-						if(isset($dynamic_options['timeFormat']) && $dynamic_options['timeFormat']){
+						if (isset($dynamic_options['timeFormat']) && $dynamic_options['timeFormat']) {
 							$content = HelperFunctions::convert_time_format($content, $dynamic_options['timeFormat']);
 						}
 					}
@@ -1005,152 +1090,155 @@ class HelperFunctions {
 	 */
 	public static function get_user_dynamic_content($content_value, $user_id = null, $meta_name = '', $dynamic_options = [])
 	{
-    $content = '';
+		$content = '';
 
-		 // Get the user by ID
-		 $user = get_user_by('id', $user_id);
+		// Get the user by ID
+		$user = get_user_by('id', $user_id);
 
-		 // fall back to the current user
-		 if(empty($user)) {
+		// fall back to the current user
+		if (empty($user)) {
 			$user = get_user_by('id', get_current_user_id());
-		 }
+		}
 
-		
-		if(empty($user)) {
+
+		if (empty($user)) {
 			return $content;
 		}
-    
-    // Switch statement to handle dynamic content based on the content_value
-    switch ($content_value) {
-        case 'display_name':
-            return $user->display_name;
-        
-        case 'user_email':
-            return $user->user_email;
-        
-        case 'user_nicename':
-            return $user->user_nicename;
-        
-				case 'registered_date': {
-					$date = $user->user_registered;
 
-					if (isset($dynamic_options['format'])) {
-						return HelperFunctions::format_date($date, $dynamic_options['format']);
+		// Switch statement to handle dynamic content based on the content_value
+		switch ($content_value) {
+			case 'display_name':
+				return $user->display_name;
+
+			case 'user_email':
+				return $user->user_email;
+
+			case 'user_nicename':
+				return $user->user_nicename;
+
+			case 'registered_date': {
+				$date = $user->user_registered;
+
+				if (isset($dynamic_options['format'])) {
+					return HelperFunctions::format_date($date, $dynamic_options['format']);
+				}
+
+				$date = new DateTime($date);
+
+				return $date->format('F j, Y');
+			}
+
+			case 'registered_time': {
+				$date = new DateTime($user->user_registered);
+				return $date->format('H:i:a');
+			}
+
+			case 'user_url':
+				return get_author_posts_url($user->ID);
+
+			case 'profile_image':
+				return get_avatar_url($user->ID);
+
+			case 'user_meta': {
+				if (!empty($meta_name)) {
+					$meta = get_user_meta($user->ID, $meta_name, true);
+
+					if (is_string($meta)) {
+						return $meta;
 					}
-
-					$date = new DateTime($date);
-
-					return $date->format('F j, Y');
+					return '';
 				}
-
-				case 'registered_time': {
-					$date = new DateTime($user->user_registered);
-					return $date->format('H:i:a');
-				}
-        
-        case 'user_url':
-					return get_author_posts_url($user->ID);
-        
-        case 'profile_image':
-            return get_avatar_url($user->ID);
-
-				case 'user_meta': {
-					if ( ! empty( $meta_name ) ) {
-						$meta = get_user_meta( $user->ID, $meta_name, true );
-					
-						if(is_string($meta)) {
-							return $meta;
-						}
-						return '';
-					}
-				}
+			}
 
 			case 'initials': {
-					$first_name = isset($user->first_name) ? $user->first_name : '';
-					$last_name = isset($user->last_name) ? $user->last_name : '';
+				$first_name = isset($user->first_name) ? $user->first_name : '';
+				$last_name = isset($user->last_name) ? $user->last_name : '';
 
-					$initials = '';
-					if ($first_name) {
-						$initials .= strtoupper(substr($first_name, 0, 1));
-					}
-
-					if ($last_name) {
-						$initials .= strtoupper(substr($last_name, 0, 1));
-					}
-
-					// if initials are lenght 1 or empty, then the first two letters of the username
-					if (empty($initials) || strlen($initials) < 2) {
-						$username = isset($user->user_login) ? $user->user_login : '';
-						$initials = strtoupper(substr($username, 0, 2));
-					}
-
-					return $initials;
+				$initials = '';
+				if ($first_name) {
+					$initials .= strtoupper(substr($first_name, 0, 1));
 				}
 
+				if ($last_name) {
+					$initials .= strtoupper(substr($last_name, 0, 1));
+				}
+
+				// if initials are lenght 1 or empty, then the first two letters of the username
+				if (empty($initials) || strlen($initials) < 2) {
+					$username = isset($user->user_login) ? $user->user_login : '';
+					$initials = strtoupper(substr($username, 0, 2));
+				}
+
+				return $initials;
+			}
+
 			default:
-            return '';
-    }
+				return '';
+		}
 	}
 
-	private static function get_value($data, $key) {
-    if (is_array($data)) {
-        return $data[$key] ?? '';
-    }
+	private static function get_value($data, $key)
+	{
+		if (is_array($data)) {
+			return $data[$key] ?? '';
+		}
 
-    if (is_object($data)) {
-        return $data->$key ?? '';
-    }
+		if (is_object($data)) {
+			return $data->$key ?? '';
+		}
 
-    return '';
-}
-
-	public static function get_term_dynamic_content($content_value, $term_id = null, $meta_name = '') {
-    $term = get_term($term_id);
-
-    if (empty($term)) {
-        return '';
-    }
-
-    switch ($content_value) {
-        case 'name':
-            return self::get_value($term, 'name');
-
-        case 'description':
-            return self::get_value($term, 'description');
-
-        case 'slug':
-            return self::get_value($term, 'slug');
-
-        case 'count':
-            return self::get_value($term, 'count');
-
-        case 'meta':
-            if (!empty($meta_name)) {
-                $term_id = self::get_value($term, 'term_id');
-                $meta = get_term_meta($term_id, $meta_name, true);
-
-                return is_scalar($meta) ? (string) $meta : '';
-            }
-            return '';
-
-        default:
-            return '';
-    }
+		return '';
 	}
 
-	public static function retrieve_post_content($post_id) {
-		$content = apply_filters( 'the_content', get_the_content(null, false, $post_id ) );
+	public static function get_term_dynamic_content($content_value, $term_id = null, $meta_name = '')
+	{
+		$term = get_term($term_id);
 
-		$load_for = HelperFunctions::sanitize_text( isset( $_GET['load_for'] ) ? $_GET['load_for'] : '' );
+		if (empty($term)) {
+			return '';
+		}
+
+		switch ($content_value) {
+			case 'name':
+				return self::get_value($term, 'name');
+
+			case 'description':
+				return self::get_value($term, 'description');
+
+			case 'slug':
+				return self::get_value($term, 'slug');
+
+			case 'count':
+				return self::get_value($term, 'count');
+
+			case 'meta':
+				if (!empty($meta_name)) {
+					$term_id = self::get_value($term, 'term_id');
+					$meta = get_term_meta($term_id, $meta_name, true);
+
+					return is_scalar($meta) ? (string) $meta : '';
+				}
+				return '';
+
+			default:
+				return '';
+		}
+	}
+
+	public static function retrieve_post_content($post_id)
+	{
+		$content = apply_filters('the_content', get_the_content(null, false, $post_id));
+
+		$load_for = HelperFunctions::sanitize_text(isset($_GET['load_for']) ? $_GET['load_for'] : '');
 
 		if ($load_for !== 'kirki-iframe' && $kirki_data = HelperFunctions::is_kirki_type_data($post_id)) {
-			$params = array( 
+			$params = array(
 				'blocks' => $kirki_data['blocks'],
 				'style_blocks' => $kirki_data['styles'],
 				'root' => 'root',
 				'post_id' => $post_id,
-			 );
-			$content =  apply_filters( 'the_content', HelperFunctions::get_html_using_preview_script( $params ));
+			);
+			$content = apply_filters('the_content', HelperFunctions::get_html_using_preview_script($params));
 		}
 
 		return $content;
@@ -1161,57 +1249,59 @@ class HelperFunctions {
 	 *
 	 * @return void
 	 */
-	public static function remove_theme_style() {
-		$theme        = wp_get_theme();
+	public static function remove_theme_style()
+	{
+		$theme = wp_get_theme();
 		$parent_style = $theme->stylesheet . '-style';
-		wp_dequeue_style( $parent_style );
-		wp_deregister_style( $parent_style );
-		wp_dequeue_style( $parent_style . '-css' );
-		wp_deregister_style( $parent_style . '-css' );
+		wp_dequeue_style($parent_style);
+		wp_deregister_style($parent_style);
+		wp_dequeue_style($parent_style . '-css');
+		wp_deregister_style($parent_style . '-css');
 	}
 
-	public static function dequeue_all_except_my_plugin() {
+	public static function dequeue_all_except_my_plugin()
+	{
 
-    global $wp_scripts, $wp_styles, $kirki_editor_assets;
+		global $wp_scripts, $wp_styles, $kirki_editor_assets;
 
-    foreach ($wp_scripts->queue as $handle) {
+		foreach ($wp_scripts->queue as $handle) {
 
-        // Keep WordPress media scripts
-        if (
-            str_starts_with($handle, 'media') ||
-            str_starts_with($handle, 'wp-media') ||
-            in_array($handle, ['underscore','backbone','jquery','wp-util'])
-        ) {
-            continue;
-        }
+			// Keep WordPress media scripts
+			if (
+				str_starts_with($handle, 'media') ||
+				str_starts_with($handle, 'wp-media') ||
+				in_array($handle, ['underscore', 'backbone', 'jquery', 'wp-util'])
+			) {
+				continue;
+			}
 
-        wp_dequeue_script($handle);
-    }
+			wp_dequeue_script($handle);
+		}
 
-    foreach ($wp_styles->queue as $handle) {
+		foreach ($wp_styles->queue as $handle) {
 
-        // Keep media related styles
-        if (
-            str_starts_with($handle, 'media') ||
-            in_array($handle, ['buttons','dashicons','imgareaselect'])
-        ) {
-            continue;
-        }
+			// Keep media related styles
+			if (
+				str_starts_with($handle, 'media') ||
+				in_array($handle, ['buttons', 'dashicons', 'imgareaselect'])
+			) {
+				continue;
+			}
 
-        wp_dequeue_style($handle);
-    }
+			wp_dequeue_style($handle);
+		}
 
-    if (!empty($kirki_editor_assets['scripts'])) {
-        foreach ($kirki_editor_assets['scripts'] as $script_handle) {
-            wp_enqueue_script($script_handle);
-        }
-    }
+		if (!empty($kirki_editor_assets['scripts'])) {
+			foreach ($kirki_editor_assets['scripts'] as $script_handle) {
+				wp_enqueue_script($script_handle);
+			}
+		}
 
-    if (!empty($kirki_editor_assets['styles'])) {
-        foreach ($kirki_editor_assets['styles'] as $style_handle) {
-            wp_enqueue_style($style_handle);
-        }
-    }
+		if (!empty($kirki_editor_assets['styles'])) {
+			foreach ($kirki_editor_assets['styles'] as $style_handle) {
+				wp_enqueue_style($style_handle);
+			}
+		}
 	}
 
 	/**
@@ -1223,59 +1313,60 @@ class HelperFunctions {
 	 * @param int    $id if need prefix like symbol or popup post_id.
 	 * @return string  the html string.
 	 */
-	public static function get_html_using_preview_script( array $params = [] ) {
+	public static function get_html_using_preview_script(array $params = [])
+	{
 
 		$blocks = $params['blocks'] ?? null;
-    $style_blocks = $params['style_blocks'] ?? null;
-    $root = $params['root'] ?? null;
-    $options = $params['options'] ?? [];
-    $post_id = $params['post_id'] ?? null;
-    $get_style = $params['get_style'] ?? true;
-    $get_variable = $params['get_variable'] ?? true;
-    $get_fonts = $params['get_fonts'] ?? true;
-    $should_take_app_script = $params['should_take_app_script'] ?? true;
-    $prefix = $params['prefix'] ?? false;
-    $get_all_style_forcefully_if_get_style_true = $params['get_all_style_forcefully_if_get_style_true'] ?? false;
+		$style_blocks = $params['style_blocks'] ?? null;
+		$root = $params['root'] ?? null;
+		$options = $params['options'] ?? [];
+		$post_id = $params['post_id'] ?? null;
+		$get_style = $params['get_style'] ?? true;
+		$get_variable = $params['get_variable'] ?? true;
+		$get_fonts = $params['get_fonts'] ?? true;
+		$should_take_app_script = $params['should_take_app_script'] ?? true;
+		$prefix = $params['prefix'] ?? false;
+		$get_all_style_forcefully_if_get_style_true = $params['get_all_style_forcefully_if_get_style_true'] ?? false;
 
 		if($blocks){
 			$options['search_related_collection_ids'] = isset($params['search_related_collection_ids']) ? $params['search_related_collection_ids'] : self::collect_search_related_collection_ids( $blocks );
 		}
 
 		//set initial context data start
-		if(!isset($options['post'])){
+		if (!isset($options['post'])) {
 			$post = get_post(get_the_ID());
-			if($post){
+			if ($post) {
 				$options['post'] = $post;
 				$options['itemType'] = 'post';
 			}
 		}
-		if(!isset($options['user'])){
+		if (!isset($options['user'])) {
 			$user = get_user_by('id', get_current_user_id());
-			if($user){
-				$options['user'] = Users::get_format_single_user_data( $user );
+			if ($user) {
+				$options['user'] = Users::get_format_single_user_data($user);
 			}
 		}
 		//set initial context data end
-	
-		$preview                = new Preview( $blocks, $style_blocks, $root, $post_id, $prefix );
-		$html                   = $preview->getHtml( $options );// this method need to call first cause after that only used style block array construct.
+
+		$preview = new Preview($blocks, $style_blocks, $root, $post_id, $prefix);
+		$html = $preview->getHtml($options);// this method need to call first cause after that only used style block array construct.
 		$only_used_style_blocks = $get_all_style_forcefully_if_get_style_true ? $style_blocks : $preview->get_only_used_style_blocks();
 		$s = '';
-		if($get_fonts ){
-			$s                      .= $preview->getCustomFontsLinks();
+		if ($get_fonts) {
+			$s .= $preview->getCustomFontsLinks();
 		}
 
 		if($get_style){
 			//style will be false when it calls from collection single item. only first item will generate style. others item will be same.
-			$s                   .= $preview->getStyleTag( $only_used_style_blocks );
+			$s .= $preview->getStyleTag($only_used_style_blocks);
 		}
 
 		$s .= $preview->get_interaction_set_as_initial_css();
 
-		
 
-		$s                     .= $html;
-		$s                     .= $preview->getScriptTag($should_take_app_script);
+
+		$s .= $html;
+		$s .= $preview->getScriptTag($should_take_app_script);
 		return $s;
 	}
 
@@ -1293,23 +1384,25 @@ class HelperFunctions {
     return $result;
 	}
 
-	public static function get_custom_fonts_tags(){
-		$custom_fonts = HelperFunctions::get_global_data_using_key( KIRKI_USER_CUSTOM_FONTS_META_KEY );
-		if ( $custom_fonts ) {
+	public static function get_custom_fonts_tags()
+	{
+		$custom_fonts = HelperFunctions::get_global_data_using_key(KIRKI_USER_CUSTOM_FONTS_META_KEY);
+		if ($custom_fonts) {
 			$s = '';
-			foreach ( $custom_fonts as $key => $fonts_data ) {
-				$s .= self::getFontsHTMLMarkup( $fonts_data );
+			foreach ($custom_fonts as $key => $fonts_data) {
+				$s .= self::getFontsHTMLMarkup($fonts_data);
 			}
 			return $s;
 		}
 	}
 
-	public static function getFontsHTMLMarkup( $fonts_data ) {
-		$font_family = str_replace( ' ', '+', $fonts_data['family'] );
-		if ( isset( $fonts_data['fontUrl'] ) && ! in_array( $font_family, self::$printed_font_family_tracker, true ) ) {
+	public static function getFontsHTMLMarkup($fonts_data)
+	{
+		$font_family = str_replace(' ', '+', $fonts_data['family']);
+		if (isset($fonts_data['fontUrl']) && !in_array($font_family, self::$printed_font_family_tracker, true)) {
 			self::$printed_font_family_tracker[] = $font_family;
 
-			$font_url = isset( $fonts_data['localUrl'] ) ? $fonts_data['localUrl'] : $fonts_data['fontUrl'];
+			$font_url = isset($fonts_data['localUrl']) ? $fonts_data['localUrl'] : $fonts_data['fontUrl'];
 
 			//phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet
 			return '<link class="' . 'kirki-custom-fonts-link" href="' . $font_url . '" rel="stylesheet">';
@@ -1324,14 +1417,15 @@ class HelperFunctions {
 	 * @param array  $style_blocks style_blocks.
 	 * @param string $root data root.
 	 */
-	public static function rec_update_data_id_then_return_new_html( $data, $style_blocks, $root = 'body', $options = [], $get_style=true ) {
+	public static function rec_update_data_id_then_return_new_html($data, $style_blocks, $root = 'body', $options = [], $get_style = true)
+	{
 		$data_helper = new DataHelper();
-		$data_helper->rec_update_data_id_to_new_id( $data, $style_blocks, $root, null );
+		$data_helper->rec_update_data_id_to_new_id($data, $style_blocks, $root, null);
 		$data = $data_helper->temp_data;
 		$style_blocks = $data_helper->temp_styles;
-		$root = isset($data_helper->temp_ids[ $root ])?$data_helper->temp_ids[ $root ]:false;
+		$root = isset($data_helper->temp_ids[$root]) ? $data_helper->temp_ids[$root] : false;
 
-		$params = array( 
+		$params = array(
 			'blocks' => $data,
 			'style_blocks' => $style_blocks,
 			'root' => $root,
@@ -1339,22 +1433,23 @@ class HelperFunctions {
 			'options' => $options,
 			'get_style' => $get_style,
 			'get_all_style_forcefully_if_get_style_true' => true,//this will generate collection first item all style 
-		 );
+		);
 
-		return self::get_html_using_preview_script( $params );
+		return self::get_html_using_preview_script($params);
 	}
 
 	// hook
-	public static function kirki_html_generator( $s, $post_id, $staging_version = false ) {
-		$d = self::is_kirki_type_data( $post_id, $staging_version );
-		if($d){
-			$params = array( 
+	public static function kirki_html_generator($s, $post_id, $staging_version = false)
+	{
+		$d = self::is_kirki_type_data($post_id, $staging_version);
+		if ($d) {
+			$params = array(
 				'blocks' => $d['blocks'],
 				'style_blocks' => $d['styles'],
 				'root' => 'root',
 				'post_id' => $post_id,
-			 );
-			return self::get_html_using_preview_script( $params );
+			);
+			return self::get_html_using_preview_script($params);
 		}
 		return false;
 	}
@@ -1367,10 +1462,11 @@ class HelperFunctions {
 	 * @param array $context : post object or user object
 	 * @return symbol || bool(false)
 	 */
-	public static function find_template_for_this_context($type = 'post', $context=null)
+	public static function find_template_for_this_context($type = 'post', $context = null)
 	{
-		$templates = Page::fetch_list('kirki_template', true,  array('publish'));
-		if (!$templates || !$context) return false;
+		$templates = Page::fetch_list('kirki_template', true, array('publish'));
+		if (!$templates || !$context)
+			return false;
 		foreach ($templates as $key => $template) {
 			if (isset($template['conditions'])) {
 				$conditions = $template['conditions'];
@@ -1382,7 +1478,7 @@ class HelperFunctions {
 					if (self::check_all_conditions_for_this_post($context, $conditions)) {
 						return $template;
 					}
-				}else if ($type === 'term'){					
+				} else if ($type === 'term') {
 					if (self::check_all_conditions_for_this_term($context, $conditions)) {
 						return $template;
 					}
@@ -1397,22 +1493,23 @@ class HelperFunctions {
 	 *
 	 * @return strint
 	 */
-	public static function get_page_popups_html() {
+	public static function get_page_popups_html()
+	{
 		global $post;
-		if ( $post ) {
+		if ($post) {
 			$popups = self::get_page_popups();
-			if ( count( $popups ) > 0 ) {
+			if (count($popups) > 0) {
 				$s = '';
-				foreach ( $popups as $key => $popup ) {
-					$params = array( 
+				foreach ($popups as $key => $popup) {
+					$params = array(
 						'blocks' => $popup['blocks'],
 						'style_blocks' => $popup['styleBlocks'],
 						'root' => $popup['root'],
 						'post_id' => $popup['id'],
 					);
-					$s .= self::get_html_using_preview_script( $params );
+					$s .= self::get_html_using_preview_script($params);
 				}
-				return do_shortcode( $s );
+				return do_shortcode($s);
 			}
 		}
 		return '';
@@ -1424,11 +1521,12 @@ class HelperFunctions {
 	 *
 	 * @return array
 	 */
-	public static function get_page_popups() {
+	public static function get_page_popups()
+	{
 		global $post;
-		if ( $post ) {
-			$popups = Page::fetch_list('kirki_popup', true, array( 'publish' ) );
-			return self::find_popups_for_this_post( $popups, $post );
+		if ($post) {
+			$popups = Page::fetch_list('kirki_popup', true, array('publish'));
+			return self::find_popups_for_this_post($popups, $post);
 		}
 		return array();
 	}
@@ -1441,26 +1539,29 @@ class HelperFunctions {
 	 * @param object $post post object.
 	 * @return popups || [];
 	 */
-	public static function find_popups_for_this_post( $popups, $post ) {
-		$arr     = array();
+	public static function find_popups_for_this_post($popups, $post)
+	{
+		$arr = array();
 		$post_id = $post->ID;
-		foreach ( $popups as $key => $popup ) {
-			$popup = self::format_single_popup_data_for_html_print( $popup );
-			if ( self::check_popup_pagearr_logic( $popup, $post_id ) ) {
+		foreach ($popups as $key => $popup) {
+			$popup = self::format_single_popup_data_for_html_print($popup);
+			if (self::check_popup_pagearr_logic($popup, $post_id)) {
 				$arr[] = $popup;
 			}
 		}
 		return $arr;
 	}
 
-	private static function format_single_popup_data_for_html_print( $popup ) {
-		if(!$popup['blocks'])return $popup;
+	private static function format_single_popup_data_for_html_print($popup)
+	{
+		if (!$popup['blocks'])
+			return $popup;
 		$root = false;
-		foreach ( $popup['blocks'] as $key2 => &$b ) {
-			if ( 'root' === $b['parentId'] ) {
+		foreach ($popup['blocks'] as $key2 => &$b) {
+			if ('root' === $b['parentId']) {
 				$root = $b['id'];
 
-				if ( isset( $b['properties']['attributes'] ) ) {
+				if (isset($b['properties']['attributes'])) {
 					$b['properties']['attributes']['popup-id'] = $popup['id'];
 				} else {
 					$b['properties']['attributes'] = array(
@@ -1481,13 +1582,15 @@ class HelperFunctions {
 	 * @param int   $post_id wp post id.
 	 * @return bool
 	 */
-	private static function check_popup_pagearr_logic( $popup, $post_id ) {
-		if(!isset($popup['root']))return false;
+	private static function check_popup_pagearr_logic($popup, $post_id)
+	{
+		if (!isset($popup['root']))
+			return false;
 		$root = $popup['root'];
-		if ( $root && isset( $popup['blocks'][ $root ]['properties']['popup']['visibilityConditions'] ) ) {
-			$conditions = $popup['blocks'][ $root ]['properties']['popup']['visibilityConditions'];
-			$post       = get_post( $post_id );
-			if ( self::check_all_conditions_for_this_post( $post, $conditions ) || in_array( $popup['id'], Preview::$only_used_popup_id_array, true ) ) {
+		if ($root && isset($popup['blocks'][$root]['properties']['popup']['visibilityConditions'])) {
+			$conditions = $popup['blocks'][$root]['properties']['popup']['visibilityConditions'];
+			$post = get_post($post_id);
+			if (self::check_all_conditions_for_this_post($post, $conditions) || in_array($popup['id'], Preview::$only_used_popup_id_array, true)) {
 				return true;
 			}
 		}
@@ -1513,10 +1616,10 @@ class HelperFunctions {
 		$hide_flag = false;
 
 		foreach ($conditions as $key => $condition) {
-			if(!isset($condition['from'])){
+			if (!isset($condition['from'])) {
 				$condition['from'] = 'post';
 			}
-			if($condition['from'] === 'term'){
+			if ($condition['from'] === 'term') {
 				return false;
 			}
 			if (isset($condition['category'])) {
@@ -1528,8 +1631,8 @@ class HelperFunctions {
 					$condition['type'] = 'post';
 				}
 			}
-			
-			if(!isset($condition['visibility'])){
+
+			if (!isset($condition['visibility'])) {
 				$condition['visibility'] = 'show';
 			}
 
@@ -1572,22 +1675,22 @@ class HelperFunctions {
 		}
 		return $show_flag;
 	}
-	
-	
+
+
 	public static function check_all_conditions_for_this_term($term, $conditions)
 	{
 		$show_flag = false;
 		$hide_flag = false;
 		foreach ($conditions as $key => $condition) {
-			if(!isset($condition['visibility'])){
+			if (!isset($condition['visibility'])) {
 				$condition['visibility'] = 'show';
 			}
-			if(!isset($condition['from'])){
+			if (!isset($condition['from'])) {
 				$condition['from'] = 'post';
 			}
 
-			if($condition['from'] !== 'term'){
-					return false;
+			if ($condition['from'] !== 'term') {
+				return false;
 			}
 
 			if ($condition['type'] === '*') {
@@ -1600,7 +1703,7 @@ class HelperFunctions {
 					if ($condition['where'] == '*') {
 						// All posts
 						$show_flag = $condition['visibility'] === 'show';
-					}  else {
+					} else {
 						// Taxonomy
 						$taxonomy = $condition['where'];
 						$con_term = $condition['to'];
@@ -1608,7 +1711,7 @@ class HelperFunctions {
 							// All terms
 							$show_flag = $condition['visibility'] === 'show';
 						} else {
-							if($term['taxonomy'] == $con_term){
+							if ($term['taxonomy'] == $con_term) {
 								$show_flag = $condition['visibility'] === 'show';
 								$hide_flag = $condition['visibility'] === 'hide';
 							}
@@ -1640,8 +1743,8 @@ class HelperFunctions {
 					$condition['type'] = 'post';
 				}
 			}
-			
-			if(!isset($condition['visibility'])){
+
+			if (!isset($condition['visibility'])) {
 				$condition['visibility'] = 'show';
 			}
 
@@ -1654,9 +1757,9 @@ class HelperFunctions {
 				} elseif ($condition['where'] === 'role') {
 					$user_role = $condition['to'];
 
-					if($user_role === '*'){
+					if ($user_role === '*') {
 						$show_flag = $condition['visibility'] === 'show';
-					}else{
+					} else {
 						$curr_user = $user;
 						if (in_array($user_role, $curr_user['roles'])) {
 							$show_flag = $condition['visibility'] === 'show';
@@ -1674,7 +1777,8 @@ class HelperFunctions {
 	}
 
 
-	private static function attribute_in_post_table($attr = '') {
+	private static function attribute_in_post_table($attr = '')
+	{
 		$post_table_attributes = array(
 			'ID',
 			'post_author',
@@ -1693,21 +1797,23 @@ class HelperFunctions {
 		return in_array($attr, $post_table_attributes, true);
 	}
 
-	private static function sort_filters_by_relation($filter_items = array()) {
+	private static function sort_filters_by_relation($filter_items = array())
+	{
 		$sorted_array = array();
 
 		if (is_array($filter_items)) {
 			array_walk($filter_items, function($item) use (&$sorted_array) {
-				$relation = isset($item['relation']) ? $item['relation'] : 'OR';
+				$relation_raw = isset($item['relation']) ? $item['relation'] : 'OR';
+				$relation = in_array(strtoupper($relation_raw), ['AND', 'OR'], true) ? strtoupper($relation_raw) : 'OR';
 
 				if (!isset($sorted_array[$relation])) {
 					$sorted_array[$relation] = array();
 				}
 
 				unset($item['relation']);
-		
+
 				$sorted_array[$relation][] = $item;
-    	});
+			});
 		}
 
 		return $sorted_array;
@@ -1716,20 +1822,21 @@ class HelperFunctions {
 	/**
 	 * text, number, date/time, options, switch
 	 */
-	private static function post_table_filter_query($filter_item, $data_type) {
+	private static function post_table_filter_query($filter_item, $data_type)
+	{
 		$field_name = $filter_item['id'];
 		$sorted_array = self::sort_filters_by_relation($filter_item['items']);
 
 		$where_sql = '';
 
-		array_walk($sorted_array, function($sorted_array_item, $condition) use ($data_type, $field_name, &$where_sql) {
+		array_walk($sorted_array, function ($sorted_array_item, $condition) use ($data_type, $field_name, &$where_sql) {
 			global $wpdb;
 
 			$conditions = array();
 			$column_name = "$wpdb->posts.$field_name";
 
-			array_walk($sorted_array_item, function($filter_condition_item) use ($data_type, $column_name, &$conditions) {
-				switch($data_type) {
+			array_walk($sorted_array_item, function ($filter_condition_item) use ($data_type, $column_name, &$conditions) {
+				switch ($data_type) {
 					case 'text': {
 						$conditions[] = PostsQueryUtils::post_table_text_query($column_name, $filter_condition_item['condition'], $filter_condition_item['value']);
 						break;
@@ -1760,17 +1867,17 @@ class HelperFunctions {
 					}
 				}
 			});
-			
+
 			if (empty($conditions)) {
 				return;
 			}
-	
+
 			$condition_sql = implode(" {$condition} ", $conditions);
-	
+
 			if ('OR' === $condition) {
 				$condition_sql = "({$condition_sql})";
 			}
-	
+
 			/**
 			 * A query to 
 			 * [x start with 'JoomShaper' or 'IcoFont' or 'Kirki'
@@ -1785,14 +1892,14 @@ class HelperFunctions {
 		if (empty($where_sql)) {
 			return null;
 		}
-	
+
 		$callback = function ($where) use ($where_sql) {
 			$where .= $where_sql;
 			return $where;
 		};
-	
+
 		add_filter('posts_where', $callback);
-	
+
 		return $callback;
 	}
 
@@ -1801,48 +1908,49 @@ class HelperFunctions {
 	 * help: https://wordpress.stackexchange.com/questions/159426/meta-query-with-string-starting-like-pattern
 	 */
 
-	private static function post_meta_table_filter_query($filter_item, $key, $data_type) {
+	private static function post_meta_table_filter_query($filter_item, $key, $data_type)
+	{
 		$sorted_array = self::sort_filters_by_relation($filter_item['items']);
 		$meta_query = array();
 
-		array_walk($sorted_array, function($sorted_array_item, $condition) use (&$meta_query, $key, $data_type) {
+		array_walk($sorted_array, function ($sorted_array_item, $condition) use (&$meta_query, $key, $data_type) {
 			if (count($sorted_array_item) > 0) {
 				$condition_arr = array('relation' => $condition);
 
-				array_walk($sorted_array_item, function($filter_condition_item) use (&$condition_arr, $key, $data_type) {
+				array_walk($sorted_array_item, function ($filter_condition_item) use (&$condition_arr, $key, $data_type) {
 
-					switch($data_type) {
+					switch ($data_type) {
 						case 'text': {
 							$condition_arr[] = PostsQueryUtils::post_meta_table_text_query($key, $filter_condition_item['condition'], $filter_condition_item['value']);
 							break;
 						}
-	
+
 						case 'date': {
 							$condition_arr[] = PostsQueryUtils::post_meta_table_date_query($key, $filter_condition_item); // ['start-date' => '', 'end-date' => '']);
 							break;
 						}
-	
+
 						case 'number': {
 							$condition_arr[] = PostsQueryUtils::post_meta_table_number_query($key, $filter_condition_item['condition'], $filter_condition_item['value']);
 							break;
 						}
-	
+
 						case 'option': {
 							$condition_arr[] = PostsQueryUtils::post_meta_table_options_query($key, $filter_condition_item['condition'], $filter_condition_item['values']);
 							break;
 						}
-	
+
 						case 'switch': {
 							$condition_arr[] = PostsQueryUtils::post_meta_table_switch_query($key, $filter_condition_item['condition']);
 							break;
 						}
-	
+
 						default: {
 							break;
 						}
 					}
 				});
-				
+
 				$meta_query[] = $condition_arr;
 			}
 		});
@@ -1875,9 +1983,10 @@ class HelperFunctions {
 		foreach ($sorted_array as $relation_str => $filters_by_relation) {
 			foreach ($filters_by_relation as $filter_condition_item) {
 				$condition = $filter_condition_item['condition'];
-				$value = isset($filter_condition_item['value']) ? (int)$filter_condition_item['value'] : null;
+				$value = isset($filter_condition_item['value']) ? (int) $filter_condition_item['value'] : null;
 
-				if (!$value) continue;
+				if (!$value)
+					continue;
 
 				$results = $wpdb->get_col($wpdb->prepare(
 					"SELECT post_id FROM {$wpdb->prefix}kirki_cm_reference WHERE field_meta_key = %s AND ref_post_id = %d",
@@ -1946,68 +2055,75 @@ class HelperFunctions {
 	 *
 	 * @return array filter array
 	 */
-	public static function  handle_legacy_filter_to_new_filter($filters){
+	public static function handle_legacy_filter_to_new_filter($filters)
+	{
 		$new_filters = array();
 
-		if(is_array($filters)){
-			foreach($filters as $key => $item){
-				if(!isset($item['id']) && isset($item['type']) && $item['type']){
-					switch($item['type']){
+		if (is_array($filters)) {
+			foreach ($filters as $key => $item) {
+				if (!isset($item['id']) && isset($item['type']) && $item['type']) {
+					switch ($item['type']) {
 						case 'date': {
 							$new_filters[] = array(
 								'type' => 'post_date',
 								'id' => 'post_date',
 								'title' => 'Post Date',
-								'items' => [array(
+								'items' => [
+									array(
 										'start-date' => isset($item['start-date']) ? $item['start-date'] : '',
 										'end-date' => isset($item['end-date']) ? $item['end-date'] : '',
 										'relation' => 'OR',
-								)],
+									)
+								],
 							);
-	
+
 							break;
 						}
-	
+
 						case 'author': {
 							$new_filters[] = array(
 								'type' => 'post_author',
 								'id' => 'post_author',
 								'title' => 'Author',
-								'items' => [array(
+								'items' => [
+									array(
 										'condition' => 'in',
 										'values' => $item['values'],
 										'relation' => 'OR',
-								)],
+									)
+								],
 							);
-	
-							break; 
+
+							break;
 						}
-	
+
 						case 'category': {
 							$new_filters[] = array(
 								'type' => 'post_category',
 								'id' => 'post_category',
 								'title' => 'Category',
-								'items' => [array(
+								'items' => [
+									array(
 										'condition' => 'in',
 										'values' => $item['values'],
 										'relation' => 'OR',
-								)],
+									)
+								],
 							);
 							break;
 						}
-	
+
 						default: {
 							break;
 						}
 					}
-				}else{
+				} else {
 					$new_filters[] = $item;
 				}
 			}
 		}
 		return $new_filters;
-	 }
+	}
 
 	 	/**
 	 * Static callback for posts_where filter to allow removal with remove_filter.
@@ -2051,22 +2167,23 @@ class HelperFunctions {
 	 *
 	 * @return array post array
 	 */
-	public static function get_posts( $params ) {
-		$name        = isset( $params['name'] ) ? $params['name'] : null;
-		$sorting     = isset( $params['sorting'] ) ? $params['sorting'] : null;
-		$filters     = isset( $params['filters'] ) ? $params['filters'] : null;
-		$inherit     = (bool)($params['inherit'] ?? false);
-		$related     = (bool)($params['related'] ?? false);
-		$post_parent = (int)($params['post_parent'] ?? 0);
-		$post_status = isset( $params['post_status'] ) ? $params['post_status'] : 'publish';
-		$query = isset( $params['q'] ) ? $params['q'] : '';
-		$IDs = isset( $params['IDs'] ) ? $params['IDs'] : [];
+	public static function get_posts($params)
+	{
+		$name = isset($params['name']) ? $params['name'] : null;
+		$sorting = isset($params['sorting']) ? $params['sorting'] : null;
+		$filters = isset($params['filters']) ? $params['filters'] : null;
+		$inherit = (bool) ($params['inherit'] ?? false);
+		$related = (bool) ($params['related'] ?? false);
+		$post_parent = (int) ($params['post_parent'] ?? 0);
+		$post_status = isset($params['post_status']) ? $params['post_status'] : 'publish';
+		$query = isset($params['q']) ? $params['q'] : '';
+		$IDs = isset($params['IDs']) ? $params['IDs'] : [];
 		$related_post_parent = isset($params['related_post_parent']) ? $params['related_post_parent'] : self::get_post_id_if_possible_from_url();
 
 		// add new 
-		$current_page = isset( $params['current_page'] ) ? $params['current_page'] : 1;
-		$item_per_page = isset( $params['item_per_page'] ) ? $params['item_per_page'] : 3;
-		$offset = isset( $params['offset'] ) ? $params['offset'] : 0;
+		$current_page = isset($params['current_page']) ? $params['current_page'] : 1;
+		$item_per_page = isset($params['item_per_page']) ? $params['item_per_page'] : 3;
+		$offset = isset($params['offset']) ? $params['offset'] : 0;
 		$context = isset($params['context']) ? $params['context'] : null;
 		$tax_query = [
 			'relation' => 'AND',
@@ -2076,13 +2193,13 @@ class HelperFunctions {
 		$offset = ($current_page - 1) * $item_per_page + $offset;
 
 		$args = array(
-			'posts_per_page'   => $item_per_page,
-			'paged'            => $current_page,
-			'offset'           => $offset,
-			'post_type'        => $name,
+			'posts_per_page' => $item_per_page,
+			'paged' => $current_page,
+			'offset' => $offset,
+			'post_type' => $name,
 			'suppress_filters' => false,
-			'post_status'      => $post_status,
-			's'								 => $query,
+			'post_status' => $post_status,
+			's' => $query,
 		);
 
 		if (!empty($query)) {
@@ -2091,31 +2208,31 @@ class HelperFunctions {
 			remove_filter('posts_where', [HelperFunctions::class, 'posts_where_filter_callback']);
 		}
 
-		if(count($IDs) > 0){
+		if (count($IDs) > 0) {
 			$args['post__in'] = $IDs;
 			unset($args['post_parent']);
 			$args['post_type'] = 'any';
 			$inherit = false;
 			$post_parent = false;
-		}	
+		}
 
-		$filters  = self::handle_legacy_filter_to_new_filter($filters);
+		$filters = self::handle_legacy_filter_to_new_filter($filters);
 		$added_filters = array();
 
-		if ( isset( $filters ) && is_array( $filters ) ) {
-			foreach ( $filters as $filter_item ) {
-				if(isset($filter_item['parent']) && $filter_item['parent']){
+		if (isset($filters) && is_array($filters)) {
+			foreach ($filters as $filter_item) {
+				if (isset($filter_item['parent']) && $filter_item['parent']) {
 					$filter_item['id'] = 'term';
 				}
-				$field_name = isset( $filter_item['id'] ) ? $filter_item['id'] : '';
+				$field_name = isset($filter_item['id']) ? $filter_item['id'] : '';
 
-				if(!$field_name){
+				if (!$field_name) {
 					continue;
 				}
 
 				if (self::attribute_in_post_table($filter_item['id']) && is_array($filter_item['items'])) {
-			
-					switch($field_name) {
+
+					switch ($field_name) {
 						case 'post_excerpt':
 						case 'post_content':
 						case 'post_title': {
@@ -2132,8 +2249,8 @@ class HelperFunctions {
 							 * in array may contain start-date, end-date
 							 * Like: [{"start-date": "2020-01-01","end-date": "2020-01-02"}]
 							 */
-							
-							if(isset($filter_item['items'], $filter_item['items'][0])) {
+
+							if (isset($filter_item['items'], $filter_item['items'][0])) {
 								$items = $filter_item['items'];
 								$item = $items[0]; // Get first item in array.
 
@@ -2147,7 +2264,7 @@ class HelperFunctions {
 								if (!empty($item['end-date'])) {
 									$date_query['before'] = $item['end-date'];
 								}
-	
+
 								$args['date_query'] = $date_query;
 							}
 
@@ -2155,7 +2272,7 @@ class HelperFunctions {
 						}
 
 						case 'post_author': {
-					
+
 							/**
 							 * $filter_item['items'] must not contain more than 2 array of conditions. 
 							 * 1 array may contain 'in' conditions and another for 'not-in' conditions
@@ -2164,13 +2281,13 @@ class HelperFunctions {
 							 */
 							$items = $filter_item['items'];
 
-							foreach($items as $item) {
-								if ( isset( $item['condition'], $item['values'] ) && is_array( $item['values'] ) ) {
-									if ( $item['condition'] === 'in' ) {
+							foreach ($items as $item) {
+								if (isset($item['condition'], $item['values']) && is_array($item['values'])) {
+									if ($item['condition'] === 'in') {
 										$args['author__in'] = $item['values'];
 									}
-	
-									if ( $item['condition'] === 'not-in' ) {
+
+									if ($item['condition'] === 'not-in') {
 										$args['author__not_in'] = $item['values'];
 									}
 								}
@@ -2181,25 +2298,25 @@ class HelperFunctions {
 
 						case 'term': {
 							$items = $filter_item['items'];
-					
 
-							foreach($items as $item) {
-								if ( isset( $item['condition'], $item['values'] ) && is_array( $item['values'] ) ) {
 
-									if ( $item['condition'] === 'in' && !empty($item['values']) ) {
+							foreach ($items as $item) {
+								if (isset($item['condition'], $item['values']) && is_array($item['values'])) {
+
+									if ($item['condition'] === 'in' && !empty($item['values'])) {
 										array_push($tax_query, [
 											'taxonomy' => $filter_item['type'],
-											'field'    => 'term_id',
-											'terms'    => $item['values'],
+											'field' => 'term_id',
+											'terms' => $item['values'],
 											'operator' => 'IN',
 										]);
 									}
-	
+
 									if ($item['condition'] === 'not-in' && !empty($item['values'])) {
-											array_push($tax_query, [
+										array_push($tax_query, [
 											'taxonomy' => $filter_item['type'],
-											'field'    => 'term_id',
-											'terms'    => $item['values'],
+											'field' => 'term_id',
+											'terms' => $item['values'],
 											'operator' => 'NOT IN',
 										]);
 									}
@@ -2216,7 +2333,7 @@ class HelperFunctions {
 						$args['meta_query'] = array();
 					}
 
-					switch($data_type) {
+					switch ($data_type) {
 						default:
 						case 'rich_text':
 						case 'text':
@@ -2248,41 +2365,41 @@ class HelperFunctions {
 						}
 
 						case 'taxonomy': {
-								if (empty($args['tax_query'])) {
-									$tax_query = array(
-										'relation' => 'AND'
-									);
-								}
-
-								if (
-									isset($filter_item['taxonomy'], $filter_item['terms']) &&
-									is_array($filter_item['terms'])
-								) {
-									$operators = array('NOT IN', 'IN');
-
-									$operator = 'IN';
-
-									if (isset($filter_item['operator']) && in_array($filter_item['operator'], $operators, true)) {
-										$operator = $filter_item['operator'];
-									}
-
-									array_push($tax_query, [
-										'taxonomy' => $filter_item['taxonomy'],
-										'field'    => 'term_id', // So far this is fixed
-										'terms'    => $filter_item['terms'],
-										'operator' => $operator,
-									]);
-								}
-								break;
+							if (empty($args['tax_query'])) {
+								$tax_query = array(
+									'relation' => 'AND'
+								);
 							}
 
+							if (
+								isset($filter_item['taxonomy'], $filter_item['terms']) &&
+								is_array($filter_item['terms'])
+							) {
+								$operators = array('NOT IN', 'IN');
+
+								$operator = 'IN';
+
+								if (isset($filter_item['operator']) && in_array($filter_item['operator'], $operators, true)) {
+									$operator = $filter_item['operator'];
+								}
+
+								array_push($tax_query, [
+									'taxonomy' => $filter_item['taxonomy'],
+									'field' => 'term_id', // So far this is fixed
+									'terms' => $filter_item['terms'],
+									'operator' => $operator,
+								]);
+							}
+							break;
+						}
+
 						case 'author': {
-							if ( isset( $filter_item['condition'], $filter_item['values'] ) && is_array( $filter_item['values'] ) ) {
-								if ( $filter_item['condition'] === 'is-equal' ) {
+							if (isset($filter_item['condition'], $filter_item['values']) && is_array($filter_item['values'])) {
+								if ($filter_item['condition'] === 'is-equal') {
 									$args['author__in'] = $filter_item['values'];
 								}
 
-								if ( $filter_item['condition'] === 'is-not-equal' ) {
+								if ($filter_item['condition'] === 'is-not-equal') {
 									$args['author__not_in'] = $filter_item['values'];
 								}
 							}
@@ -2291,72 +2408,72 @@ class HelperFunctions {
 
 						case 'multi-reference':
 						case 'reference': {
-								$args = self::cm_reference_table_filter_query($filter_item, $key, $args);
-								break;
-							}
+							$args = self::cm_reference_table_filter_query($filter_item, $key, $args);
+							break;
+						}
 					}
 				}
 			}
 		}
 
 		$args['tax_query'] = $tax_query;
-		
-		if ( isset( $sorting ) ) {
+
+		if (isset($sorting)) {
 			// Set the sort order (ASC/DESC)
-			if ( isset( $sorting['order'] ) ) {
+			if (isset($sorting['order'])) {
 				$args['order'] = $sorting['order'];
 			}
-	
+
 			// Check if the name is set and contains 'kirki_cm' && not include 'kirki_cm_post_meta'
-			if ( isset($name) && str_contains($name, KIRKI_CONTENT_MANAGER_PREFIX) && !in_array($sorting['orderby'], KIRKI_WORDPRESS_SORT_BY_OPTIONS)) {
+			if (isset($name) && str_contains($name, KIRKI_CONTENT_MANAGER_PREFIX) && !in_array($sorting['orderby'], KIRKI_WORDPRESS_SORT_BY_OPTIONS)) {
 				$args['orderby'] = 'meta_value'; // Use 'meta_value' or 'meta_value_num' as needed
-				if ( isset($sorting['orderby']) && !empty($sorting['orderby']) ) {
-					$args['meta_key'] = ContentManagerHelper::get_child_post_meta_key_using_field_id($post_parent,$sorting['orderby']);
+				if (isset($sorting['orderby']) && !empty($sorting['orderby'])) {
+					$args['meta_key'] = ContentManagerHelper::get_child_post_meta_key_using_field_id($post_parent, $sorting['orderby']);
 				}
 			} else {
 				// For other cases, set the orderby based on the sorting parameter
-				if ( isset( $sorting['orderby'] ) && !empty($sorting['orderby']) ) {
+				if (isset($sorting['orderby']) && !empty($sorting['orderby'])) {
 					$args['orderby'] = $sorting['orderby'];
 				}
 			}
 		}
 
-		if ( $inherit || $post_parent ) {
+		if ($inherit || $post_parent) {
 			//TODO: if terms page then show terms post only. like tag, category.
 			$args['post_parent'] = $post_parent;
 		}
 
-		if(!empty($context) && $inherit){
-			if($context['collectionType'] == 'user'){
+		if (!empty($context) && $inherit) {
+			if ($context['collectionType'] == 'user') {
 				$args['author'] = $context['id'];
 				unset($args['post_parent']);
 			}
-			if($context['collectionType'] == 'term'){
+			if ($context['collectionType'] == 'term') {
 				$args['tax_query'] = array(
 					array(
-							'taxonomy' => $context['taxonomy'], // Replace 'category' with your taxonomy
-							'field'    => 'term_id', // Use 'slug' if you want to query by slug
-							'terms'    => $context['id'],       // Replace 123 with your term ID
+						'taxonomy' => $context['taxonomy'], // Replace 'category' with your taxonomy
+						'field' => 'term_id', // Use 'slug' if you want to query by slug
+						'terms' => $context['id'],       // Replace 123 with your term ID
 					)
 				);
 				unset($args['post_parent']);
 			}
 		}
 
-		if($related){
+		if ($related) {
 			$post = get_post($related_post_parent);
 
-			if($post){
+			if ($post) {
 				$args['post_type'] = $post->post_type;
-				if(str_contains($post->post_type, 'kirki_cm_')){
+				if (str_contains($post->post_type, 'kirki_cm_')) {
 					// filter related posts for content manager post
 					$referenced_post_ids = self::get_referenced_post_ids($post_parent, $post);
 					$args['post__in'] = array_map('intval', $referenced_post_ids);
-				}else{
+				} else {
 					$args['tax_query'] = self::buildTaxonomyForRelatedPosts($post);
 					$args['post__not_in'] = [$post->ID];
 				}
-				
+
 			}
 		}
 
@@ -2368,110 +2485,113 @@ class HelperFunctions {
 		}
 
 		$posts = $query->posts;
-		
 
-		$custom_logo_id = get_theme_mod( 'custom_logo' );
-		$image          = wp_get_attachment_image_src( $custom_logo_id, 'full' );
+
+		$custom_logo_id = get_theme_mod('custom_logo');
+		$image = wp_get_attachment_image_src($custom_logo_id, 'full');
 
 		$kirki_content_manager_post_type_fields = array();
-		
+
 		if (isset($args['post_type']) && KIRKI_CONTENT_MANAGER_PREFIX === $args['post_type']) {
 			$post_parent = $args['post_parent'];
 			$kirki_content_manager_post_type_fields = ContentManagerHelper::get_post_type_custom_field_keys($post_parent);
 		}
 
-		foreach ( $posts as  &$post ) {
+		foreach ($posts as &$post) {
 			if (
 				KIRKI_CONTENT_MANAGER_PREFIX === $post->post_type && is_array($kirki_content_manager_post_type_fields)
-				) {
-					foreach($kirki_content_manager_post_type_fields as $field_key) {
-						$meta_key = ContentManagerHelper::get_child_post_meta_key_using_field_id($post->post_parent, $field_key['id']);
-						$post->{$field_key['id']} = get_post_meta($post->ID, $meta_key, true);
+			) {
+				foreach ($kirki_content_manager_post_type_fields as $field_key) {
+					$meta_key = ContentManagerHelper::get_child_post_meta_key_using_field_id($post->post_parent, $field_key['id']);
+					$post->{$field_key['id']} = get_post_meta($post->ID, $meta_key, true);
 
-						if (
-							isset($field_key['type']) &&
-							$field_key['type'] === 'image' &&
-							$post->{$field_key['id']}
-						) {
-							$post->{$field_key['id']} = array(
-								'wp_attachment_id' => $post->{$field_key['id']}['id'],
-								'src' => $post->{$field_key['id']}['url'],
-							);
-						}
+					if (
+						isset($field_key['type']) &&
+						$field_key['type'] === 'image' &&
+						$post->{$field_key['id']}
+					) {
+						$post->{$field_key['id']} = array(
+							'wp_attachment_id' => $post->{$field_key['id']}['id'],
+							'src' => $post->{$field_key['id']}['url'],
+						);
+					}
 				}
 			}
 
 
 			$post->post_id = $post->ID;
 			$post->author_profile_picture = array(
-				'src' => get_avatar_url( $post->post_author )
-			); 
-			$post->post_author = get_the_author_meta( 'display_name', $post->post_author );
-			$post->post_time = get_the_time( '', $post->ID );
-			$post->featured_image = array(
-				'wp_attachment_id' => get_post_thumbnail_id( $post->ID ),
-				'src' => get_the_post_thumbnail_url( $post->ID )
+				'src' => get_avatar_url($post->post_author)
 			);
-			$post->site_logo = isset( $image[0] ) ? $image[0] : '';
-			$post->post_page_link = \get_permalink( $post->ID );
-			$post->author_posts_page_link = \get_author_posts_url( $post->post_author );
+			$post->post_author = get_the_author_meta('display_name', $post->post_author);
+			$post->post_time = get_the_time('', $post->ID);
+			$post->featured_image = array(
+				'wp_attachment_id' => get_post_thumbnail_id($post->ID),
+				'src' => get_the_post_thumbnail_url($post->ID)
+			);
+			$post->site_logo = isset($image[0]) ? $image[0] : '';
+			$post->post_page_link = \get_permalink($post->ID);
+			$post->author_posts_page_link = \get_author_posts_url($post->post_author);
 
 			unset($post->post_excerpt);
-		};
+		}
+		;
 
 		// Get total posts and total pages for pagination
 		$total_posts = $query->found_posts;
 		$total_posts_updated = max(0, $total_posts - $offset);
 		$total_pages = ceil($total_posts_updated / $item_per_page);
 
-		 // Calculate previous and next page numbers
-		 $prev_page = ( $current_page > 1 ) ? $current_page - 1 : null;
-		 $next_page = ( $current_page < $total_pages ) ? $current_page + 1 : null;
- 
-		 // Return the query and pagination info
-		 return array(
-				 'data'       => $posts,  
-				 'pagination' => array(
-						 'per_page'     => $item_per_page,
-						 'current_page' => $current_page,
-						 'total_pages'  => $total_pages,
-						 'total_count'  => $total_posts,
-						 'previous'     => $prev_page,
-						 'next'         => $next_page,
-				 ),
-		 );
+		// Calculate previous and next page numbers
+		$prev_page = ($current_page > 1) ? $current_page - 1 : null;
+		$next_page = ($current_page < $total_pages) ? $current_page + 1 : null;
+
+		// Return the query and pagination info
+		return array(
+			'data' => $posts,
+			'pagination' => array(
+				'per_page' => $item_per_page,
+				'current_page' => $current_page,
+				'total_pages' => $total_pages,
+				'total_count' => $total_posts,
+				'previous' => $prev_page,
+				'next' => $next_page,
+			),
+		);
 	}
 
 
-	public static function search_posts_by_query($name, $query, $post_parent, &$args) {
+	public static function search_posts_by_query($name, $query, $post_parent, &$args)
+	{
 		global $wpdb;
-	
+
 		if (!str_contains($name, 'kirki_cm_')) {
 			return;
 		}
-	
+
 		unset($args['s']);
-	
-		$all_custom_fields   = ContentManagerHelper::get_post_type_custom_field_keys($post_parent);
-		$meta_query_args     = ['relation' => 'OR'];
+
+		$all_custom_fields = ContentManagerHelper::get_post_type_custom_field_keys($post_parent);
+		$meta_query_args = ['relation' => 'OR'];
 		$reference_where_sql = '';
-	
+
 		foreach ($all_custom_fields as $data) {
-			if (!$data) continue;
-	
+			if (!$data)
+				continue;
+
 			$meta_key = ContentManagerHelper::get_child_post_meta_key_using_field_id($post_parent, $data['id']);
-	
+
 			if (in_array($data['type'], ['text'], true)) {
 				$meta_query_args[] = [
-					'key'     => $meta_key,
-					'value'   => $query,
+					'key' => $meta_key,
+					'value' => $query,
 					'compare' => 'LIKE',
 				];
 			}
-	
+
 			if (in_array($data['type'], ['reference'], true)) {
 				$matched_post_ids = self::get_matched_post_ids_recursive($data['ref_collection'], $query);
-	
+
 				if (!empty($matched_post_ids)) {
 					$ids = implode(',', array_map('intval', $matched_post_ids));
 					$reference_where_sql .= " OR {$wpdb->posts}.ID IN (
@@ -2483,7 +2603,7 @@ class HelperFunctions {
 				}
 			}
 		}
-	
+
 		if (count($meta_query_args) > 1) {
 			$args['meta_query'] = $meta_query_args;
 		}
@@ -2497,14 +2617,15 @@ class HelperFunctions {
 
 		add_filter('posts_where', [__CLASS__, 'posts_where_filter_callback']);
 	}
-	
-	public static function get_matched_post_ids_recursive($post_parent, $query, $depth = 0, $max_depth = 5) {
+
+	public static function get_matched_post_ids_recursive($post_parent, $query, $depth = 0, $max_depth = 5)
+	{
 		global $wpdb;
-	
+
 		if ($depth > $max_depth) {
 			return [];
 		}
-	
+
 		$post_type = 'kirki_cm_' . $post_parent;
 
 		$matched_post_ids = $wpdb->get_col(
@@ -2513,17 +2634,18 @@ class HelperFunctions {
 				WHERE post_title LIKE %s
 				AND post_status = 'publish'
 				AND post_type = %s",
-				'%' . $wpdb->esc_like( $query ) . '%',
+				'%' . $wpdb->esc_like($query) . '%',
 				$post_type
 			)
 		);
-	
+
 		$ref_custom_fields = ContentManagerHelper::get_post_type_custom_field_keys($post_parent);
-		$meta_conditions   = [];
-	
+		$meta_conditions = [];
+
 		foreach ($ref_custom_fields as $ref_field) {
-			if (!$ref_field) continue;
-	
+			if (!$ref_field)
+				continue;
+
 			if (in_array($ref_field['type'], ['text'], true)) {
 				$ref_meta_key = ContentManagerHelper::get_child_post_meta_key_using_field_id($post_parent, $ref_field['id']);
 				$meta_conditions[] = $wpdb->prepare(
@@ -2533,10 +2655,10 @@ class HelperFunctions {
 				);
 			}
 		}
-	
+
 		if (!empty($meta_conditions)) {
-			$where_meta    = implode( ' OR ', $meta_conditions );
-			$meta_post_ids = $wpdb->get_col( "SELECT DISTINCT post_id FROM {$wpdb->postmeta} WHERE {$where_meta}" ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			$where_meta = implode(' OR ', $meta_conditions);
+			$meta_post_ids = $wpdb->get_col("SELECT DISTINCT post_id FROM {$wpdb->postmeta} WHERE {$where_meta}"); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 			$matched_post_ids = array_merge($matched_post_ids, $meta_post_ids);
 		}
 
@@ -2544,82 +2666,83 @@ class HelperFunctions {
 			if (!$ref_field || !in_array($ref_field['type'], ['reference'], true)) {
 				continue;
 			}
-	
+
 			$ref_post_parent = $ref_field['ref_collection'];
 			$nested_matched_ids = self::get_matched_post_ids_recursive($ref_post_parent, $query, $depth + 1, $max_depth);
-	
+
 			if (!empty($nested_matched_ids)) {
-				$meta_key     = ContentManagerHelper::get_child_post_meta_key_using_field_id( $post_parent, $ref_field['id'] );
-				$ids          = implode( ',', array_map( 'intval', $nested_matched_ids ) );
-				$ref_post_ids = $wpdb->get_col( $wpdb->prepare( "SELECT post_id FROM {$wpdb->prefix}kirki_cm_reference WHERE field_meta_key = %s AND ref_post_id IN ($ids)", $meta_key ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
+				$meta_key = ContentManagerHelper::get_child_post_meta_key_using_field_id($post_parent, $ref_field['id']);
+				$ids = implode(',', array_map('intval', $nested_matched_ids));
+				$ref_post_ids = $wpdb->get_col($wpdb->prepare("SELECT post_id FROM {$wpdb->prefix}kirki_cm_reference WHERE field_meta_key = %s AND ref_post_id IN ($ids)", $meta_key)); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
 				$matched_post_ids = array_merge($matched_post_ids, $ref_post_ids);
 			}
 		}
-	
+
 		return array_unique(array_map('intval', $matched_post_ids));
 	}
 
-	public static function get_referenced_post_ids($post_parent, $post) {
-    global $wpdb;
+	public static function get_referenced_post_ids($post_parent, $post)
+	{
+		global $wpdb;
 
-    $allData   = ContentManagerHelper::get_post_type_custom_field_keys($post_parent);
-    $post_ids  = [];
+		$allData = ContentManagerHelper::get_post_type_custom_field_keys($post_parent);
+		$post_ids = [];
 
-    foreach ($allData as $data) {
-        if ($data && in_array($data['type'], ['reference', 'multi-reference'], true)) {
-            $meta_key = 'kirki_cm_field_' . $post_parent . '_' . $data['id'];
+		foreach ($allData as $data) {
+			if ($data && in_array($data['type'], ['reference', 'multi-reference'], true)) {
+				$meta_key = 'kirki_cm_field_' . $post_parent . '_' . $data['id'];
 
-            $results = $wpdb->get_results(
-                $wpdb->prepare(
-                    "SELECT ref_post_id FROM {$wpdb->prefix}kirki_cm_reference WHERE field_meta_key = %s AND post_id = %d",
-                    $meta_key,
-                    $post->ID
-                ),
-                ARRAY_A
-            );
+				$results = $wpdb->get_results(
+					$wpdb->prepare(
+						"SELECT ref_post_id FROM {$wpdb->prefix}kirki_cm_reference WHERE field_meta_key = %s AND post_id = %d",
+						$meta_key,
+						$post->ID
+					),
+					ARRAY_A
+				);
 
-            foreach ($results as $id) {
-                $related_posts = $wpdb->get_results(
-                    $wpdb->prepare(
-                        "SELECT post_id FROM {$wpdb->prefix}kirki_cm_reference WHERE field_meta_key = %s AND ref_post_id = %d",
-                        $meta_key,
-                        (int) $id['ref_post_id']
-                    ),
-                    ARRAY_A
-                );
+				foreach ($results as $id) {
+					$related_posts = $wpdb->get_results(
+						$wpdb->prepare(
+							"SELECT post_id FROM {$wpdb->prefix}kirki_cm_reference WHERE field_meta_key = %s AND ref_post_id = %d",
+							$meta_key,
+							(int) $id['ref_post_id']
+						),
+						ARRAY_A
+					);
 
-								foreach ($related_posts as $related) {
-									$related_id = (int) $related['post_id'];
+					foreach ($related_posts as $related) {
+						$related_id = (int) $related['post_id'];
 
-									if ($related_id !== (int) $post->ID) {
-											$post_ids[] = $related_id;
-									}
-							}
+						if ($related_id !== (int) $post->ID) {
+							$post_ids[] = $related_id;
+						}
+					}
 
-                
-            }
-        }
-    }
+
+				}
+			}
+		}
 		$post_ids = array_values(array_unique($post_ids));
 
-    return !empty($post_ids) ? $post_ids : [0];
-}
+		return !empty($post_ids) ? $post_ids : [0];
+	}
 
 	public static function get_terms($params)
 	{
 		$terms_array = [];
-		$current_page = isset($params['current_page']) ? (int)$params['current_page'] : 1;
-		$item_per_page = isset($params['item_per_page']) ? (int)$params['item_per_page'] : 3;
-		$offset = isset($params['offset']) ? (int)$params['offset'] : 0;
+		$current_page = isset($params['current_page']) ? (int) $params['current_page'] : 1;
+		$item_per_page = isset($params['item_per_page']) ? (int) $params['item_per_page'] : 3;
+		$offset = isset($params['offset']) ? (int) $params['offset'] : 0;
 
 		if (!empty($params['inherit'])) {
 			$terms_array = get_the_terms($params['post_parent'], $params['taxonomy']);
 			if (is_array($terms_array)) {
 				// Convert WP_Term objects to arrays only if needed
-				$terms_array = array_map(function($term) {
+				$terms_array = array_map(function ($term) {
 					return is_object($term) && method_exists($term, 'to_array')
 						? $term->to_array()
-						: (array)$term;
+						: (array) $term;
 				}, $terms_array);
 
 				$calculated_offset = (($current_page - 1) * $item_per_page) + $offset;
@@ -2638,7 +2761,7 @@ class HelperFunctions {
 					if (is_object($item) && method_exists($item, 'to_array')) {
 						$item = $item->to_array();
 					} elseif (is_object($item)) {
-						$item = (array)$item;
+						$item = (array) $item;
 					}
 				}
 			} else {
@@ -2678,23 +2801,23 @@ class HelperFunctions {
 
 	public static function buildTaxonomyForRelatedPosts(\WP_Post $post)
 	{
-		$taxonomies = get_object_taxonomies( $post->post_type );
-			$taxQuery = [
-					'relation' => 'OR',
+		$taxonomies = get_object_taxonomies($post->post_type);
+		$taxQuery = [
+			'relation' => 'OR',
+		];
+
+		foreach ($taxonomies as $taxonomy) {
+			$taxQuery[] = [
+				'taxonomy' => $taxonomy,
+				'field' => 'slug',
+				'terms' => array_filter(wp_get_object_terms($post->ID, $taxonomy, ['fields' => 'slugs']), function ($termSlug) {
+					return strtolower($termSlug) !== 'uncategorized';
+				}),
 			];
-
-			foreach ($taxonomies as $taxonomy) {
-					$taxQuery[] = [
-							'taxonomy' => $taxonomy,
-							'field'    => 'slug',
-							'terms'    => array_filter(wp_get_object_terms($post->ID, $taxonomy, ['fields' => 'slugs']), function ($termSlug) {
-									return strtolower($termSlug) !== 'uncategorized';
-							}),
-					];
-			}
+		}
 
 
-			return $taxQuery;
+		return $taxQuery;
 	}
 
 
@@ -2705,46 +2828,47 @@ class HelperFunctions {
 	 *
 	 * @return array post array
 	 */
-	public static function get_comments( $params ) {
-		$parent = (int)($params['parent'] ?? 0);
-		$post_id = (int)($params['post_id'] ?? 0);
+	public static function get_comments($params)
+	{
+		$parent = (int) ($params['parent'] ?? 0);
+		$post_id = (int) ($params['post_id'] ?? 0);
 		$type = ($params['type'] ?? 'comment');
-		$sorting     = isset( $params['sorting'] ) ? $params['sorting'] : null;
-		$filters      = isset( $params['filters'] ) ? $params['filters'] : null;
+		$sorting = isset($params['sorting']) ? $params['sorting'] : null;
+		$filters = isset($params['filters']) ? $params['filters'] : null;
 		// add new 
-		$current_page = isset( $params['current_page'] ) ? $params['current_page'] : 1;
-		$item_per_page = isset( $params['item_per_page'] ) ? $params['item_per_page'] : 3;
-		$offset = isset( $params['offset'] ) ? $params['offset'] : 0;
+		$current_page = isset($params['current_page']) ? $params['current_page'] : 1;
+		$item_per_page = isset($params['item_per_page']) ? $params['item_per_page'] : 3;
+		$offset = isset($params['offset']) ? $params['offset'] : 0;
 
 		// Calculate the offset
 		$offset_cal = ($current_page - 1) * $item_per_page + $offset;
 
-		$args        = array(
+		$args = array(
 			'parent' => $parent,
-			'post_id'   => $post_id,
-			'type'   => $type,
+			'post_id' => $post_id,
+			'type' => $type,
 			'number' => $item_per_page,
 			'paged' => $current_page,
 			'offset' => $offset_cal,
 			'count' => false
 		);
-		
-		if ( isset( $filters ) && is_array( $filters ) ) {
-			foreach ( $filters as $filter_item ) {
-				$field_name = isset( $filter_item['id'] ) ? $filter_item['id'] : '';
 
-				if(!$field_name){
+		if (isset($filters) && is_array($filters)) {
+			foreach ($filters as $filter_item) {
+				$field_name = isset($filter_item['id']) ? $filter_item['id'] : '';
+
+				if (!$field_name) {
 					continue;
 				}
-				switch($field_name) {
+				switch ($field_name) {
 					case 'comment_date':
-					case 'comment_date_gmt':{
+					case 'comment_date_gmt': {
 						/**
 						 * $filter_item['items'] max contain one array. 
 						 * in array may contain start-date, end-date
 						 * Like: [{"start-date": "2020-01-01","end-date": "2020-01-02"}]
 						 */
-						if(isset($filter_item['items'], $filter_item['items'][0])) {
+						if (isset($filter_item['items'], $filter_item['items'][0])) {
 							$items = $filter_item['items'];
 							$item = $items[0]; // Get first item in array.
 
@@ -2768,13 +2892,13 @@ class HelperFunctions {
 					case 'comment_author': {
 						$items = $filter_item['items']; // $items['items'] max contain one array. 
 
-						foreach($items as $item) {
-							if ( isset( $item['condition'], $item['values'] ) && is_array( $item['values'] ) ) {
-								if ( $item['condition'] === 'in' ) {
+						foreach ($items as $item) {
+							if (isset($item['condition'], $item['values']) && is_array($item['values'])) {
+								if ($item['condition'] === 'in') {
 									$args['author__in'] = $item['values'];
 								}
 
-								if ( $item['condition'] === 'not-in' ) {
+								if ($item['condition'] === 'not-in') {
 									$args['author__not_in'] = $item['values'];
 								}
 							}
@@ -2786,9 +2910,9 @@ class HelperFunctions {
 					case 'comment_approved': {
 						$items = $filter_item['items']; //  $items['items'] max contain one array. 
 
-						foreach($items as $item) {
-							if ( isset( $item['condition'], $item['values'] ) && is_array( $item['values'] ) ) {
-								if ( $item['condition'] === 'in' ) {
+						foreach ($items as $item) {
+							if (isset($item['condition'], $item['values']) && is_array($item['values'])) {
+								if ($item['condition'] === 'in') {
 									$args['status'] = $item['values'];
 								}
 							}
@@ -2798,24 +2922,24 @@ class HelperFunctions {
 			}
 		}
 
-		if(isset($sorting)){
+		if (isset($sorting)) {
 			// Set the sort order (ASC/DESC)
-			if ( isset( $sorting['order'] ) ) {
+			if (isset($sorting['order'])) {
 				$args['order'] = $sorting['order'];
 			}
 
-			if ( isset( $sorting['orderby'] ) && !empty($sorting['orderby']) ) {
+			if (isset($sorting['orderby']) && !empty($sorting['orderby'])) {
 				$args['orderby'] = $sorting['orderby'];
 			}
 		}
-		
+
 		$comments = get_comments($args);
 		unset($args['number']);
 		unset($args['paged']);
 
 		if (is_array($comments)) {
-			foreach($comments as &$comment) {
-				$comment = (object)(array)$comment;
+			foreach ($comments as &$comment) {
+				$comment = (object) (array) $comment;
 
 				$author_posts_page_link = $comment->comment_author_url;
 
@@ -2824,33 +2948,33 @@ class HelperFunctions {
 				}
 
 				$comment->author_profile_picture = array(
-					'src' => get_avatar_url( $comment->user_id )
+					'src' => get_avatar_url($comment->user_id)
 				);
 				$comment->author_posts_page_link = $author_posts_page_link;
 			}
 		}
 
 		// Get total comments count
-    $total_comments = get_comments( array_merge( $args, array( 'count' => true ) ) ) ;
+		$total_comments = get_comments(array_merge($args, array('count' => true)));
 		$total_comments = $total_comments - $offset;
-		
+
 		// Calculate total pages
-		$total_pages = ceil( $total_comments / $item_per_page );
+		$total_pages = ceil($total_comments / $item_per_page);
 
 		// Calculate previous and next pages
-    $prev_page = ( $current_page > 1 ) ? $current_page - 1 : null;
-    $next_page = ( $current_page < $total_pages ) ? $current_page + 1 : null;
+		$prev_page = ($current_page > 1) ? $current_page - 1 : null;
+		$next_page = ($current_page < $total_pages) ? $current_page + 1 : null;
 
 		// return $comments;
 		return array(
-			'data'       => $comments,  // Raw comments data
+			'data' => $comments,  // Raw comments data
 			'pagination' => array(
-					'per_page'     => $item_per_page,
-					'current_page' => $current_page,
-					'total_pages'  => $total_pages,
-					'total_count' => $total_comments,
-					'previous'     => $prev_page,
-					'next'         => $next_page,
+				'per_page' => $item_per_page,
+				'current_page' => $current_page,
+				'total_pages' => $total_pages,
+				'total_count' => $total_comments,
+				'previous' => $prev_page,
+				'next' => $next_page,
 			),
 		);
 	}
@@ -2861,7 +2985,8 @@ class HelperFunctions {
 	 *
 	 * @return void
 	 */
-	public static function remove_wp_assets() {
+	public static function remove_wp_assets()
+	{
 		/*
 		// Remove all WordPress actions
 		// remove_all_actions('wp_head');
@@ -2885,7 +3010,7 @@ class HelperFunctions {
 		// remove_all_actions('after_wp_tiny_mce');
 		*/
 		// remove admin-bar.
-		add_filter( 'show_admin_bar', '__return_false', PHP_INT_MAX );
+		add_filter('show_admin_bar', '__return_false', PHP_INT_MAX);
 	}
 
 	/**
@@ -2894,8 +3019,9 @@ class HelperFunctions {
 	 *
 	 * @return string protocol name.
 	 */
-	public static function get_protocol() {
-		$protocol = isset( $_SERVER['HTTPS'] ) ? 'https' : 'http';
+	public static function get_protocol()
+	{
+		$protocol = isset($_SERVER['HTTPS']) ? 'https' : 'http';
 		return $protocol;
 	}
 
@@ -2905,11 +3031,12 @@ class HelperFunctions {
 	 * @param string $role The role to check.
 	 * @return boolean
 	 */
-	public static function user_is( $role ) {
-		$user  = wp_get_current_user();
+	public static function user_is($role)
+	{
+		$user = wp_get_current_user();
 		$roles = $user->roles;
 
-		return is_array( $roles ) && count( $roles ) && in_array( $role, $roles, true ) ? true : false;
+		return is_array($roles) && count($roles) && in_array($role, $roles, true) ? true : false;
 	}
 
 	/**
@@ -2917,6 +3044,9 @@ class HelperFunctions {
 	 *
 	 * @param int $post_id post id.
 	 * @return boolean
+	 * 
+	 * @deprecated
+	 * @see Kirki\App\Wordpress\User::has_edit_access()
 	 */
 	public static function user_has_post_edit_access()
 	{
@@ -2933,10 +3063,11 @@ class HelperFunctions {
 	 *
 	 * @return boolean
 	 */
-	public static function user_has_editor_access() {
-		if(isset($_GET['editor-preview-token'])){
+	public static function user_has_editor_access()
+	{
+		if (isset($_GET['editor-preview-token'])) {
 			//phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-			$editor_preview_token            = self::sanitize_text( isset( $_GET['editor-preview-token'] ) ? $_GET['editor-preview-token'] : '' );
+			$editor_preview_token = self::sanitize_text(isset($_GET['editor-preview-token']) ? $_GET['editor-preview-token'] : '');
 			return self::is_post_editor_preview_token_valid($editor_preview_token);
 		}
 		return self::has_access(
@@ -2948,40 +3079,39 @@ class HelperFunctions {
 		);
 	}
 
-	public static function getallheaders() {
-        $headers = [];
+	public static function getallheaders()
+	{
+		$headers = [];
 
-        foreach ($_SERVER as $name => $value) {
-            if (strpos($name, 'HTTP_') === 0) {
-                $key = substr($name, 5);
-            } elseif (in_array($name, ['CONTENT_TYPE', 'CONTENT_LENGTH', 'CONTENT_MD5'])) {
-                $key = $name;
-            } else {
-                continue;
-            }
+		foreach ($_SERVER as $name => $value) {
+			if (strpos($name, 'HTTP_') === 0) {
+				$key = substr($name, 5);
+			} elseif (in_array($name, ['CONTENT_TYPE', 'CONTENT_LENGTH', 'CONTENT_MD5'])) {
+				$key = $name;
+			} else {
+				continue;
+			}
 
-            // Convert HEADER_NAME → Header-Name
-            $key = str_replace('_', ' ', strtolower($key));
-            $key = ucwords($key);
-            $key = str_replace(' ', '-', $key);
+			// Convert HEADER_NAME → Header-Name
+			$key = str_replace('_', ' ', strtolower($key));
+			$key = ucwords($key);
+			$key = str_replace(' ', '-', $key);
 
-            $headers[$key] = $value;
-        }
-
-        return $headers;
-  }
-
-	public static function is_api_call_from_editor_preview(){
-		// Check the Editor-Preview-Token header
-    $headers = self::getallheaders();
-    $editor_preview_token = isset($headers['Editor-Preview-Token']) ? $headers['Editor-Preview-Token'] : null;
-		if($editor_preview_token){
-			return true;
+			$headers[$key] = $value;
 		}
-		return false;
+
+		return $headers;
 	}
 
-	public static function is_api_header_post_editor_preview_token_valid(){
+	/**
+	 * Check if the request is from the editor preview.
+	 * 
+	 * @deprecated Use Kirki\App\Supports\EditorPreview::is_valid_request
+	 * @see \Kirki\App\Supports\EditorPreview::is_valid_request()
+	 * @return bool
+	 */
+	public static function is_api_call_from_editor_preview()
+	{
 		// Check the Editor-Preview-Token header
 		$headers = self::getallheaders();
 		$editor_preview_token = isset($headers['Editor-Preview-Token']) ? $headers['Editor-Preview-Token'] : null;
@@ -2991,13 +3121,38 @@ class HelperFunctions {
 		return false;
 	}
 
-	
+	/**
+	 * Check if the Editor-Preview-Token header is valid
+	 * 
+	 * @deprecated Use Kirki\App\Supports\EditorPreview::has_valid_token
+	 * @see Kirki\App\Supports\EditorPreview::has_valid_token()
+	 * @return bool
+	 */
+	public static function is_api_header_post_editor_preview_token_valid()
+	{
+		// Check the Editor-Preview-Token header
+		$headers = self::getallheaders();
+		$editor_preview_token = isset($headers['Editor-Preview-Token']) ? $headers['Editor-Preview-Token'] : null;
+		if (HelperFunctions::is_post_editor_preview_token_valid($editor_preview_token)) {
+			return true;
+		}
+		return false;
+	}
 
-	public static function is_post_editor_preview_token_valid($token){
+
+	/**
+	 * Check if the Editor-Preview-Token header is valid
+	 * 
+	 * @deprecated Use Kirki\App\Supports\EditorPreview::has_valid_token
+	 * @see Kirki\App\Supports\EditorPreview
+	 * @return bool
+	 */
+	public static function is_post_editor_preview_token_valid($token)
+	{
 		$status = HelperFunctions::get_global_data_using_key('kirki_editor_read_only_access_status');
-		if($status){
+		if ($status) {
 			$kirki_editor_read_only_access_token = HelperFunctions::get_global_data_using_key('kirki_editor_read_only_access_token');
-			if($kirki_editor_read_only_access_token && $kirki_editor_read_only_access_token === $token){
+			if ($kirki_editor_read_only_access_token && $kirki_editor_read_only_access_token === $token) {
 				return true;
 			}
 		}
@@ -3007,29 +3162,33 @@ class HelperFunctions {
 	/**
 	 * Check if the current user has specific access
 	 *
+	 * @deprecated Use Kirki\App\Wordpress\User::has_access
+	 * @see Kirki\App\Wordpress\User
 	 * @param string|string[] $access_level The access level to check access.
+	 * 
 	 */
-	public static function has_access( $access_level ) {
-		if ( ! function_exists( 'wp_get_current_user' ) ) {
+	public static function has_access($access_level)
+	{
+		if (!function_exists('wp_get_current_user')) {
 			return false;
 		}
 
-		$user       = wp_get_current_user();
-		$roles      = $user->roles;
+		$user = wp_get_current_user();
+		$roles = $user->roles;
 		$has_access = false;
 
-		if ( is_array( $access_level ) ) {
-			foreach ( $roles as $role ) {
-				$access = get_option('kirki_' . $role );
-				if ( ! empty( $access ) && in_array( $access, $access_level, true ) ) {
+		if (is_array($access_level)) {
+			foreach ($roles as $role) {
+				$access = get_option('kirki_' . $role);
+				if (!empty($access) && in_array($access, $access_level, true)) {
 					$has_access = true;
 					break;
 				}
 			}
-		} elseif ( is_string( $access_level ) ) {
-			foreach ( $roles as $role ) {
-				$access = get_option('kirki_' . $role );
-				if ( ! empty( $access ) && $access === $access_level ) {
+		} elseif (is_string($access_level)) {
+			foreach ($roles as $role) {
+				$access = get_option('kirki_' . $role);
+				if (!empty($access) && $access === $access_level) {
 					$has_access = true;
 					break;
 				}
@@ -3045,14 +3204,15 @@ class HelperFunctions {
 	 * @param string $license_key user license key.
 	 * @return array license info.
 	 */
-	public static function get_my_license_info( $license_key ) {
+	public static function get_my_license_info($license_key)
+	{
 		//phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		$info = self::http_get( KIRKI_CORE_PLUGIN_URL . '/?license_key=' . $license_key . '&host=' . rawurlencode( self::sanitize_text( isset( $_SERVER['HTTP_HOST'] ) ? $_SERVER['HTTP_HOST'] : null ) ) );
-		$info = json_decode( $info, true );
-		if ( $info && isset( $info['success'] ) ) {
+		$info = self::http_get(KIRKI_CORE_PLUGIN_URL . '/?license_key=' . $license_key . '&host=' . rawurlencode(self::sanitize_text(isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : null)));
+		$info = json_decode($info, true);
+		if ($info && isset($info['success'])) {
 			return $info['data'];
 		} else {
-			return array( 'key' => $license_key );
+			return array('key' => $license_key);
 		}
 	}
 
@@ -3061,19 +3221,23 @@ class HelperFunctions {
 	 *
 	 * @param string $url api endpoint url.
 	 * @return string|bool response.
+	 * 
+	 * @deprecated
+	 * @see \Kirki\Framework\Supports\Facades\Http::get()
 	 */
-	public static function http_get( $url, $args = array() ) {
+	public static function http_get($url, $args = array())
+	{
 		try {
-			$response = wp_remote_get( $url, $args );
+			$response = wp_remote_get($url, $args);
 
-			if ( ( !is_wp_error($response)) && (200 === wp_remote_retrieve_response_code( $response ) ) ) {
+			if ((!is_wp_error($response)) && (200 === wp_remote_retrieve_response_code($response))) {
 				$responseBody = $response['body'];
 
 				return $responseBody;
 			}
 
 			return false;
-		} catch( \Exception $ex ) {
+		} catch (\Exception $ex) {
 			return false;
 		}
 	}
@@ -3084,9 +3248,13 @@ class HelperFunctions {
 	 * @param string $url api endpoint url.
 	 * @param array  $options options.
 	 * @return array|WP_Error response.
+	 * 
+	 * @deprecated
+	 * @see \Kirki\Framework\Supports\Facades\Http::post()
 	 */
-	public static function http_post( $url, $options ) {
-		$res = wp_remote_post( $url, $options );
+	public static function http_post($url, $options)
+	{
+		$res = wp_remote_post($url, $options);
 		return $res;
 	}
 
@@ -3096,24 +3264,25 @@ class HelperFunctions {
 	 * @param string $handle kirki handle.
 	 * @return void
 	 */
-	public static function load_script_text_domain( $handle ) {
-		wp_set_script_translations( $handle, 'kirki', KIRKI_ROOT_PATH . 'languages/' );
+	public static function load_script_text_domain($handle)
+	{
+		wp_set_script_translations($handle, 'kirki', KIRKI_PLUGIN_PATH . 'languages/');
 	}
 
-	
 	/**
 	 * Delete kirki related meta if a post is deleted.
 	 *
 	 * @param int $post_id post id.
 	 * @return void
 	 */
-	public static function delete_post_with_meta_key( $post_id ) {
-		delete_post_meta( $post_id, KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS );
-		delete_post_meta( $post_id, KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS . '_random' );
-		delete_post_meta( $post_id, 'kirki' );
-		delete_post_meta( $post_id, KIRKI_META_NAME_FOR_POST_EDITOR_MODE );
-		delete_post_meta( $post_id, KIRKI_GLOBAL_STYLE_BLOCK_META_KEY );
-		delete_post_meta( $post_id, KIRKI_GLOBAL_STYLE_BLOCK_META_KEY . '_random' );
+	public static function delete_post_with_meta_key($post_id)
+	{
+		delete_post_meta($post_id, KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS);
+		delete_post_meta($post_id, KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS . '_random');
+		delete_post_meta($post_id, 'kirki');
+		delete_post_meta($post_id, KIRKI_META_NAME_FOR_POST_EDITOR_MODE);
+		delete_post_meta($post_id, KIRKI_GLOBAL_STYLE_BLOCK_META_KEY);
+		delete_post_meta($post_id, KIRKI_GLOBAL_STYLE_BLOCK_META_KEY . '_random');
 	}
 	/**
 	 * Get the query string for the media type
@@ -3122,14 +3291,15 @@ class HelperFunctions {
 	 * @return string The query string.
 	 * @example  HelperFunctions::get_media_type_query_string('image') => 'image/jpeg, image/png, image/gif'
 	 */
-	public static function get_media_type_query_string( $type ) {
+	public static function get_media_type_query_string($type)
+	{
 		return implode(
 			', ',
 			array_map(
-				function ( $v ) {
+				function ($v) {
 					return "'" . $v . "'";
 				},
-				KIRKI_SUPPORTED_MEDIA_TYPES[ $type ]
+				KIRKI_SUPPORTED_MEDIA_TYPES[$type]
 			)
 		);
 	}
@@ -3139,9 +3309,10 @@ class HelperFunctions {
 	 *
 	 * @return string script tag
 	 */
-	public static function get_empty_variables() {
-		$s  = "<script id='kirki-elements-property-empty-vars'>";
-		$s .= 'var ' .'kirkiSliders = [], ' .'kirkiMaps = [], ' .'kirkiLotties = [], ' .'kirkiPopups = [], ' .'kirkiLightboxes = [], ' .'kirkiReCaptchas = [], ' .'kirkiVideos = [], ' .'kirkiTabs = [], ' .'kirkiInteractions = [], ' .'kirkiCollections = [], ' .'kirkiDropdown = [], ' .'kirkiForms = [];';
+	public static function get_empty_variables()
+	{
+		$s = "<script id='kirki-elements-property-empty-vars'>";
+		$s .= 'var ' . 'kirkiSliders = [], ' . 'kirkiMaps = [], ' . 'kirkiLotties = [], ' . 'kirkiPopups = [], ' . 'kirkiLightboxes = [], ' . 'kirkiReCaptchas = [], ' . 'kirkiVideos = [], ' . 'kirkiTabs = [], ' . 'kirkiInteractions = [], ' . 'kirkiCollections = [], ' . 'kirkiDropdown = [], ' . 'kirkiForms = [];';
 		$s .= '</script>';
 		return $s;
 	}
@@ -3152,8 +3323,9 @@ class HelperFunctions {
 	 * @param string $plugin_main_file plugin main PHP file name.
 	 * @return boolean
 	 */
-	public static function is_plugin_activate( $plugin_main_file ) {
-		if ( in_array( $plugin_main_file, apply_filters( 'active_plugins', get_option( 'active_plugins' ) ), true ) ) {
+	public static function is_plugin_activate($plugin_main_file)
+	{
+		if (in_array($plugin_main_file, apply_filters('active_plugins', get_option('active_plugins')), true)) {
 			// plugin is activated.
 			return true;
 		}
@@ -3167,12 +3339,16 @@ class HelperFunctions {
 	 * @param string $action ajax action name.
 	 *
 	 * @return void
+	 * 
+	 * @deprecated
+	 * @see Kirki\App\Http\Middlewares\RestNonceMiddleware::class
 	 */
-	public static function verify_nonce( $action = -1 ) {
+	public static function verify_nonce($action = -1)
+	{
 		//phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		$nonce = self::sanitize_text( isset( $_SERVER['HTTP_X_WP_NONCE'] ) ? $_SERVER['HTTP_X_WP_NONCE'] : null );
-		if ( ! wp_verify_nonce( $nonce, $action ) ) {
-			wp_send_json_error( 'Not authorized' );
+		$nonce = self::sanitize_text(isset($_SERVER['HTTP_X_WP_NONCE']) ? $_SERVER['HTTP_X_WP_NONCE'] : null);
+		if (!wp_verify_nonce($nonce, $action)) {
+			wp_send_json_error('Not authorized');
 			exit;
 		}
 	}
@@ -3183,8 +3359,9 @@ class HelperFunctions {
 	 * @param string $v text.
 	 * @return string sanitized text.
 	 */
-	public static function sanitize_text( $v ) {
-		return sanitize_text_field( wp_unslash( $v ) );
+	public static function sanitize_text($v)
+	{
+		return sanitize_text_field(wp_unslash($v));
 	}
 
 	/**
@@ -3193,7 +3370,8 @@ class HelperFunctions {
 	 *
 	 * @return string Session ID.
 	 */
-	public static function get_session_id() {
+	public static function get_session_id()
+	{
 
 		// First, check if a session ID is already stored in the static variable.
 		if (self::$global_session_id) {
@@ -3205,7 +3383,7 @@ class HelperFunctions {
 			self::$global_session_id = sanitize_text_field($_COOKIE['kirki_session_id']);
 			return self::$global_session_id;
 		}
-		
+
 		// Generate a new session ID.
 		self::$global_session_id = wp_generate_uuid4();
 		// Set the session ID in a cookie.
@@ -3220,7 +3398,8 @@ class HelperFunctions {
 	 * @param string $key The key of the session data to retrieve.
 	 * @return mixed|null The session data if found, null otherwise.
 	 */
-	public static function get_session_data($key) {
+	public static function get_session_data($key)
+	{
 		// Get the current session ID.
 		$session_id = self::get_session_id();
 
@@ -3241,7 +3420,8 @@ class HelperFunctions {
 	 * @param mixed $value The value of the session data.
 	 * @return void
 	 */
-	public static function set_session_data($key, $value) {
+	public static function set_session_data($key, $value)
+	{
 		// Get the current session ID.
 		$session_id = self::get_session_id();
 
@@ -3261,7 +3441,8 @@ class HelperFunctions {
 	 * @param string $key The key of the session data to delete.
 	 * @return void
 	 */
-	public static function delete_session_data($key) {
+	public static function delete_session_data($key)
+	{
 		// Get the current session ID.
 		$session_id = self::get_session_id();
 
@@ -3286,40 +3467,28 @@ class HelperFunctions {
 	 *
 	 * @return bool
 	 */
-	public static function is_pro_user() {
-		$common_data = WpAdmin::get_common_data( true );
-		
-		$bool= isset( $common_data['license_key']['valid'] ) && boolval( $common_data['license_key']['valid'] ) === true;
+	public static function is_pro_user()
+	{
+		$common_data = WpAdmin::get_common_data(true);
+
+		$bool = isset($common_data['license_key']['valid']) && boolval($common_data['license_key']['valid']) === true;
 
 		return $bool;
 	}
 
-	/**
-	 * Store Error log to kirki server
-	 *
-	 * @param string $error_text the error text created in PHP.
-	 *
-	 * @return void
-	 */
-	public static function store_error_log( $error_text ) {
-		// $kirki_version = KIRKI_VERSION;
-
-		// self::http_get(
-		// 	KIRKI_CORE_PLUGIN_URL . "?log_data=error&version=$kirki_version&error_type=php&error_text=$error_text"
-		// );
-	}
 
 	/**
 	 * Get all view port lists
 	 *
 	 * @return string viewports list variable in script markup.
 	 */
-	public static function get_view_port_lists() {
-		$s       = '';
+	public static function get_view_port_lists()
+	{
+		$s = '';
 		$list = UserData::get_view_port_list();
-		if ( $list ) {
+		if ($list) {
 			$s .= "<script id='kirki-viewport-lists'>";
-			$s .= 'var ' .'kirkiViewports = ' . wp_json_encode( $list ) . ';';
+			$s .= 'var ' . 'kirkiViewports = ' . wp_json_encode($list) . ';';
 			$s .= '</script>';
 		}
 		return $s;
@@ -3330,12 +3499,13 @@ class HelperFunctions {
 	 *
 	 * @return string variables in script markup.
 	 */
-	public static function get_kirki_css_variables_data() {
-		$s       = '';
+	public static function get_kirki_css_variables_data()
+	{
+		$s = '';
 		$variableData = UserData::get_kirki_variable_data();
-		if ( $variableData ) {
+		if ($variableData) {
 			$s .= "<script id='kirki-variable-lists'>";
-			$s .= 'var ' .'kirkiCSSVariable = ' . wp_json_encode( $variableData ) . ';';
+			$s .= 'var ' . 'kirkiCSSVariable = ' . wp_json_encode($variableData) . ';';
 			$s .= '</script>';
 		}
 		return $s;
@@ -3424,71 +3594,73 @@ class HelperFunctions {
 		return $date;
 	}
 
-		/**
-	 	* Format the time with time format
-	 	*
-	 	* @return string
-	 	*/
-	public static function convert_time_format($timeString, $format = 'h:i a') 
-  {
-    $dateTime = null;
+	/**
+	 * Format the time with time format
+	 *
+	 * @return string
+	 */
+	public static function convert_time_format($timeString, $format = 'h:i a')
+	{
+		$dateTime = null;
 
 		try {
 			$dateTime = new \DateTime($timeString);
-    	if ($dateTime && $timeString) {
-        return $dateTime->format($format);
-    	} 
+			if ($dateTime && $timeString) {
+				return $dateTime->format($format);
+			}
 		} catch (\Exception $e) {
 			// if timeString is an invalid time format
 			$parts = explode(' ', $timeString);
-        if (count($parts) > 1) {
-					// Remove the last part (am/pm)
-					$time_value = $parts[0];
-            try {
-                $dateTime = new \DateTime($time_value);
-								if ($dateTime && $timeString) {
-									return $dateTime->format($format);
-								} 
-            } catch (\Exception $e2) {
-                return $timeString;
-            }
-        }
-        return $timeString;
-	}
+			if (count($parts) > 1) {
+				// Remove the last part (am/pm)
+				$time_value = $parts[0];
+				try {
+					$dateTime = new \DateTime($time_value);
+					if ($dateTime && $timeString) {
+						return $dateTime->format($format);
+					}
+				} catch (\Exception $e2) {
+					return $timeString;
+				}
+			}
+			return $timeString;
+		}
 
-    return $timeString;
-  }
+		return $timeString;
+	}
 
 	/**
 	 * Get single post if has a kirki type post
 	 *
 	 * @return object|bool
 	 */
-	public static function get_last_edited_kirki_editor_type_page(){
+	public static function get_last_edited_kirki_editor_type_page()
+	{
 		$args = array(
-			'post_type'      => 'page', // Change to 'post' if you want to search for posts
-			'post_status'    => ['publish', 'draft'],
-			'numberposts'    => 1,      // Number of results to retrieve (change as needed)
-			'meta_key'       => 'kirki_editor_mode',
-			'meta_value'     => 'kirki',
-			'orderby'        => 'modified', // Order by post date
-    	'order'          => 'DESC',  // Sort in descending order
+			'post_type' => 'page', // Change to 'post' if you want to search for posts
+			'post_status' => ['publish', 'draft'],
+			'numberposts' => 1,      // Number of results to retrieve (change as needed)
+			'meta_key' => 'kirki_editor_mode',
+			'meta_value' => 'kirki',
+			'orderby' => 'modified', // Order by post date
+			'order' => 'DESC',  // Sort in descending order
 		);
-		
+
 		$pages = get_posts($args);
-		if(count($pages) > 0){
+		if (count($pages) > 0) {
 			return $pages[0];
 		}
 		return false;
 	}
 
-	public static function get_kirki_version_from_db() {
+	public static function get_kirki_version_from_db()
+	{
 		$version = wp_cache_get('kirki_version', 'kirki');
 
 		if (false === $version) {
 			$version = get_option('kirki_version', '');
-			
-			if ( !empty($version) ) {
+
+			if (!empty($version)) {
 				wp_cache_set('kirki_version', $version, 'kirki');
 			}
 		}
@@ -3496,10 +3668,11 @@ class HelperFunctions {
 		return $version;
 	}
 
-	public static function set_kirki_version_in_db() {
+	public static function set_kirki_version_in_db()
+	{
 		$version = self::get_kirki_version_from_db();
 
-		if($version && version_compare($version, KIRKI_VERSION, '==')) {
+		if ($version && version_compare($version, KIRKI_VERSION, '==')) {
 			// No need to update the version if it's already equal to the current version.
 			return;
 		}
@@ -3508,21 +3681,23 @@ class HelperFunctions {
 		wp_cache_set('kirki_version', KIRKI_VERSION, 'kirki');
 	}
 
-	public static function accepted_file_types_by_plugin($accepted_media_types = KIRKI_SUPPORTED_MEDIA_TYPES) {
-    $result = array();
+	public static function accepted_file_types_by_plugin($accepted_media_types = KIRKI_SUPPORTED_MEDIA_TYPES)
+	{
+		$result = array();
 
-    foreach ($accepted_media_types as $value) {
+		foreach ($accepted_media_types as $value) {
 			if (is_array($value)) {
 				$result = array_merge($result, self::accepted_file_types_by_plugin($value));
 			} else {
 				$result[] = $value;
 			}
-    }
+		}
 
-    return $result;
+		return $result;
 	}
 
-	public static function content_manager_link_filter($dynamic_content = array(), $href="#") {
+	public static function content_manager_link_filter($dynamic_content = array(), $href = "#")
+	{
 		$current_post = get_post(self::get_post_id_if_possible_from_url());
 
 		if ($current_post->post_type === KIRKI_CONTENT_MANAGER_PREFIX) {
@@ -3540,29 +3715,36 @@ class HelperFunctions {
 		return $href;
 	}
 
-	public static function check_string_has_this_tags($string, $tag) {
-    // Check if the string contains either a <p> tag or an <h1> tag
-    return preg_match("/<".$tag."[^>]*>/i", $string) === 1;
+	public static function check_string_has_this_tags($string, $tag)
+	{
+		// Check if the string contains either a <p> tag or an <h1> tag
+		return preg_match("/<" . $tag . "[^>]*>/i", $string) === 1;
 	}
-	private static function get_global_data_post_id(){
+
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Managers\GlobalDataManager::get_post_id()
+	 */
+	private static function get_global_data_post_id()
+	{
 		$post_id = get_option('KIRKI_GLOBAL_DATA_POST_TYPE_ID', get_option('DROIP_GLOBAL_DATA_POST_TYPE_ID', false));
-		if($post_id){
+		if ($post_id) {
 			return $post_id;
-		}else{
+		} else {
 			//this block will run only once
 			$posts = get_posts(array(
 				'post_type' => KIRKI_GLOBAL_DATA_POST_TYPE_NAME,
 				'numberposts' => 1,
 			));
-			if($posts){
+			if ($posts) {
 				$post_id = $posts[0]->ID;
-			}else{
+			} else {
 				//create new post
 				$post = array(
 					'post_title' => KIRKI_GLOBAL_DATA_POST_TYPE_NAME,
 					'post_type' => KIRKI_GLOBAL_DATA_POST_TYPE_NAME,
 					'post_status' => 'draft'
-				);		
+				);
 				$post_id = wp_insert_post($post);
 			}
 			update_option('KIRKI_GLOBAL_DATA_POST_TYPE_ID', $post_id, true);
@@ -3574,44 +3756,51 @@ class HelperFunctions {
 	/**
 	 * Get global data using key
 	 * 
+	 * @deprecated
+	 * @see Kirki\App\Managers\GlobalDataManager::get()
 	 */
-	public static function get_global_data_using_key($key){
+	public static function get_global_data_using_key($key)
+	{
 		//first get post using KIRKI_GLOBAL_DATA_POST_TYPE_NAME post_type name. if not found then create new one.
 		$post_id = self::get_global_data_post_id();
-		if ( metadata_exists( 'post', $post_id, $key ) ) {
-			return get_post_meta( $post_id, $key, true );
+		if (metadata_exists('post', $post_id, $key)) {
+			return get_post_meta($post_id, $key, true);
 		}
 
 		// this block will run only once for a legacy option key.
-		$value = get_option( $key, null );
-		if ( null !== $value ) {
-			update_post_meta( $post_id, $key, $value );
-			delete_option( $key );
+		$value = get_option($key, null);
+		if (null !== $value) {
+			update_post_meta($post_id, $key, $value);
+			delete_option($key);
 		}
 
 		return $value;
 	}
-	
+
 	/**
 	 * Get global data using key
 	 * 
+	 * @deprecated
+	 * @see Kirki\App\Managers\GlobalDataManager::update()
 	 */
-	public static function update_global_data_using_key($key, $value){
+	public static function update_global_data_using_key($key, $value)
+	{
 		$post_id = self::get_global_data_post_id();
 		update_post_meta($post_id, $key, $value);
 
 	}
 
-	public static function get_template_data_if_current_page_is_kirki_template(){
+	public static function get_template_data_if_current_page_is_kirki_template()
+	{
 		$custom_data = get_query_var('kirki_custom_data');
 		$data = false;
 		$builder_div = '';
 		if ($custom_data && isset($custom_data['kirki_template_content'])) {
 			$action = HelperFunctions::sanitize_text(isset($_GET['action']) ? $_GET['action'] : null);
-			$load_for = HelperFunctions::sanitize_text( isset( $_GET['load_for'] ) ? $_GET['load_for'] : '' );
+			$load_for = HelperFunctions::sanitize_text(isset($_GET['load_for']) ? $_GET['load_for'] : '');
 
-			if ($action === KIRKI_EDITOR_ACTION && $load_for ==='kirki-iframe' && !str_contains($custom_data['kirki_template_content'],'kirki-builder')){
-				$template_edit_url = HelperFunctions::get_post_url_arr_from_post_id( $custom_data['kirki_template_id'], ['editor_url' => true] )['editor_url'];
+			if ($action === KIRKI_EDITOR_ACTION && $load_for === 'kirki-iframe' && !str_contains($custom_data['kirki_template_content'], 'kirki-builder')) {
+				$template_edit_url = HelperFunctions::get_post_url_arr_from_post_id($custom_data['kirki_template_id'], ['editor_url' => true])['editor_url'];
 				$builder_div = '<div id="' . 'kirki-builder' . '" template-error="' . $template_edit_url . '"></div>';
 			}
 
@@ -3622,17 +3811,18 @@ class HelperFunctions {
 		}
 		return $data;
 	}
-	
-	public static function get_custom_data_if_current_page_is_kirki_custom_post(){
+
+	public static function get_custom_data_if_current_page_is_kirki_custom_post()
+	{
 		$custom_data = get_query_var('kirki_custom_data');
 		$data = false;
 		$builder_div = '';
 		if ($custom_data && isset($custom_data['kirki_custom_post_content'])) {
 			$action = HelperFunctions::sanitize_text(isset($_GET['action']) ? $_GET['action'] : null);
-			$load_for = HelperFunctions::sanitize_text( isset( $_GET['load_for'] ) ? $_GET['load_for'] : '' );
+			$load_for = HelperFunctions::sanitize_text(isset($_GET['load_for']) ? $_GET['load_for'] : '');
 
-			if ($action === KIRKI_EDITOR_ACTION && $load_for ==='kirki-iframe' && !str_contains($custom_data['kirki_custom_post_content'],'kirki-builder')){
-				$template_edit_url = HelperFunctions::get_post_url_arr_from_post_id( $custom_data['kirki_custom_post_id'], ['editor_url' => true] )['editor_url'];
+			if ($action === KIRKI_EDITOR_ACTION && $load_for === 'kirki-iframe' && !str_contains($custom_data['kirki_custom_post_content'], 'kirki-builder')) {
+				$template_edit_url = HelperFunctions::get_post_url_arr_from_post_id($custom_data['kirki_custom_post_id'], ['editor_url' => true])['editor_url'];
 				$builder_div = '<div id="' . 'kirki-builder' . '" template-error="' . $template_edit_url . '"></div>';
 			}
 
@@ -3644,19 +3834,31 @@ class HelperFunctions {
 		return $data;
 	}
 
-	public static function validate_slug($post_id, $post_type, $post_name){
-    global $wpdb;
-    // Execute the query
-    $result = $wpdb->get_var( $wpdb->prepare( "SELECT ID FROM $wpdb->posts WHERE post_name = %s AND post_type = %s AND ID != %d", $post_name, $post_type, $post_id ? $post_id : 0 ) );
+	/**
+	 * Validate slug for a post.
+	 * 
+	 * @param int|null $post_id
+	 * @param string $post_type
+	 * @param string $post_name
+	 * @return bool
+	 * 
+	 * @deprecated Use Kirki\App\Supports\ContentManager::validate_slug() instead.
+	 * @see Kirki\App\Supports\ContentManager
+	 */
+	public static function validate_slug($post_id, $post_type, $post_name)
+	{
+		global $wpdb;
+		// Execute the query
+		$result = $wpdb->get_var($wpdb->prepare("SELECT ID FROM $wpdb->posts WHERE post_name = %s AND post_type = %s AND ID != %d", $post_name, $post_type, $post_id ? $post_id : 0));
 
-    // If a post with the same slug exists, return false
-    if ($result) {
-        return false;
-    }
+		// If a post with the same slug exists, return false
+		if ($result) {
+			return false;
+		}
 
-    // If no post with the same slug exists, return true
-    return true; 
-  }
+		// If no post with the same slug exists, return true
+		return true;
+	}
 
 	/**
 	 * Summary of find_utility_page_for_this_context
@@ -3664,16 +3866,17 @@ class HelperFunctions {
 	 * @param mixed $get_by id | type.
 	 * @return mixed
 	 */
-	public static function find_utility_page_for_this_context( $value = '404', $get_by = 'type' ) {
-		$utility_pages = Page::fetch_list('kirki_utility', true,  array('publish'));
-		if(count($utility_pages) > 0) {
+	public static function find_utility_page_for_this_context($value = '404', $get_by = 'type')
+	{
+		$utility_pages = Page::fetch_list('kirki_utility', true, array('publish'));
+		if (count($utility_pages) > 0) {
 			foreach ($utility_pages as $key => $page) {
-				if($get_by === 'type'){
-					if($page['utility_page_type'] === $value){
+				if ($get_by === 'type') {
+					if ($page['utility_page_type'] === $value) {
 						return $page;
 					}
-				}else if($get_by === 'id'){
-					if($page['id'] === (int) $value){
+				} else if ($get_by === 'id') {
+					if ($page['id'] === (int) $value) {
 						return $page;
 					}
 				}
@@ -3681,12 +3884,13 @@ class HelperFunctions {
 		}
 		return false;
 	}
-	public static function get_current_page_context(){
+	public static function get_current_page_context()
+	{
 		$context = array(); // {id, type}
 
 		$obj = get_queried_object();
 
-		if(is_404()){
+		if (is_404()) {
 			$context['type'] = '404';
 		} else if ($obj instanceof WP_Post) {
 			$context['id'] = $obj->ID;
@@ -3694,24 +3898,22 @@ class HelperFunctions {
 		} else if ($obj instanceof WP_User) {
 			$context['id'] = $obj->ID;
 			$context['type'] = 'user';
-		}
-		elseif ($obj instanceof WP_Term) {
+		} elseif ($obj instanceof WP_Term) {
 			$context['id'] = $obj->term_id;
 			$context['type'] = 'term';
-		} 
+		}
 		// elseif ($obj instanceof WP_Post_Type) {
 		// 		echo 'This is a WP_Post_Type object';
 		// } elseif (is_null($obj)) {
 		// 		echo 'No queried object (null)';
 		// }
-		
 		else {
 			$kirki_utility_page_type = get_query_var('kirki_utility_page_type');
 			$kirki_utility_page_id = get_query_var('kirki_utility_page_id');
-			if(!empty($kirki_utility_page_type)){
-				if(!self::check_utility_page_visibility_condition($kirki_utility_page_type)){
+			if (!empty($kirki_utility_page_type)) {
+				if (!self::check_utility_page_visibility_condition($kirki_utility_page_type)) {
 					$context['type'] = '404';
-				}else{
+				} else {
 					$context['type'] = 'kirki_utility';
 					$context['kirki_utility_page_type'] = $kirki_utility_page_type;
 					$context['kirki_utility_page_id'] = $kirki_utility_page_id;
@@ -3721,7 +3923,7 @@ class HelperFunctions {
 		return $context;
 	}
 
-	
+
 	/**
 	 * Get utility page slug using type.
 	 * { type: 'login', title: 'Login' },
@@ -3734,30 +3936,32 @@ class HelperFunctions {
 	 * @param string $type //utility page type.
 	 * @return string||bool //string or false.
 	 */
-	public static function get_utility_page_url($type){
-		$utility_pages = Page::fetch_list('kirki_utility', true,  array('publish'));
+	public static function get_utility_page_url($type)
+	{
+		$utility_pages = Page::fetch_list('kirki_utility', true, array('publish'));
 		foreach ($utility_pages as $key => $page) {
 			$utility_page_type = $page['utility_page_type'];
 
 			$slug = $page['slug'];
-			if( $utility_page_type === $type ){
-				return home_url('/'.$slug);
+			if ($utility_page_type === $type) {
+				return home_url('/' . $slug);
 			}
 		}
 		return false;
 	}
-	public static function check_utility_page_visibility_condition($type){
-		if ($type === 'login' || $type === 'sign_up' || $type === 'forgot_password'|| $type === 'reset_password'|| $type === 'retrive_username') {
+	public static function check_utility_page_visibility_condition($type)
+	{
+		if ($type === 'login' || $type === 'sign_up' || $type === 'forgot_password' || $type === 'reset_password' || $type === 'retrive_username') {
 			// Check if the user is already logged in
 			if (is_user_logged_in()) {
-					return false; // User is logged in, so the page should not be visible
+				return false; // User is logged in, so the page should not be visible
 			}
 			// Add other conditions based on the type if needed
 			if ($type === 'signup') {
-					// Example: Check if registrations are enabled in WordPress
-					if (!get_option('users_can_register')) {
-							return false; // Registration is disabled
-					}
+				// Example: Check if registrations are enabled in WordPress
+				if (!get_option('users_can_register')) {
+					return false; // Registration is disabled
+				}
 			}
 			// If the user is not logged in and other conditions pass, allow the page to be visible
 			return true;
@@ -3766,22 +3970,31 @@ class HelperFunctions {
 		return true;
 	}
 
+	/**
+	 * @deprecated
+	 * @see \Kirki\Framework\Supports\Facades\File::delete()
+	 */
 	public static function delete_directory($dirname)
 	{
 		global $wp_filesystem;
-		if ( empty( $wp_filesystem ) ) {
+		if (empty($wp_filesystem)) {
 			require_once ABSPATH . 'wp-admin/includes/file.php';
 			WP_Filesystem();
 		}
-		
-		if ( $wp_filesystem->exists( $dirname ) ) {
-			return $wp_filesystem->delete( $dirname, true );
+
+		if ($wp_filesystem->exists($dirname)) {
+			return $wp_filesystem->delete($dirname, true);
 		}
-		
+
 		return false;
 	}
 
-	public static function get_temp_folder_path(){
+	/**
+	 * @deprecated
+	 * @see \Kirki\App\Supports\FileHandler::get_temp_folder_path()
+	 */
+	public static function get_temp_folder_path()
+	{
 		$upload_dir = wp_upload_dir();
 		$temp_folder = 'kirki_temp';
 		$temp_folder_path = $upload_dir['basedir'] . '/' . $temp_folder;
@@ -3789,7 +4002,12 @@ class HelperFunctions {
 		return $temp_folder_path;
 	}
 
-	public static function get_initial_view_ports(){
+	/**
+	 * @deprecated
+	 * @see \Kirki\App\Managers\GlobalDataManager::get_initial_viewports()
+	 */
+	public static function get_initial_view_ports()
+	{
 		return json_decode('{
    "active":"md",
    "scale":1,
@@ -3843,11 +4061,15 @@ class HelperFunctions {
 }', true);
 	}
 
+	/**
+	 * @deprecated 
+	 * @see \Kirki\App\Supports\FileHandler::download_zip_from_remote()
+	 */
 	public static function download_zip_from_remote($remote_file, $new_name)
 	{
 		$file_ext = explode('.', $remote_file); // ['file', 'ext']
-    $file_ext = strtolower(end($file_ext)); // 'ext'
-    $allowed = ['zip'];
+		$file_ext = strtolower(end($file_ext)); // 'ext'
+		$allowed = ['zip'];
 		if (!in_array($file_ext, $allowed)) {
 			return false;
 		}
@@ -3859,12 +4081,12 @@ class HelperFunctions {
 			// Create a stream context to disable SSL verification
 			$options = [
 				"http" => [
-						"method" => "GET",
-						"header" => "User-Agent: WordPress\r\n"
+					"method" => "GET",
+					"header" => "User-Agent: WordPress\r\n"
 				],
 				"ssl" => [
-						"verify_peer" => false,      // Disable verification of the peer's certificate
-						"verify_peer_name" => false // Disable verification of the peer's name
+					"verify_peer" => false,      // Disable verification of the peer's certificate
+					"verify_peer_name" => false // Disable verification of the peer's name
 				]
 			];
 			$context = stream_context_create($options);
@@ -3883,113 +4105,118 @@ class HelperFunctions {
 		return false;
 	}
 
-	public static function filterZipFile($zip, $zip_file_path) {
-    // Temporary filtered ZIP path
-    $filtered_zip_path = sys_get_temp_dir() . '/filtered.zip';
-    $filtered_zip = new \ZipArchive;
+	public static function filterZipFile($zip, $zip_file_path)
+	{
+		// Temporary filtered ZIP path
+		$filtered_zip_path = sys_get_temp_dir() . '/filtered.zip';
+		$filtered_zip = new \ZipArchive;
 
-    if ($filtered_zip->open($filtered_zip_path, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === TRUE) {
-        // Loop through all files in the archive
-        for ($i = 0; $i < $zip->numFiles; $i++) {
-            $filename = $zip->getNameIndex($i);
-            $file_path = 'zip://' . $zip_file_path . '#' . $filename;
+		if ($filtered_zip->open($filtered_zip_path, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === TRUE) {
+			// Loop through all files in the archive
+			for ($i = 0; $i < $zip->numFiles; $i++) {
+				$filename = $zip->getNameIndex($i);
+				$file_path = 'zip://' . $zip_file_path . '#' . $filename;
 
 				// Get MIME type based on file extensioncm_f
 				$file_mime = self::getMimeTypeByExtension($filename);
 
-            // Additional JSON validation
-            if ($file_mime === 'application/json' && !self::isJsonFile($file_path)) {
-                $file_mime = 'text/plain'; // Fallback if not valid JSON
-            }
+				// Additional JSON validation
+				if ($file_mime === 'application/json' && !self::isJsonFile($file_path)) {
+					$file_mime = 'text/plain'; // Fallback if not valid JSON
+				}
 
-            // Check if the file MIME type matches supported types
-            $is_supported = false;
-            foreach (KIRKI_SUPPORTED_MEDIA_TYPES as $types) {
-                if (in_array($file_mime, $types)) {
-                    $is_supported = true;
-                    break;
-                }
-            }
+				// Check if the file MIME type matches supported types
+				$is_supported = false;
+				foreach (KIRKI_SUPPORTED_MEDIA_TYPES as $types) {
+					if (in_array($file_mime, $types)) {
+						$is_supported = true;
+						break;
+					}
+				}
 
-            // Add the file to the filtered archive if supported
-            if ($is_supported) {
-                $file_contents = $zip->getFromIndex($i);
-                $filtered_zip->addFromString($filename, $file_contents);
-            }
-        }
+				// Add the file to the filtered archive if supported
+				if ($is_supported) {
+					$file_contents = $zip->getFromIndex($i);
+					$filtered_zip->addFromString($filename, $file_contents);
+				}
+			}
 
-        $filtered_zip->close();
-        return $filtered_zip_path;
-    } else {
-        return false;
-    }
- }
+			$filtered_zip->close();
+			return $filtered_zip_path;
+		} else {
+			return false;
+		}
+	}
 
 	// Helper function to get MIME type by file extension
-	private static function getMimeTypeByExtension($filename) {
-			$extension_to_mime = [
-					'json' => 'application/json',
-					'jpg'  => 'image/jpeg',
-					'jpeg' => 'image/jpeg',
-					'png'  => 'image/png',
-					'gif'  => 'image/gif',
-					'webp' => 'image/webp',
-					'svg'  => 'image/svg+xml',
-					'pdf'  => 'application/pdf',
-					'mp4'  => 'video/mp4',
-					'ogg'  => 'audio/ogg',
-					'lottie' => 'text/plain',
-					'mov'  => 'video/quicktime',
-					'mp3'  => 'audio/mpeg',
-					'wav'  => 'audio/wav',
+	private static function getMimeTypeByExtension($filename)
+	{
+		$extension_to_mime = [
+			'json' => 'application/json',
+			'jpg' => 'image/jpeg',
+			'jpeg' => 'image/jpeg',
+			'png' => 'image/png',
+			'gif' => 'image/gif',
+			'webp' => 'image/webp',
+			'svg' => 'image/svg+xml',
+			'pdf' => 'application/pdf',
+			'mp4' => 'video/mp4',
+			'ogg' => 'audio/ogg',
+			'lottie' => 'text/plain',
+			'mov' => 'video/quicktime',
+			'mp3' => 'audio/mpeg',
+			'wav' => 'audio/wav',
 
-					// Add more extensions as needed
-			];
+			// Add more extensions as needed
+		];
 
-			$ext = pathinfo($filename, PATHINFO_EXTENSION);
-			return $extension_to_mime[strtolower($ext)] ?? 'application/octet-stream';
+		$ext = pathinfo($filename, PATHINFO_EXTENSION);
+		return $extension_to_mime[strtolower($ext)] ?? 'application/octet-stream';
 	}
 
 	// Helper function to validate JSON file content
-	private static function isJsonFile($file_path) {
-			$file_contents = @file_get_contents($file_path);
-			$trimmed = trim($file_contents);
-			return $trimmed[0] === '{' || $trimmed[0] === '[';
+	private static function isJsonFile($file_path)
+	{
+		$file_contents = @file_get_contents($file_path);
+		$trimmed = trim($file_contents);
+		return $trimmed[0] === '{' || $trimmed[0] === '[';
 	}
 
-	public static function is_remote_url($url) {
-    // Parse the URL to get components
-    $parsed_url = wp_parse_url($url);
+	public static function is_remote_url($url)
+	{
+		// Parse the URL to get components
+		$parsed_url = wp_parse_url($url);
 		return isset($parsed_url['scheme']);
 	}
 
-	public static function is_element_accessible($access) {
+	public static function is_element_accessible($access)
+	{
 
-    switch ($access) {
-        case 'all':
-            return true; // Accessible to everyone
-						
-				case 'guest':
-            return !is_user_logged_in();
+		switch ($access) {
+			case 'all':
+				return true; // Accessible to everyone
 
-        case 'logged-in':
-            return is_user_logged_in(); // Accessible to logged-in users
-						
-        case 'admin':
-            return current_user_can('administrator'); // Accessible to administrators
+			case 'guest':
+				return !is_user_logged_in();
 
-        case 'editor':
-            return current_user_can('editor'); // Accessible to editors
+			case 'logged-in':
+				return is_user_logged_in(); // Accessible to logged-in users
 
-        case 'author':
-            return current_user_can('author'); // Accessible to authors
+			case 'admin':
+				return current_user_can('administrator'); // Accessible to administrators
 
-        case 'subscriber':
-            return current_user_can('subscriber'); // Accessible to subscribers
+			case 'editor':
+				return current_user_can('editor'); // Accessible to editors
 
-        default:
-            return false; // Default to not accessible if the value is unrecognized
-    }
+			case 'author':
+				return current_user_can('author'); // Accessible to authors
+
+			case 'subscriber':
+				return current_user_can('subscriber'); // Accessible to subscribers
+
+			default:
+				return false; // Default to not accessible if the value is unrecognized
+		}
 	}
 
 	/**
@@ -4000,10 +4227,11 @@ class HelperFunctions {
 	 * @param string $post : post object.
 	 * @return symbol || bool(false)
 	 */
-	public static function find_symbol_for_this_page( $type ) {
-		$all_symbols = Symbol::fetch_list( true, false );
-		foreach ( $all_symbols as $key => $symbol ) {
-			if(isset($symbol['setAs']) && $symbol['setAs'] === $type){
+	public static function find_symbol_for_this_page($type)
+	{
+		$all_symbols = Symbol::fetch_list(true, false);
+		foreach ($all_symbols as $key => $symbol) {
+			if (isset($symbol['setAs']) && $symbol['setAs'] === $type) {
 				return $symbol;
 			}
 		}
@@ -4017,36 +4245,39 @@ class HelperFunctions {
 	 * @param string $html if true the function will return html otherwise return symbol object.
 	 * @return string|object custom section html or stymbol object.
 	 */
-	public static function get_page_custom_section( $type, $html = true ) {
+	public static function get_page_custom_section($type, $html = true)
+	{
 		$show = apply_filters('kirki_show_custom_section_' . $type, true);
-		if(!$show){
+		if (!$show) {
 			return '';
 		}
-		
 
-		$symbol = self::find_symbol_for_this_page( $type );
-		if ( ! $html ) {
+
+		$symbol = self::find_symbol_for_this_page($type);
+		if (!$html) {
 			return $symbol;
 		}
 
-		if(isset(self::$custom_sections[$type])){
+		if (isset(self::$custom_sections[$type])) {
 			return self::$custom_sections[$type];
 		}
 
-		$s = self::isShowWPThemeHeaderFooter() ? '':' '; // this is for disableing theme header footer forcefully if is_show_wp_theme_header_footer is false
+		$s = self::isShowWPThemeHeaderFooter() ? '' : ' '; // this is for disableing theme header footer forcefully if is_show_wp_theme_header_footer is false
 
-		if ( $symbol ) {
-			$action = HelperFunctions::sanitize_text( isset( $_GET['action'] ) ? $_GET['action'] : '' );
+		if ($symbol) {
+			$action = HelperFunctions::sanitize_text(isset($_GET['action']) ? $_GET['action'] : '');
 			$symbol_data = $symbol['symbolData'];
 			$set_as = isset($symbol['setAs']) ? $symbol['setAs'] : '';
 
 			$post_id = self::get_post_id_if_possible_from_url();
 			$template_data = self::get_template_data_if_current_page_is_kirki_template();
-			if($template_data) $post_id = $template_data['template_id'];
+			if ($template_data)
+				$post_id = $template_data['template_id'];
 
 
 			$custom_page_data = self::get_custom_data_if_current_page_is_kirki_custom_post();
-			if($custom_page_data) $post_id = $custom_page_data['post_id'];
+			if ($custom_page_data)
+				$post_id = $custom_page_data['post_id'];
 
 			$is_page_symbol_disabled = get_post_meta($post_id, KIRKI_META_NAME_FOR_PAGE_HF_SYMBOL_DISABLE_STATUS, true);
 			if (isset($is_page_symbol_disabled) && is_array($is_page_symbol_disabled) && isset($is_page_symbol_disabled[$type])) {
@@ -4055,7 +4286,7 @@ class HelperFunctions {
 				$is_page_symbol_disabled = false;
 			}
 
-			$params = array( 
+			$params = array(
 				'blocks' => $symbol_data['data'],
 				'style_blocks' => $symbol_data['styleBlocks'],
 				'root' => $symbol_data['root'],
@@ -4066,28 +4297,30 @@ class HelperFunctions {
 				'should_take_app_script' => false,
 				'prefix' => 'kirki-s' . $symbol['id']
 			);
-			if($action === KIRKI_EDITOR_ACTION){
+			if ($action === KIRKI_EDITOR_ACTION) {
 				$extra_attr_for_hf_symbol = '';
-				if($is_page_symbol_disabled) $extra_attr_for_hf_symbol = ' style="display:none;"';
-				$s = '<' . $type . $extra_attr_for_hf_symbol . ' data-kirki-symbol_set_as="' . $set_as . '" data-kirki-symbol="' . $symbol['id'] . '" data-kirki="' . $type . '">' . self::get_html_using_preview_script( $params ) . '</' . $type .'>'; //added data-kirki="$type" => We removed theme header and footer using preg_replace in TheFrontendHooks.php file
-			}else if(!$is_page_symbol_disabled){	
+				if ($is_page_symbol_disabled)
+					$extra_attr_for_hf_symbol = ' style="display:none;"';
+				$s = '<' . $type . $extra_attr_for_hf_symbol . ' data-kirki-symbol_set_as="' . $set_as . '" data-kirki-symbol="' . $symbol['id'] . '" data-kirki="' . $type . '">' . self::get_html_using_preview_script($params) . '</' . $type . '>'; //added data-kirki="$type" => We removed theme header and footer using preg_replace in TheFrontendHooks.php file
+			} else if (!$is_page_symbol_disabled) {
 				$params['should_take_app_script'] = true;
 				$params['get_variable'] = true;
-				$s = self::get_html_using_preview_script( $params );
-			}else if($is_page_symbol_disabled){
+				$s = self::get_html_using_preview_script($params);
+			} else if ($is_page_symbol_disabled) {
 				$s = '<!-- ' . $type . ' is disabled -->';
 			}
 		}
-		
-		$s =  do_shortcode($s);
-		
+
+		$s = do_shortcode($s);
+
 		self::$custom_sections[$type] = $s;
-		
+
 		return $s;
 	}
 
-	public static function isShowWPThemeHeaderFooter(){
-		$common_data = WpAdmin::get_common_data( true );
+	public static function isShowWPThemeHeaderFooter()
+	{
+		$common_data = WpAdmin::get_common_data(true);
 		return $common_data['is_show_wp_theme_header_footer'];
 	}
 
@@ -4096,17 +4329,25 @@ class HelperFunctions {
 	 *
 	 * @param mixed $value The value to check.
 	 * @return bool Returns true if the value is considered "truthy", otherwise false.
+	 * 
+	 * @deprecated
+	 * @see function \Kirki\App\is_truthy()
 	 */
-	public static function isTruthy($value): bool {
+	public static function isTruthy($value): bool
+	{
 		return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
 	}
 
 	/**
 	 * Get the upload directory path has upload or write permission.
+	 * 
+	 * @deprecated 
+	 * @see Kirki\Framework\Supports\Facades\File::is_writable()
+	 * @see function Kirki\App\get_upload_directory()
 	 */
 	public static function get_upload_dir_has_write_permission()
 	{
-		if (! function_exists('request_filesystem_credentials')) {
+		if (!function_exists('request_filesystem_credentials')) {
 			require_once ABSPATH . 'wp-admin/includes/file.php';
 		}
 
@@ -4121,47 +4362,52 @@ class HelperFunctions {
 
 	/**
 	 * $name = [] or string
+	 * @deprecated 
+	 * @see Kirki\App\Supports\Template::add_prefix_to_class_name()
 	 */
-	public static function add_prefix_to_class_name($prefix, $name) {
-    if (is_array($name)) {
-        foreach ($name as $key => $c) {
-            $c = strtolower($c);
-            if (in_array($c, KIRKI_PRESERVED_CLASS_LIST)) {
-                $name[$key] = $c;
-            } else {
-                $name[$key] = $prefix ? strtolower($prefix) . '-' . $c : $c;
-            }
-        }
-    } else {
-        $name = strtolower($name);
-        if (!in_array($name, KIRKI_PRESERVED_CLASS_LIST)) {
-            $name = $prefix ? strtolower($prefix) . '-' . $name : $name;
-        }
-    }
-    return $name;
-}
-
-	public static function checkVisibilityConditions($element, $options) {
-		$conditions = $element['properties']['visibilityConditions'] ?? [];
-		if ( !count($conditions) ) return true;
-    foreach ($conditions as $and_group) {
-        $and_result = true;
-        foreach ($and_group as $condition) {
-					$source = (string) ($condition['source'] ?? 'kirki');
-					$condition_result = apply_filters('kirki_visibility_condition_check_' . $source, false, $condition, $options);
-					if (!$condition_result) {
-							$and_result = false;
-							break; // If any condition fails in AND group
-					}
-        }
-        if ($and_result) {
-            return true; // If any OR group passes
-        }
-    }
-    return false; // No group passed
+	public static function add_prefix_to_class_name($prefix, $name)
+	{
+		if (is_array($name)) {
+			foreach ($name as $key => $c) {
+				$c = strtolower($c);
+				if (in_array($c, KIRKI_PRESERVED_CLASS_LIST)) {
+					$name[$key] = $c;
+				} else {
+					$name[$key] = $prefix ? strtolower($prefix) . '-' . $c : $c;
+				}
+			}
+		} else {
+			$name = strtolower($name);
+			if (!in_array($name, KIRKI_PRESERVED_CLASS_LIST)) {
+				$name = $prefix ? strtolower($prefix) . '-' . $name : $name;
+			}
+		}
+		return $name;
 	}
 
-		private static function update_slider_style_blocks($blocks, $styles)
+	public static function checkVisibilityConditions($element, $options)
+	{
+		$conditions = $element['properties']['visibilityConditions'] ?? [];
+		if (!count($conditions))
+			return true;
+		foreach ($conditions as $and_group) {
+			$and_result = true;
+			foreach ($and_group as $condition) {
+				$source = (string) ($condition['source'] ?? 'kirki');
+				$condition_result = apply_filters('kirki_visibility_condition_check_' . $source, false, $condition, $options);
+				if (!$condition_result) {
+					$and_result = false;
+					break; // If any condition fails in AND group
+				}
+			}
+			if ($and_result) {
+				return true; // If any OR group passes
+			}
+		}
+		return false; // No group passed
+	}
+
+	private static function update_slider_style_blocks($blocks, $styles)
 	{
 
 		$slider_mask_styleIds = [];
@@ -4198,7 +4444,7 @@ class HelperFunctions {
 
 		if (count($slider_mask_styleIds) > 0) {
 			foreach ($slider_mask_styleIds as $styleId) {
-				if($styles[$styleId]){
+				if ($styles[$styleId]) {
 					$style = $styles[$styleId];
 					$style_variants = $style['variant'];
 
@@ -4252,7 +4498,7 @@ class HelperFunctions {
 			$meta_key = $value['meta_key'];     // Meta key name
 			$meta_value = $value['meta_value']; // Serialized meta value
 
-			$meta_value = unserialize($meta_value); // Convert serialized data to array
+			$meta_value = unserialize($meta_value, ['allowed_classes' => false]); // Convert serialized data to array
 
 			// If the meta value has a 'blocks' key, handle it as a full page data
 			if (isset($meta_value['blocks'])) {
@@ -4278,17 +4524,18 @@ class HelperFunctions {
 		}
 	}
 
-	public static function handle_legacy_slider_default_class(){
+	public static function handle_legacy_slider_default_class()
+	{
 		$styles = self::get_global_data_using_key(KIRKI_GLOBAL_STYLE_BLOCK_META_KEY);
-		if(!$styles){
+		if (!$styles) {
 			$styles = array();
 		}
-		if(count($styles) > 0){
-			if(isset($styles['kirki_slider_slide'])){
+		if (count($styles) > 0) {
+			if (isset($styles['kirki_slider_slide'])) {
 				// Handle kirki_slider_mask
-				if(isset($styles['kirki_slider_mask'])){
+				if (isset($styles['kirki_slider_mask'])) {
 					$variants = $styles['kirki_slider_mask']['variant'];
-					if(count($variants) > 0){
+					if (count($variants) > 0) {
 						$styleVariants = [];
 						foreach ($variants as $key => $css) {
 							$css = preg_replace('/overflow\s*:\s*hidden;?/', '', $css);
@@ -4299,11 +4546,11 @@ class HelperFunctions {
 						$styles['kirki_slider_mask']['variant'] = $styleVariants;
 					}
 				}
-				
+
 				// Handle kirki_slider_slide
-				if(isset($styles['kirki_slider_slide'])){
+				if (isset($styles['kirki_slider_slide'])) {
 					$variants = $styles['kirki_slider_slide']['variant'];
-					if(count($variants) > 0){
+					if (count($variants) > 0) {
 						$styleVariants = [];
 						foreach ($variants as $key => $css) {
 							$css = preg_replace('/position\s*:\s*absolute;?/', '', $css);
@@ -4316,7 +4563,7 @@ class HelperFunctions {
 				}
 			}
 		}
-		
+
 	}
 
 	public static function get_current_item_index($index, $options)
@@ -4337,7 +4584,7 @@ class HelperFunctions {
 	{
 		$val = trim($val);
 		$last = strtolower($val[strlen($val) - 1]);
-		$val = (int)$val;
+		$val = (int) $val;
 		switch ($last) {
 			case 'g':
 				$val *= 1024;
@@ -4349,10 +4596,21 @@ class HelperFunctions {
 		return $val;
 	}
 
-	public static function get_kirki_full_canvas_template_path(){
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Supports\Canvas::get_full_canvas_template_path()
+	 */
+	public static function get_kirki_full_canvas_template_path()
+	{
 		return self::normalize_kirki_full_canvas_template_path(KIRKI_FULL_CANVAS_TEMPLATE_PATH);
 	}
-	public static function normalize_kirki_full_canvas_template_path($path){
+
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Supports\Canvas::normalize_full_canvas_template_path()
+	 */
+	public static function normalize_kirki_full_canvas_template_path($path)
+	{
 		// replace if has kirki-pro => kirki
 		if (strpos($path, 'kirki-pro') !== false) {
 			$path = str_replace('kirki-pro', 'kirki', $path);

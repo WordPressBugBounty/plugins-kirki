@@ -24,18 +24,20 @@ class PageSettings {
 	 * Save page settings data
 	 *
 	 * @return void wp_send_json
+	 * @deprecated
+	 * @see Kirki\App\Services\PageSettingsService::update_page_settings()
 	 */
 	public static function save_page_setting_data() {
 		//phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$id = (int) HelperFunctions::sanitize_text( isset( $_POST['id'] ) ? $_POST['id'] : '' );
 		//phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		$page_name = HelperFunctions::sanitize_text( isset( $_POST['page_name'] ) ? $_POST['page_name'] : null );
+		$page_name = HelperFunctions::sanitize_text( isset( $_POST['page_title'] ) ? $_POST['page_title'] : null );
 		//phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		$slug = HelperFunctions::sanitize_text( isset( $_POST['page_url'] ) ? $_POST['page_url'] : null );
+		$slug = HelperFunctions::sanitize_text( isset( $_POST['slug'] ) ? $_POST['slug'] : null );
 		//phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$post_status = HelperFunctions::sanitize_text( isset( $_POST['post_status'] ) ? $_POST['post_status'] : null );
 		//phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		$page_desc = HelperFunctions::sanitize_text( isset( $_POST['page_desc'] ) ? $_POST['page_desc'] : '' );
+		$page_desc = HelperFunctions::sanitize_text( isset( $_POST['page_description'] ) ? $_POST['page_description'] : '' );
 		$featured_image_url = HelperFunctions::sanitize_text( isset( $_POST['featured_image'] ) ? $_POST['featured_image'] : '' );
 		//phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated,WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$seo_settings = json_decode( stripslashes( $_POST['seo_settings'] ), true );
@@ -72,16 +74,16 @@ class PageSettings {
 
 		wp_send_json(
 			array(
-				'page_name'     => $the_post->post_title,
-				'page_url'      => $the_post->post_name,
-				'page_desc'     => $the_post->post_excerpt,
-				'post_status'   => $the_post->post_status,
-				'post_url'      => str_replace( get_http_origin(), '', $the_post_perma ),
+				'page_title'      => $the_post->post_title,
+				'slug'            => $the_post->post_name,
+				'page_description' => $the_post->post_excerpt,
+				'post_status'     => $the_post->post_status,
+				'post_url'        => str_replace( get_http_origin(), '', $the_post_perma ),
 				// NB: These are sent debugging purpose, please don't remove them without being sure.
-				'page_full_url' => $the_post_perma,
-				'home_url'      => home_url(),
-				'origin'        => get_http_origin(),
-				'site_url'      => site_url(),
+				'page_full_url'   => $the_post_perma,
+				'home_url'        => home_url(),
+				'origin'          => get_http_origin(),
+				'site_url'        => site_url(),
 			)
 		);
 
@@ -118,14 +120,14 @@ class PageSettings {
 		}
 		
 		$result = array(
-			'page_name'    => ! empty( $post_title ) ? $post_title : '',
-			'page_url'     => ! empty( $slug ) ? $slug : '',
-			'og_image'     => ! empty( $og_image ) ? $og_image : '',
-			'page_desc'    => ! empty( $page_desc ) ? $page_desc : '',
-			'post_status'  => $post->post_status,
-			'seo_settings' => $seo_settings_post_meta,
-			'custom_code'  => $custom_code_post_meta,
-			'featured_image'=> empty( $featured_img ) ? '' : $featured_img,
+			'page_title'      => ! empty( $post_title ) ? $post_title : '',
+			'slug'            => ! empty( $slug ) ? $slug : '',
+			'og_image'        => ! empty( $og_image ) ? $og_image : '',
+			'page_description' => ! empty( $page_desc ) ? $page_desc : '',
+			'post_status'     => $post->post_status,
+			'seo_settings'    => $seo_settings_post_meta,
+			'custom_code'     => $custom_code_post_meta,
+			'featured_image'  => empty( $featured_img ) ? '' : $featured_img,
 		);
 
 		$seo_post_data           = self::get_seo_post_data( $post );
@@ -157,6 +159,9 @@ class PageSettings {
 	 * Save custom code
 	 *
 	 * @return void wp_send_json
+	 * 
+	 * @deprecated
+	 * @see Kirki\App\Services\PageSettingsService::update_page_custom_code()
 	 */
 	public static function save_custom_code() {
 		$post_id = HelperFunctions::get_post_id_if_possible_from_url();

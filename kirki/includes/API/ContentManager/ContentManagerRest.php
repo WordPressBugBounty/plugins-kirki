@@ -5,29 +5,35 @@
  * @package kirki
  */
 
- namespace Kirki\API\ContentManager;
+namespace Kirki\API\ContentManager;
 
-if ( ! defined( 'ABSPATH' ) ) {
+if (!defined('ABSPATH')) {
 	exit; // Exit if accessed directly.
 }
 
 use Kirki\HelperFunctions;
 use WP_Error;
- use WP_REST_Controller;
- use WP_REST_Server;
+use WP_REST_Controller;
+use WP_REST_Server;
 
 /**
  * ContentManagerRest
+ * 
+ * @deprecated
+ * @see \Kirki\App\Http\Controllers\Api\CollectionController
+ * @see \Kirki\App\Http\Controllers\Api\CollectionItemController
  */
-class ContentManagerRest extends WP_REST_Controller {
+class ContentManagerRest extends WP_REST_Controller
+{
 
 	/**
 	 * Initialize the media class
 	 *
 	 * @return void
 	 */
-	public function __construct() {
-		$this->namespace ='kirki/v1';
+	public function __construct()
+	{
+		$this->namespace = 'kirki/v1';
 		$this->rest_base = 'content-manager';
 	}
 
@@ -36,18 +42,19 @@ class ContentManagerRest extends WP_REST_Controller {
 	 *
 	 * @return void
 	 */
-	public function register_routes() {
+	public function register_routes()
+	{
 		register_rest_route(
 			$this->namespace,
 			'/' . $this->rest_base . '/post_types',
 			array(
 				array(
-					'methods'             => 'GET',
-					'callback'            => array( $this, 'get_all_post_types' ),
-					'permission_callback' => array( $this, 'get_item_permissions_check' ),
-					'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::READABLE ),
+					'methods' => 'GET',
+					'callback' => array($this, 'get_all_post_types'),
+					'permission_callback' => array($this, 'get_item_permissions_check'),
+					'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::READABLE),
 				),
-				'schema' => array( $this, 'get_item_schema' ),
+				'schema' => array($this, 'get_item_schema'),
 			)
 		);
 
@@ -56,12 +63,12 @@ class ContentManagerRest extends WP_REST_Controller {
 			'/' . $this->rest_base . '/post_types/settings',
 			array(
 				array(
-					'methods'             => 'GET',
-					'callback'            => array( $this, 'get_post_type_settings' ),
-					'permission_callback' => array( $this, 'get_item_permissions_check' ),
-					'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::READABLE ),
+					'methods' => 'GET',
+					'callback' => array($this, 'get_post_type_settings'),
+					'permission_callback' => array($this, 'get_item_permissions_check'),
+					'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::READABLE),
 				),
-				'schema' => array( $this, 'get_item_schema' ),
+				'schema' => array($this, 'get_item_schema'),
 			)
 		);
 
@@ -70,12 +77,12 @@ class ContentManagerRest extends WP_REST_Controller {
 			'/' . $this->rest_base . '/post_types/get_referenced_collection',
 			array(
 				array(
-					'methods'             => 'GET',
-					'callback'            => array( $this, 'get_referenced_collection' ),
-					'permission_callback' => array( $this, 'get_item_permissions_check' ),
-					'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::READABLE ),
+					'methods' => 'GET',
+					'callback' => array($this, 'get_referenced_collection'),
+					'permission_callback' => array($this, 'get_item_permissions_check'),
+					'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::READABLE),
 				),
-				'schema' => array( $this, 'get_item_schema' ),
+				'schema' => array($this, 'get_item_schema'),
 			)
 		);
 
@@ -84,12 +91,12 @@ class ContentManagerRest extends WP_REST_Controller {
 			'/' . $this->rest_base . '/post_types',
 			array(
 				array(
-					'methods'             => 'POST',
-					'callback'            => array( $this, 'create_or_update_a_post_type' ),
-					'permission_callback' => array( $this, 'post_item_permissions_check' ),
-					'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::READABLE ),
+					'methods' => 'POST',
+					'callback' => array($this, 'create_or_update_a_post_type'),
+					'permission_callback' => array($this, 'post_item_permissions_check'),
+					'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::READABLE),
 				),
-				'schema' => array( $this, 'get_item_schema' ),
+				'schema' => array($this, 'get_item_schema'),
 			)
 		);
 
@@ -98,12 +105,12 @@ class ContentManagerRest extends WP_REST_Controller {
 			'/' . $this->rest_base . '/post_type/(?P<id>\d+)',
 			array(
 				array(
-					'methods'             => 'GET',
-					'callback'            => array( $this, 'get_post_type' ),
-					'permission_callback' => array( $this, 'get_item_permissions_check' ),
-					'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::READABLE ),
+					'methods' => 'GET',
+					'callback' => array($this, 'get_post_type'),
+					'permission_callback' => array($this, 'get_item_permissions_check'),
+					'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::READABLE),
 				),
-				'schema' => array( $this, 'get_item_schema' ),
+				'schema' => array($this, 'get_item_schema'),
 			)
 		);
 
@@ -112,12 +119,12 @@ class ContentManagerRest extends WP_REST_Controller {
 			'/' . $this->rest_base . '/post_type/delete',
 			array(
 				array(
-					'methods'             => 'POST',
-					'callback'            => array( $this, 'delete_content_manager_post' ),
-					'permission_callback' => array( $this, 'post_item_permissions_check' ),
-					'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::READABLE ),
+					'methods' => 'POST',
+					'callback' => array($this, 'delete_content_manager_post'),
+					'permission_callback' => array($this, 'post_item_permissions_check'),
+					'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::READABLE),
 				),
-				'schema' => array( $this, 'get_item_schema' ),
+				'schema' => array($this, 'get_item_schema'),
 			)
 		);
 
@@ -126,12 +133,12 @@ class ContentManagerRest extends WP_REST_Controller {
 			'/' . $this->rest_base . '/post_type/duplicate',
 			array(
 				array(
-					'methods'             => 'POST',
-					'callback'            => array( $this, 'duplicate_content_manager_post_type' ),
-					'permission_callback' => array( $this, 'post_item_permissions_check' ),
-					'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::READABLE ),
+					'methods' => 'POST',
+					'callback' => array($this, 'duplicate_content_manager_post_type'),
+					'permission_callback' => array($this, 'post_item_permissions_check'),
+					'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::READABLE),
 				),
-				'schema' => array( $this, 'get_item_schema' ),
+				'schema' => array($this, 'get_item_schema'),
 			)
 		);
 
@@ -140,12 +147,12 @@ class ContentManagerRest extends WP_REST_Controller {
 			'/' . $this->rest_base . '/post_types/items',
 			array(
 				array(
-					'methods'             => 'GET',
-					'callback'            => array( $this, 'get_all_items' ),
-					'permission_callback' => array( $this, 'get_item_permissions_check' ),
-					'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::READABLE ),
+					'methods' => 'GET',
+					'callback' => array($this, 'get_all_items'),
+					'permission_callback' => array($this, 'get_item_permissions_check'),
+					'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::READABLE),
 				),
-				'schema' => array( $this, 'get_item_schema' ),
+				'schema' => array($this, 'get_item_schema'),
 			)
 		);
 
@@ -154,12 +161,12 @@ class ContentManagerRest extends WP_REST_Controller {
 			'/' . $this->rest_base . '/post_types/items',
 			array(
 				array(
-					'methods'             => 'POST',
-					'callback'            => array( $this, 'create_or_update_a_post_type_item' ),
-					'permission_callback' => array( $this, 'post_item_permissions_check' ),
-					'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::READABLE ),
+					'methods' => 'POST',
+					'callback' => array($this, 'create_or_update_a_post_type_item'),
+					'permission_callback' => array($this, 'post_item_permissions_check'),
+					'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::READABLE),
 				),
-				'schema' => array( $this, 'get_item_schema' ),
+				'schema' => array($this, 'get_item_schema'),
 			)
 		);
 
@@ -171,12 +178,12 @@ class ContentManagerRest extends WP_REST_Controller {
 			'/' . $this->rest_base . '/post_types/item/(?P<id>\d+)',
 			array(
 				array(
-					'methods'             => 'GET',
-					'callback'            => array( $this, 'get_post_type_item' ),
-					'permission_callback' => array( $this, 'get_item_permissions_check' ),
-					'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::READABLE ),
+					'methods' => 'GET',
+					'callback' => array($this, 'get_post_type_item'),
+					'permission_callback' => array($this, 'get_item_permissions_check'),
+					'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::READABLE),
 				),
-				'schema' => array( $this, 'get_item_schema' ),
+				'schema' => array($this, 'get_item_schema'),
 			)
 		);
 
@@ -185,12 +192,12 @@ class ContentManagerRest extends WP_REST_Controller {
 			'/' . $this->rest_base . '/post_types/items/action',
 			array(
 				array(
-					'methods'             => 'POST',
-					'callback'            => array( $this, 'handle_post_type_item_action' ),
-					'permission_callback' => array( $this, 'post_item_permissions_check' ),
-					'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::READABLE ),
+					'methods' => 'POST',
+					'callback' => array($this, 'handle_post_type_item_action'),
+					'permission_callback' => array($this, 'post_item_permissions_check'),
+					'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::READABLE),
 				),
-				'schema' => array( $this, 'get_item_schema' ),
+				'schema' => array($this, 'get_item_schema'),
 			)
 		);
 
@@ -199,12 +206,12 @@ class ContentManagerRest extends WP_REST_Controller {
 			'/' . $this->rest_base . '/post_types/items/bulk-action',
 			array(
 				array(
-					'methods'             => 'POST',
-					'callback'            => array( $this, 'handle_post_type_item_bulk_action' ),
-					'permission_callback' => array( $this, 'post_item_permissions_check' ),
-					'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::READABLE ),
+					'methods' => 'POST',
+					'callback' => array($this, 'handle_post_type_item_bulk_action'),
+					'permission_callback' => array($this, 'post_item_permissions_check'),
+					'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::READABLE),
 				),
-				'schema' => array( $this, 'get_item_schema' ),
+				'schema' => array($this, 'get_item_schema'),
 			)
 		);
 
@@ -213,12 +220,12 @@ class ContentManagerRest extends WP_REST_Controller {
 			'/' . $this->rest_base . '/validate_slug',
 			array(
 				array(
-					'methods'             => 'GET',
-					'callback'            => array( $this, 'validate_slug' ),
-					'permission_callback' => array( $this, 'get_item_permissions_check' ),
-					'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::READABLE ),
+					'methods' => 'GET',
+					'callback' => array($this, 'validate_slug'),
+					'permission_callback' => array($this, 'get_item_permissions_check'),
+					'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::READABLE),
 				),
-				'schema' => array( $this, 'get_item_schema' ),
+				'schema' => array($this, 'get_item_schema'),
 			)
 		);
 
@@ -232,8 +239,9 @@ class ContentManagerRest extends WP_REST_Controller {
 	 *
 	 * @return \WP_REST_Response
 	 */
-	public function get_item_permissions_check( $request ) {
-		if ( HelperFunctions::is_api_call_from_editor_preview() && HelperFunctions::is_api_header_post_editor_preview_token_valid() ) {
+	public function get_item_permissions_check($request)
+	{
+		if (HelperFunctions::is_api_call_from_editor_preview() && HelperFunctions::is_api_header_post_editor_preview_token_valid()) {
 			return true;
 		}
 
@@ -253,7 +261,8 @@ class ContentManagerRest extends WP_REST_Controller {
 	 *
 	 * @return \WP_REST_Response
 	 */
-	public function post_item_permissions_check( $request ) {
+	public function post_item_permissions_check($request)
+	{
 		return HelperFunctions::has_access(
 			array(
 				KIRKI_ACCESS_LEVELS['FULL_ACCESS'],
@@ -269,12 +278,13 @@ class ContentManagerRest extends WP_REST_Controller {
 	 *
 	 * @return \WP_Error|WP_REST_Response
 	 */
-	public function get_all_post_types( $request ) {
-		$args  = array(
-			'page' => HelperFunctions::sanitize_text( isset( $request['page'] ) ? $request['page'] : 1 ),
+	public function get_all_post_types($request)
+	{
+		$args = array(
+			'page' => HelperFunctions::sanitize_text(isset($request['page']) ? $request['page'] : 1),
 		);
-		$posts = ContentManagerHelper::get_all_post_types( $args );
-		return rest_ensure_response( $posts );
+		$posts = ContentManagerHelper::get_all_post_types($args);
+		return rest_ensure_response($posts);
 	}
 
 	/**
@@ -284,19 +294,21 @@ class ContentManagerRest extends WP_REST_Controller {
 	 *
 	 * @return \WP_Error|WP_REST_Response
 	 */
-	public function get_post_type_settings( $request ) {
-		$post_id = HelperFunctions::sanitize_text( isset( $request['post_id'] ) ? $request['post_id'] : '' );
+	public function get_post_type_settings($request)
+	{
+		$post_id = HelperFunctions::sanitize_text(isset($request['post_id']) ? $request['post_id'] : '');
 
-		$post = ContentManagerHelper::get_post_type_settings( $post_id );
-		return rest_ensure_response( $post );
+		$post = ContentManagerHelper::get_post_type_settings($post_id);
+		return rest_ensure_response($post);
 	}
 
-	public function get_referenced_collection( $request ) {
-		$post_id  = HelperFunctions::sanitize_text( isset( $request['post_id'] ) ? $request['post_id'] : '' );
-		$field_id = HelperFunctions::sanitize_text( isset( $request['field_id'] ) ? $request['field_id'] : '' );
+	public function get_referenced_collection($request)
+	{
+		$post_id = HelperFunctions::sanitize_text(isset($request['post_id']) ? $request['post_id'] : '');
+		$field_id = HelperFunctions::sanitize_text(isset($request['field_id']) ? $request['field_id'] : '');
 
-		$data = ContentManagerHelper::get_referenced_collection( $post_id, $field_id );
-		return rest_ensure_response( $data );
+		$data = ContentManagerHelper::get_referenced_collection($post_id, $field_id);
+		return rest_ensure_response($data);
 	}
 
 	/**
@@ -306,19 +318,20 @@ class ContentManagerRest extends WP_REST_Controller {
 	 *
 	 * @return \WP_Error|WP_REST_Response
 	 */
-	public function create_or_update_a_post_type( $request ) {
-		$request    = json_decode( $request['data'], true );
-		$args       = array(
-			'ID'         => HelperFunctions::sanitize_text( isset( $request['ID'] ) ? $request['ID'] : '' ),
-			'post_title' => HelperFunctions::sanitize_text( isset( $request['post_title'] ) ? $request['post_title'] : '' ),
-			'post_name'  => HelperFunctions::sanitize_text( isset( $request['post_name'] ) ? $request['post_name'] : $request['post_title'] ),
+	public function create_or_update_a_post_type($request)
+	{
+		$request = json_decode($request['data'], true);
+		$args = array(
+			'ID' => HelperFunctions::sanitize_text(isset($request['ID']) ? $request['ID'] : ''),
+			'post_title' => HelperFunctions::sanitize_text(isset($request['post_title']) ? $request['post_title'] : ''),
+			'post_name' => HelperFunctions::sanitize_text(isset($request['post_name']) ? $request['post_name'] : $request['post_title']),
 		);
 		$othersArgs = array(
-			'fields'       => $request['fields'],
+			'fields' => $request['fields'],
 			'basic_fields' => $request['basic_fields'],
 		);
-		$res        = ContentManagerHelper::create_or_update_a_post_type( $args, $othersArgs );
-		return rest_ensure_response( $res );
+		$res = ContentManagerHelper::create_or_update_a_post_type($args, $othersArgs);
+		return rest_ensure_response($res);
 	}
 
 	/**
@@ -328,16 +341,17 @@ class ContentManagerRest extends WP_REST_Controller {
 	 *
 	 * @return \WP_Error|WP_REST_Response
 	 */
-	public function get_all_items( $request ) {
+	public function get_all_items($request)
+	{
 		$args = array(
-			'post_parent'      => HelperFunctions::sanitize_text( isset( $request['post_parent'] ) ? $request['post_parent'] : '' ),
-			'page'             => HelperFunctions::sanitize_text( isset( $request['page'] ) ? $request['page'] : 1 ),
-			'query'            => HelperFunctions::sanitize_text( isset( $request['query'] ) ? $request['query'] : '' ),
-			'filter'           => json_decode( $request['filter'], true ),
-			'exclude_post_ids' => json_decode( $request['exclude_post_ids'], true ) ?: array(),
+			'post_parent' => HelperFunctions::sanitize_text(isset($request['post_parent']) ? $request['post_parent'] : ''),
+			'page' => HelperFunctions::sanitize_text(isset($request['page']) ? $request['page'] : 1),
+			'query' => HelperFunctions::sanitize_text(isset($request['query']) ? $request['query'] : ''),
+			'filter' => json_decode($request['filter'], true),
+			'exclude_post_ids' => json_decode($request['exclude_post_ids'], true) ?: array(),
 		);
-		$res  = ContentManagerHelper::get_all_child_items( $args );
-		return rest_ensure_response( $res );
+		$res = ContentManagerHelper::get_all_child_items($args);
+		return rest_ensure_response($res);
 	}
 
 
@@ -350,11 +364,12 @@ class ContentManagerRest extends WP_REST_Controller {
 	 *
 	 * @return \WP_Error|WP_REST_Response
 	 */
-	public function get_post_type_item( $request ) {
-		$post_id = HelperFunctions::sanitize_text( isset( $request['id'] ) ? $request['id'] : '' );
+	public function get_post_type_item($request)
+	{
+		$post_id = HelperFunctions::sanitize_text(isset($request['id']) ? $request['id'] : '');
 
-		$post = ContentManagerHelper::get_post_type_item( $post_id );
-		return rest_ensure_response( $post );
+		$post = ContentManagerHelper::get_post_type_item($post_id);
+		return rest_ensure_response($post);
 	}
 
 	/**
@@ -364,12 +379,13 @@ class ContentManagerRest extends WP_REST_Controller {
 	 *
 	 * @return \WP_Error|WP_REST_Response
 	 */
-	public function get_post_type( $request ) {
-		$post_id   = HelperFunctions::sanitize_text( isset( $request['id'] ) ? $request['id'] : '' );
-		$hierarchy = HelperFunctions::sanitize_text( isset( $request['hierarchy'] ) ? $request['hierarchy'] : false );
+	public function get_post_type($request)
+	{
+		$post_id = HelperFunctions::sanitize_text(isset($request['id']) ? $request['id'] : '');
+		$hierarchy = HelperFunctions::sanitize_text(isset($request['hierarchy']) ? $request['hierarchy'] : false);
 
-		$post = ContentManagerHelper::get_post_type( $post_id, $hierarchy );
-		return rest_ensure_response( $post );
+		$post = ContentManagerHelper::get_post_type($post_id, $hierarchy);
+		return rest_ensure_response($post);
 	}
 
 	/**
@@ -379,13 +395,14 @@ class ContentManagerRest extends WP_REST_Controller {
 	 *
 	 * @return \WP_Error|WP_REST_Response
 	 */
-	public function validate_slug( $request ) {
-		$post_id   = HelperFunctions::sanitize_text( isset( $request['post_id'] ) ? $request['post_id'] : '' );
-		$post_type = HelperFunctions::sanitize_text( isset( $request['post_type'] ) ? $request['post_type'] : '' );
-		$post_name = HelperFunctions::sanitize_text( isset( $request['post_name'] ) ? $request['post_name'] : '' );
+	public function validate_slug($request)
+	{
+		$post_id = HelperFunctions::sanitize_text(isset($request['post_id']) ? $request['post_id'] : '');
+		$post_type = HelperFunctions::sanitize_text(isset($request['post_type']) ? $request['post_type'] : '');
+		$post_name = HelperFunctions::sanitize_text(isset($request['post_name']) ? $request['post_name'] : '');
 
-		$isValid = ContentManagerHelper::validate_slug( $post_id, $post_type, $post_name );
-		return rest_ensure_response( $isValid );
+		$isValid = ContentManagerHelper::validate_slug($post_id, $post_type, $post_name);
+		return rest_ensure_response($isValid);
 	}
 
 	/**
@@ -395,23 +412,24 @@ class ContentManagerRest extends WP_REST_Controller {
 	 *
 	 * @return \WP_Error|WP_REST_Response
 	 */
-	public function create_or_update_a_post_type_item( $request ) {
-		$request = json_decode( $request['data'], true );
-		$args    = array(
-			'ID'          => HelperFunctions::sanitize_text( isset( $request['ID'] ) ? $request['ID'] : '' ),
-			'post_parent' => HelperFunctions::sanitize_text( isset( $request['post_parent'] ) ? $request['post_parent'] : '' ),
-			'post_title'  => HelperFunctions::sanitize_text( isset( $request['post_title'] ) ? $request['post_title'] : '' ),
-			'post_name'   => HelperFunctions::sanitize_text( isset( $request['post_name'] ) ? $request['post_name'] : $request['post_title'] ),
-			'post_status' => HelperFunctions::sanitize_text( isset( $request['post_status'] ) ? $request['post_status'] : 'draft' ),
-			'post_date'   => HelperFunctions::sanitize_text( isset( $request['post_date'] ) ? $request['post_date'] : '' ),
+	public function create_or_update_a_post_type_item($request)
+	{
+		$request = json_decode($request['data'], true);
+		$args = array(
+			'ID' => HelperFunctions::sanitize_text(isset($request['ID']) ? $request['ID'] : ''),
+			'post_parent' => HelperFunctions::sanitize_text(isset($request['post_parent']) ? $request['post_parent'] : ''),
+			'post_title' => HelperFunctions::sanitize_text(isset($request['post_title']) ? $request['post_title'] : ''),
+			'post_name' => HelperFunctions::sanitize_text(isset($request['post_name']) ? $request['post_name'] : $request['post_title']),
+			'post_status' => HelperFunctions::sanitize_text(isset($request['post_status']) ? $request['post_status'] : 'draft'),
+			'post_date' => HelperFunctions::sanitize_text(isset($request['post_date']) ? $request['post_date'] : ''),
 		);
 
 		$othersArgs = array(
 			'fields' => $request['fields'],
 		);
 
-		$res = ContentManagerHelper::create_or_update_a_post_type_item( $args, $othersArgs );
-		return rest_ensure_response( $res );
+		$res = ContentManagerHelper::create_or_update_a_post_type_item($args, $othersArgs);
+		return rest_ensure_response($res);
 	}
 
 	/**
@@ -421,16 +439,17 @@ class ContentManagerRest extends WP_REST_Controller {
 	 *
 	 * @return \WP_Error|WP_REST_Response
 	 */
-	public function handle_post_type_item_action( $request ) {
-		$post_id = HelperFunctions::sanitize_text( isset( $request['post_id'] ) ? $request['post_id'] : '' );
-		$action  = HelperFunctions::sanitize_text( isset( $request['action'] ) ? $request['action'] : '' );
-		$res     = false;
-		if ( $action === 'delete' ) {
-			$res = ContentManagerHelper::delete_content_manager_post( $post_id );
-		} elseif ( $action === 'duplicate' ) {
-			$res = ContentManagerHelper::duplicate_content_manager_post( $post_id );
+	public function handle_post_type_item_action($request)
+	{
+		$post_id = HelperFunctions::sanitize_text(isset($request['post_id']) ? $request['post_id'] : '');
+		$action = HelperFunctions::sanitize_text(isset($request['action']) ? $request['action'] : '');
+		$res = false;
+		if ($action === 'delete') {
+			$res = ContentManagerHelper::delete_content_manager_post($post_id);
+		} elseif ($action === 'duplicate') {
+			$res = ContentManagerHelper::duplicate_content_manager_post($post_id);
 		}
-		return rest_ensure_response( $res );
+		return rest_ensure_response($res);
 	}
 
 	/**
@@ -440,17 +459,18 @@ class ContentManagerRest extends WP_REST_Controller {
 	 *
 	 * @return \WP_Error|WP_REST_Response
 	 */
-	public function handle_post_type_item_bulk_action( $request ) {
-		$input_post_ids = HelperFunctions::sanitize_text( isset( $request['post_ids'] ) ? $request['post_ids'] : [] );
-		$post_ids    = json_decode( $input_post_ids, true );
-		$action      = HelperFunctions::sanitize_text( isset( $request['action'] ) ? $request['action'] : '' );
-		$post_parent = HelperFunctions::sanitize_text( isset( $request['post_parent'] ) ? $request['post_parent'] : '' );
+	public function handle_post_type_item_bulk_action($request)
+	{
+		$input_post_ids = HelperFunctions::sanitize_text(isset($request['post_ids']) ? $request['post_ids'] : []);
+		$post_ids = json_decode($input_post_ids, true);
+		$action = HelperFunctions::sanitize_text(isset($request['action']) ? $request['action'] : '');
+		$post_parent = HelperFunctions::sanitize_text(isset($request['post_parent']) ? $request['post_parent'] : '');
 
-		if ( in_array( '*', $post_ids ) ) {
+		if (in_array('*', $post_ids)) {
 			$post_ids = get_posts(
 				array(
-					'fields'      => 'ids', // Only get post IDs
-					'post_type'   => ContentManagerHelper::get_child_post_post_type_value( $post_parent ),
+					'fields' => 'ids', // Only get post IDs
+					'post_type' => ContentManagerHelper::get_child_post_post_type_value($post_parent),
 					'post_parent' => $post_parent,
 					'post_status' => 'any',
 					'numberposts' => -1,
@@ -458,15 +478,15 @@ class ContentManagerRest extends WP_REST_Controller {
 			);
 		}
 
-		if ( $action === 'delete' ) {
-			foreach ( $post_ids as $key => $post_id ) {
-				ContentManagerHelper::delete_content_manager_post( $post_id );
+		if ($action === 'delete') {
+			foreach ($post_ids as $key => $post_id) {
+				ContentManagerHelper::delete_content_manager_post($post_id);
 			}
 			return true;
-		} elseif ( $action === 'duplicate' ) {
+		} elseif ($action === 'duplicate') {
 			$items = array();
-			foreach ( $post_ids as $key => $post_id ) {
-				$item    = ContentManagerHelper::duplicate_content_manager_post( $post_id );
+			foreach ($post_ids as $key => $post_id) {
+				$item = ContentManagerHelper::duplicate_content_manager_post($post_id);
 				$items[] = $item;
 			}
 			return $items;
@@ -480,10 +500,11 @@ class ContentManagerRest extends WP_REST_Controller {
 	 *
 	 * @return \WP_Error|WP_REST_Response
 	 */
-	public function delete_content_manager_post( $request ) {
-		$post_id = HelperFunctions::sanitize_text( isset( $request['post_id'] ) ? $request['post_id'] : '' );
-		$res     = ContentManagerHelper::delete_content_manager_post( $post_id );
-		return rest_ensure_response( $res );
+	public function delete_content_manager_post($request)
+	{
+		$post_id = HelperFunctions::sanitize_text(isset($request['post_id']) ? $request['post_id'] : '');
+		$res = ContentManagerHelper::delete_content_manager_post($post_id);
+		return rest_ensure_response($res);
 	}
 
 	/**
@@ -493,9 +514,10 @@ class ContentManagerRest extends WP_REST_Controller {
 	 *
 	 * @return \WP_Error|WP_REST_Response
 	 */
-	public function duplicate_content_manager_post_type( $request ) {
-		$post_id = HelperFunctions::sanitize_text( isset( $request['post_id'] ) ? $request['post_id'] : '' );
-		$res     = ContentManagerHelper::duplicate_content_manager_post_type( $post_id );
-		return rest_ensure_response( $res );
+	public function duplicate_content_manager_post_type($request)
+	{
+		$post_id = HelperFunctions::sanitize_text(isset($request['post_id']) ? $request['post_id'] : '');
+		$res = ContentManagerHelper::duplicate_content_manager_post_type($post_id);
+		return rest_ensure_response($res);
 	}
 }

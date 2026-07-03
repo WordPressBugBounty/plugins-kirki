@@ -3,7 +3,7 @@ Contributors: themeum
 Tags: page builder, website builder, drag and drop, form builder, freeform canvas
 Requires at least: 5.9
 Tested up to: 7.0
-Stable tag: 6.0.12
+Stable tag: 6.0.13
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -190,6 +190,14 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 ---
 
 == Changelog ==
+
+= 6.0.13 =
+* New: Added support for dragging and dropping local media files directly into Grid cells.
+* Update: Refactored the REST API backend for improved stability and maintainability.
+* Fix: Implemented security improvements and resolved known security issues.
+* Fix: Resolved device-specific interaction preview issues in the canvas.
+* Fix: Added support for dynamic video fields from the Content Manager in the Video element.
+
 
 = 6.0.12 =
 * Update: Added real-time canvas controls when focusing on Padding, Margin, and Gap inputs.

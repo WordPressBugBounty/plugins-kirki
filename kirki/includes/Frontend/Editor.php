@@ -54,7 +54,6 @@ class Editor {
 		add_action( 'wp_default_scripts', array( $this, 'remove_jquery_migrate' ) );
 		add_action( 'init', array( $this, 'disable_wp_emojicons' ) );
 
-		
 	}
 
 	public function disable_wp_emojicons() {
@@ -154,7 +153,7 @@ class Editor {
 
     wp_enqueue_media();
 
-		wp_enqueue_script('kirki-editor', KIRKI_ASSETS_URL . 'js/kirki-editor.min.js', array( 'wp-i18n' ), $version, true );
+		wp_enqueue_script('kirki-editor', apply_filters('kirki_editor_script_url', KIRKI_ASSETS_URL . 'js/kirki-editor.min.js'), array( 'wp-i18n' ), $version, true );
 		wp_enqueue_script( 'kirki', KIRKI_ASSETS_URL . 'js/kirki.min.js', array( 'wp-i18n' ), $version, true );
 
 		$post_id = HelperFunctions::get_post_id_if_possible_from_url();

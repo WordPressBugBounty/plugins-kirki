@@ -77,6 +77,9 @@ class Collaboration {
 	 * @param int    $status event status.
 	 *
 	 * @return bool,array if success.
+	 * 
+	 * @deprecated
+	 * @see Kirki\App\Services\CollaborationService::save_action()
 	 */
 	public static function save_action_to_db( $parent, $parent_id, $data, $status = 1, $session_id = '', $cleanup = true ) {
 		if ( count( self::get_all_connected_rows( $cleanup ) ) > 1 ) {
@@ -225,6 +228,9 @@ class Collaboration {
 	 *
 	 * @param bool $cleanup if true will clean disconnected rows.
 	 * @return array
+	 * 
+	 * @deprecated
+	 * @see Kirki\App\Services\CollaborationService::get_all_connected_rows()
 	 */
 	public static function get_all_connected_rows( $cleanup = true ) {
 		if ( $cleanup ) {
@@ -265,6 +271,9 @@ class Collaboration {
 	 * Clean disconnected rows if inactive less then 50 seconds.
 	 *
 	 * @return void
+	 * 
+	 * @deprecated
+	 * @see Kirki\App\Services\CollaborationService::clean_disconnected_rows()
 	 */
 	public static function clean_disconnected_rows() {
 		global $wpdb;

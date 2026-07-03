@@ -115,6 +115,7 @@ class EditWithButton {
 				array(
 					'editor_url' => true,
 					'ajax_url'   => true,
+					'rest_url'   => true,
 				)
 			);
 			wp_enqueue_script( 'custom_link', KIRKI_ASSETS_URL . 'js/admin/custom-link-in-toolbar.js', array(), $version, true );
@@ -124,6 +125,7 @@ class EditWithButton {
 				array(
 					'postEditURL'         => $post_url_arr['editor_url'],
 					'ajaxUrl'             => $post_url_arr['ajax_url'],
+					'restUrl'			  => $post_url_arr['rest_url'],
 					'action'              => KIRKI_EDITOR_ACTION,
 					'isEditorModeIsKirki' => $editor_mode,
 					'postId'              => get_the_ID(),

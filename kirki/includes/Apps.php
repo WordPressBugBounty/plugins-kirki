@@ -31,7 +31,7 @@ class Apps {
 	}
 
 	private function import_kirki_component_library() {
-		require_once KIRKI_ROOT_PATH . 'ComponentLibrary/index.php';
+		require_once KIRKI_PLUGIN_PATH . 'ComponentLibrary/index.php';
 		if ( IS_DEVELOPING_KIRKI_APPS ) {
 			require_once KIRKI_DEVELOPING_APPS_INCLUDES;
 		}

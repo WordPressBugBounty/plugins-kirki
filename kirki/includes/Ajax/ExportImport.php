@@ -329,6 +329,10 @@ class ExportImport {
 		$blocks  = $kirki_json_data['blocks'];
 		$symbols = $kirki_json_data['symbols'];
 
+		/**
+		 * @deprecated
+		 * @see \Kirki\App\Supports\Template::process_template_from_json()
+		 */
 		if ( $is_include_media === 'true' ) {
 			$asset_urls = $kirki_json_data['asset_urls'];
 
@@ -460,7 +464,10 @@ class ExportImport {
 	 *
 	 * @param string  $kirki_template_zip_path
 	 * @param boolean $is_include_media
-	 * @return boolean || string
+	 * @return boolean|string
+	 * 
+	 * @deprecated
+	 * @see \Kirki\App\Supports\Template::save_kirki_template_from_zip()
 	 */
 	public static function process_kirki_template_zip( $kirki_template_zip_path, $is_include_media = false, $post_id = false ) {
 		$zip = new \ZipArchive();
@@ -565,6 +572,10 @@ class ExportImport {
 		return false;
 	}
 
+	/**
+	 * @deprecated
+	 * @see \Kirki\App\Supports\Template::attach_assets_from_zip()
+	 */
 	private static function upload_file( $asset_item ) {
 		$asset_name       = basename( $asset_item['url'] );
 		$temp_folder_path = HelperFunctions::get_temp_folder_path();

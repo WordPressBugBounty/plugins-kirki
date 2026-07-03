@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Kirki 6.0.12\n"
+"Project-Id-Version: Kirki 6.0.13\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/kirki\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-06-24T11:24:25+00:00\n"
+"POT-Creation-Date: 2026-07-03T10:52:21+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: kirki\n"
@@ -1471,6 +1471,11 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 #: assets/js/kirki.min.js:2
+msgid "Something went wrong."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+#: assets/js/kirki.min.js:2
 msgid "Saving data is not allowed in editor preview mode."
 msgstr ""
 
@@ -1482,6 +1487,10 @@ msgstr ""
 #: assets/js/kirki-editor.min.js:2
 #: assets/js/kirki.min.js:2
 msgid "Controller data saved failed."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Failed to publish."
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -3356,23 +3365,6 @@ msgid "Enter subclass name"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Clean up Unused Class."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Failed Clean up Unused Class."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-#, js-format
-msgid "Clean up %d Unused Class"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Are sure you want to clean up unused classes?"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Inheritance"
 msgstr ""
 
@@ -3902,6 +3894,10 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Version published successfully"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Failed to save. Please try again."
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2

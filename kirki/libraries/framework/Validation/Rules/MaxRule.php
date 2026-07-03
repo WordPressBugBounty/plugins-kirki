@@ -1,0 +1,73 @@
+<?php
+
+/**
+ * Rule to ensure the maximum value.
+ *
+ * @package    Framework
+ * @subpackage Validation\Rules
+ * @since      1.0.0
+ */
+namespace Kirki\Framework\Validation\Rules;
+
+\defined('ABSPATH') || exit;
+use Kirki\Framework\Validation\Constants\Validation;
+use function Kirki\Framework\message;
+class MaxRule extends BaseRule
+{
+    /**
+     * Check if the value is valid.
+     *
+     * @return bool
+     *
+     * @since 1.0.0
+     */
+    public function validate_rule()
+    {
+        if ($this->is_string_value()) {
+            return \strlen($this->value) <= $this->rule_value;
+        } elseif ($this->is_array_value()) {
+            return \count($this->value) <= $this->rule_value;
+        }
+        return $this->value <= $this->rule_value;
+    }
+    /**
+     * Get the error message if the value is less than the min value.
+     *
+     * @return string
+     *
+     * @since 1.0.0
+     */
+    public function get_error_message()
+    {
+        if ($this->is_string_value()) {
+            return message('validator.max.characters', $this->last_key_segment(), $this->rule_value);
+        } elseif ($this->is_array_value()) {
+            return message('validator.max.items', $this->last_key_segment(), $this->rule_value);
+        }
+        return message('validator.max.numeric', $this->last_key_segment(), $this->rule_value);
+    }
+    /**
+     * Determine whether the string value.
+     *
+     * @return bool
+     *
+     * @since 1.0.0
+     */
+    protected function is_string_value()
+    {
+        $is_string = \in_array('string', $this->all_applied_rules, \true) || \in_array(Validation::RULE_MAP['string'], $this->all_applied_rules, \true);
+        return $is_string || \is_string($this->value) && !\is_numeric($this->value);
+    }
+    /**
+     * Determine whether the array value.
+     *
+     * @return bool
+     *
+     * @since 1.0.0
+     */
+    protected function is_array_value()
+    {
+        $is_array = \in_array('array', $this->all_applied_rules, \true) || \in_array(Validation::RULE_MAP['array'], $this->all_applied_rules, \true);
+        return $is_array || \is_array($this->value);
+    }
+}

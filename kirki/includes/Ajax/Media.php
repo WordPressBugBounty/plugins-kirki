@@ -974,6 +974,9 @@ class Media {
 	 * Remove custom font folder from server
 	 *
 	 * @return void wp_send_json.
+	 * 
+	 * @deprecated
+	 * @see \Kirki\App\Services\FontService::remove_custom_fonts_permanently()
 	 */
 	public static function remove_custom_font_folder_from_server() {        //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$data = HelperFunctions::sanitize_text( isset( $_POST['data'] ) ? $_POST['data'] : null );

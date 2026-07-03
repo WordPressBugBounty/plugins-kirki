@@ -39,8 +39,7 @@ class AdminMenu {
 		'kirki-settings'     => array(
 			'title'   => 'Settings',
 			'toolbar' => 'settings',
-		),
-		
+		)
 	);
 
 
@@ -56,6 +55,10 @@ class AdminMenu {
 			\add_action( 'admin_init', array( $this, 'maybe_redirect_kirki_menu' ) );
 		}
 		\add_action( 'admin_head', array( $this, 'add_kirki_admin_styles' ) );
+	}
+
+	private function get_submenu_items() {
+		return apply_filters( 'kirki_submenu_items', $this->dashboard_toolbar_submenus );
 	}
 
 	/**
@@ -110,13 +113,10 @@ class AdminMenu {
 	 * @return void
 	 */
 	public function admin_menu() {
-		/* FREE_START */
-		$menu_title = 'Kirki';
-		/* FREE_END */
-		
+		$menu_title = apply_filters('kirki_menu_title', 'Kirki');
 		\add_menu_page( 'Kirki - Home', $menu_title, 'edit_posts', 'kirki', array( $this, 'plugin_page' ), 'dashicons-kirki', 25 );
 
-		foreach ( $this->dashboard_toolbar_submenus as $slug => $submenu ) {
+		foreach ( $this->get_submenu_items() as $slug => $submenu ) {
 			\add_submenu_page(
 				'kirki',
 				$submenu['title'],
@@ -153,8 +153,8 @@ class AdminMenu {
 			exit;
 		}
 
-		if ( isset( $this->dashboard_toolbar_submenus[ $page_slug ] ) ) {
-			$toolbar       = $this->dashboard_toolbar_submenus[ $page_slug ]['toolbar'];
+		if ( isset( $this->get_submenu_items()[ $page_slug ] ) ) {
+			$toolbar       = $this->get_submenu_items()[ $page_slug ]['toolbar'];
 			$dashboard_url = \home_url( '/?action=kirki&screen=dashboard&toolbar=' . rawurlencode( $toolbar ) );
 			\wp_safe_redirect( $dashboard_url );
 			exit;

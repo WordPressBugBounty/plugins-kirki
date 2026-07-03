@@ -26,11 +26,8 @@ class PluginDeactivateEvents {
 	 * @return void
 	 */
 	public function __construct() {
-		
 		// Flush rewrite rules on deactivation
 		flush_rewrite_rules( true );
 	}
-
-	
 
 }

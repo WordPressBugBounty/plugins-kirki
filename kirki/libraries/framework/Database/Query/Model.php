@@ -1,0 +1,1178 @@
+<?php
+
+/**
+ * Provide an active record style base model for the Query Builder.
+ * Encapsulate table naming, attribute handling, persistence operations, and relationship definitions.
+ * Models interact with the query builder to perform CRUD operations, 
+ * handle casting, timestamps, hydration, and eager loading of related records for a cohesive developer experience.
+ *
+ * @package    Framework
+ * @subpackage Database\Query
+ * @since      1.0.0
+ */
+namespace Kirki\Framework\Database\Query;
+
+\defined('ABSPATH') || exit;
+use ArrayAccess;
+use Kirki\Framework\Contracts\Support\Arrayable;
+use Kirki\Framework\Contracts\Support\Jsonable;
+use Kirki\Framework\Database\Concerns\HasAttributes;
+use Kirki\Framework\Database\Concerns\HasRelationships;
+use Kirki\Framework\Database\Query\Collection;
+use Kirki\Framework\Collections\Collection as BaseCollection;
+use Kirki\Framework\Supports\Arr;
+use Kirki\Framework\Supports\Traits\Macroable;
+use Kirki\Framework\Database\Concerns\GuardAttributes;
+use Kirki\Framework\Supports\Facades\Date;
+use Exception;
+use Kirki\Framework\Database\Concerns\HasTimestamps;
+use Kirki\Framework\Database\Connection\Connection;
+use Kirki\Framework\Exceptions\MassAssignmentException;
+use JsonSerializable;
+use ReflectionClass;
+use function Kirki\Framework\app;
+use function Kirki\Framework\Polyfill\str_contains;
+abstract class Model implements Arrayable, Jsonable, ArrayAccess, JsonSerializable
+{
+    use Macroable;
+    use HasAttributes;
+    use GuardAttributes;
+    use HasRelationships;
+    use HasTimestamps;
+    /**
+     * The shared database connection instance for all models.
+     *
+     * @var Connection|null
+     *
+     * @since 1.0.0
+     */
+    protected static $connection = null;
+    /**
+     * The name of the database table associated with the model.
+     *
+     * @var string
+     *
+     * @since 1.0.0
+     */
+    protected $table;
+    /**
+     * The primary key column name for the model.
+     *
+     * @var string
+     *
+     * @since 1.0.0
+     */
+    protected $primary_key = 'id';
+    /**
+     * The type of the primary key.
+     *
+     * @var string
+     *
+     * @since 1.0.0
+     */
+    protected $key_type = 'int';
+    /**
+     * The model's loaded relationship instances.
+     *
+     * @var array
+     *
+     * @since 1.0.0
+     */
+    public $relations = [];
+    /**
+     * The relations to count that would be eager loaded on every query
+     *
+     * @var array
+     *
+     * @since 1.0.0
+     */
+    protected $with_count = [];
+    /**
+     * The models that have been booted.
+     *
+     * @var array
+     *
+     * @since 1.0.0
+     */
+    protected static $booted = [];
+    /**
+     * Indicates if the model exists in the database.
+     *
+     * @var bool
+     *
+     * @since 1.0.0
+     */
+    protected bool $exists = \false;
+    /**
+     * Indicates if the model was recently created.
+     *
+     * @var bool
+     *
+     * @since 1.0.0
+     */
+    protected bool $was_recently_created = \false;
+    /**
+     * Indicates if mass assignment should be silently discarded.
+     *
+     * @var bool
+     *
+     * @since 1.0.0
+     */
+    protected static $prevent_silently_discarding_attributes = \false;
+    /**
+     * The callback to be invoked when an attribute is silently discarded.
+     *
+     * @var callable|null
+     *
+     * @since 1.0.0
+     */
+    protected static $discarded_attribute_callback = null;
+    /**
+     * The name of the "created at" column.
+     *
+     * @var string|null
+     */
+    public const CREATED_AT = 'created_at';
+    /**
+     * The name of the "updated at" column.
+     *
+     * @var string|null
+     */
+    public const UPDATED_AT = 'updated_at';
+    /**
+     * Construct a new model instance optionally seeded with attributes.
+     *
+     * Fills the model using mass assignment rules and snapshots the original
+     * attributes for dirty tracking. The instance starts in a non-persisted
+     * state until saved for the first time.
+     *
+     * @param array $attributes The initial attribute values
+     *
+     * @return void No return value
+     *
+     * @since 1.0.0
+     */
+    public function __construct(array $attributes = [])
+    {
+        $this->boot_if_not_booted();
+        $this->fill($attributes);
+        $this->sync_original();
+    }
+    /**
+     * Boot the model if it has not been booted yet.
+     *
+     * @return void
+     *
+     * @since 1.0.0
+     */
+    protected function boot_if_not_booted()
+    {
+        if (!isset(static::$booted[static::class])) {
+            static::$booted[static::class] = \true;
+            static::booting();
+            static::boot();
+            static::booted();
+        }
+    }
+    /**
+     * The booting event.
+     *
+     * @return void
+     *
+     * @since 1.0.0
+     */
+    protected function booting()
+    {
+        //
+    }
+    /**
+     * The boot event.
+     *
+     * @return void
+     *
+     * @since 1.0.0
+     */
+    protected function boot()
+    {
+        //
+    }
+    /**
+     * The booted event.
+     *
+     * @return void
+     *
+     * @since 1.0.0
+     */
+    protected function booted()
+    {
+        //
+    }
+    /**
+     * Prevent silently discarding attributes.
+     *
+     * @return bool
+     *
+     * @since 1.0.0
+     */
+    public static function is_attribute_silently_discarding_enabled()
+    {
+        return static::$prevent_silently_discarding_attributes;
+    }
+    /**
+     * Prevent silently discarding attributes.
+     *
+     * @param bool $state The state.
+     *
+     * @return void
+     *
+     * @since 1.0.0
+     */
+    public static function prevent_silently_discarding_attributes($state = \true)
+    {
+        static::$prevent_silently_discarding_attributes = $state;
+    }
+    /**
+     * Set the callback to be invoked when an attribute is silently discarded.
+     *
+     * @param callable|null $callback The callback to set.
+     *
+     * @return void
+     *
+     * @since 1.0.0
+     */
+    public static function discarded_attribute_callback(?callable $callback = null)
+    {
+        static::$discarded_attribute_callback = $callback;
+    }
+    /**
+     * Set the model to be strict.
+     *
+     * @param bool $state The state.
+     *
+     * @return void
+     *
+     * @since 1.0.0
+     */
+    public static function should_be_strict(bool $state = \true)
+    {
+        static::prevent_silently_discarding_attributes($state);
+    }
+    /**
+     * Set the shared database connection used by all models.
+     *
+     * Allows applications and tests to inject a specific connection instance
+     * for use when building and executing queries across model operations.
+     *
+     * @param Connection $connection The connection to assign
+     *
+     * @return void
+     *
+     * @since 1.0.0
+     */
+    public static function set_connection(Connection $connection)
+    {
+        static::$connection = $connection;
+    }
+    /**
+     * Retrieve the active connection, creating it on first use.
+     *
+     * Lazily resolves the singleton connection from the Connection manager
+     * when a model requires database access. Ensures a single shared instance
+     * is used throughout the application lifecycle.
+     *
+     * @return Connection The active database connection
+     *
+     * @since 1.0.0
+     */
+    protected static function get_connection()
+    {
+        return app()->make(Connection::class);
+    }
+    /**
+     * Determine the database table name for the model.
+     *
+     * Returns the explicitly set table when provided; otherwise infers the
+     * table by lowercasing the class base name and appending an "s" suffix.
+     *
+     * @return string The table name associated with the model
+     *
+     * @since 1.0.0
+     */
+    public function get_table()
+    {
+        if (isset($this->table)) {
+            return $this->table;
+        }
+        $class_name = (new ReflectionClass($this))->getShortName();
+        $table_name = \strtolower($class_name) . 's';
+        return $table_name;
+    }
+    /**
+     * Get the table name for the model class.
+     *
+     * @return string The table name for the model class
+     *
+     * @since 1.0.0
+     */
+    public static function get_table_name()
+    {
+        return (new static())->get_table();
+    }
+    /**
+     * Set the database table name for the model.
+     *
+     * @param string $table The table name to assign
+     *
+     * @return static The model instance for method chaining
+     *
+     * @since 1.0.0
+     */
+    public function set_table($table)
+    {
+        $this->table = $table;
+        return $this;
+    }
+    /**
+     * Get the route key name for the model.
+     *
+     * @return string The route key name
+     *
+     * @since 1.0.0
+     */
+    public function get_route_key()
+    {
+        return $this->primary_key;
+    }
+    /**
+     * Get the primary key name for the model.
+     *
+     * @return string The primary key name
+     *
+     * @since 1.0.0
+     */
+    public function get_primary_key()
+    {
+        return $this->primary_key;
+    }
+    /**
+     * Get the type of the primary key.
+     *
+     * @return string The type of the primary key
+     *
+     * @since 1.0.0
+     */
+    public function get_key_type()
+    {
+        return $this->key_type;
+    }
+    /**
+     * Get the fillable attributes for the model.
+     *
+     * @return array The fillable attributes
+     *
+     * @since 1.0.0
+     */
+    public function get_fillable()
+    {
+        return $this->fillable;
+    }
+    /**
+     * Prepare the column name for the query.
+     *
+     * @param string $column The column name to prepare
+     *
+     * @return string The prepared column name
+     *
+     * @since 1.0.0
+     */
+    public function prepare_column($column)
+    {
+        if (str_contains($column, '.')) {
+            return $column;
+        }
+        return $this->get_table() . '.' . $column;
+    }
+    /**
+     * Get the prepared primary key name for the query.
+     *
+     * @return string The prepared primary key name
+     *
+     * @since 1.0.0
+     */
+    public function get_prepared_key_name()
+    {
+        return $this->prepare_column($this->get_primary_key());
+    }
+    /**
+     * Prepare the columns for the query.
+     *
+     * @param array $columns The columns to prepare
+     *
+     * @return array The prepared columns
+     *
+     * @since 1.0.0
+     */
+    public function prepare_columns($columns)
+    {
+        $columns = Arr::wrap($columns);
+        return $this->new_collection($columns)->map(function ($column) {
+            return $this->prepare_column($column);
+        })->all();
+    }
+    /**
+     * Create a new instance of the model.
+     *
+     * @param array $attributes The attributes to set
+     * @param mixed $exists The exists.
+     *
+     * @return static The new instance
+     *
+     * @since 1.0.0
+     */
+    public function new_instance($attributes = [], $exists = \false)
+    {
+        $model = new static();
+        $model->exists = $exists;
+        $model->set_table($this->get_table());
+        $model->merge_casts($this->casts);
+        $model->fill($attributes);
+        return $model;
+    }
+    /**
+     * Create a new instance of the model with fillable attributes.
+     *
+     * @param array $attributes The attributes to set
+     *
+     * @return static The new instance
+     *
+     * @since 1.0.0
+     */
+    public function new_fillable_instance($attributes = [])
+    {
+        $model = new static();
+        $model->set_table($this->get_table());
+        $model->merge_casts($this->casts);
+        $model->fill($attributes);
+        return $model;
+    }
+    /**
+     * Create a new query builder instance for the model's table.
+     *
+     * Instantiates a fresh model to determine the table and returns a
+     * configured query builder bound to this model class for fluent query
+     * construction and result hydration.
+     *
+     * @return QueryBuilder The query builder targeting this model's table
+     *
+     * @since 1.0.0
+     */
+    public static function query()
+    {
+        return new QueryBuilder(static::get_connection(), static::get_connection()->get_query_compiler(), new static());
+    }
+    /**
+     * Create a new query builder instance for the model's table.
+     *
+     * Instantiates a fresh model to determine the table and returns a
+     * configured query builder bound to this model class for fluent query
+     * construction and result hydration.
+     *
+     * @return QueryBuilder The query builder targeting this model's table
+     *
+     * @since 1.0.0
+     */
+    public function new_query()
+    {
+        return new QueryBuilder($this->get_connection(), $this->get_connection()->get_query_compiler(), $this);
+    }
+    /**
+     * Retrieve all records for the model.
+     *
+     * Builds a basic select query and returns a collection of hydrated model
+     * instances representing all rows in the corresponding table.
+     *
+     * @param mixed $columns The columns.
+     *
+     * @return Collection A collection of model instances
+     *
+     * @since 1.0.0
+     */
+    public static function all($columns = ['*'])
+    {
+        return static::query()->get(\is_array($columns) ? $columns : \func_get_args());
+    }
+    /**
+     * Specify relationships to eager load with the query results.
+     *
+     * @param mixed $relations The relations to eager load
+     *
+     * @return static The query builder instance for method chaining
+     *
+     * @since 1.0.0
+     */
+    public static function with($relations)
+    {
+        return static::query()->with(\is_string($relations) ? \func_get_args() : $relations);
+    }
+    /**
+     * Retrieve a model instance by its primary key.
+     *
+     * @param mixed $id The primary key of the record to find
+     *
+     * @return Model The hydrated model instance
+     *
+     * @since 1.0.0
+     */
+    public static function find($id)
+    {
+        return static::query()->find($id, (new static())->primary_key);
+    }
+    /**
+     * Create and persist a new model instance.
+     *
+     * Mass assigns the provided attributes, saves the model, and returns the
+     * fresh instance. Fillable and guarded rules apply during assignment.
+     *
+     * @param array $attributes The attributes to assign and persist
+     *
+     * @return static The newly created, persisted model instance
+     *
+     * @since 1.0.0
+     */
+    public static function create(array $attributes)
+    {
+        $instance = new static($attributes);
+        $instance->save();
+        return $instance;
+    }
+    /**
+     * Persist the model to the database.
+     *
+     * Updates timestamps when enabled, then performs an insert or update
+     * depending on whether the model already exists. Returns a boolean to
+     * indicate success.
+     *
+     * @return bool True when the operation succeeds; false otherwise
+     *
+     * @since 1.0.0
+     */
+    public function save()
+    {
+        $this->merge_attributes_from_cached_class_casts();
+        if ($this->exists) {
+            $saved = $this->is_dirty() ? $this->perform_update() : \true;
+        } else {
+            $saved = $this->perform_insert();
+        }
+        if ($saved) {
+            $this->sync_original();
+        }
+        return $saved;
+    }
+    /**
+     * Insert the model as a new record in the database.
+     *
+     * Uses the query builder to insert attributes and capture the generated
+     * primary key, then updates the original snapshot. Returns true on
+     * completion to mirror successful persistence semantics.
+     *
+     * @return bool True when the insert completes successfully
+     *
+     * @since 1.0.0
+     */
+    protected function perform_insert()
+    {
+        if ($this->uses_timestamps()) {
+            $this->update_timestamps();
+        }
+        $query = static::query();
+        $attributes = $this->get_attributes_for_insert();
+        if (empty($attributes)) {
+            return \true;
+        }
+        $newly_created_key_value = $query->insert_get_id($attributes);
+        $this->set_attribute($this->get_primary_key(), $newly_created_key_value);
+        $this->exists = \true;
+        $this->was_recently_created = \true;
+        return \true;
+    }
+    /**
+     * Update the existing database record with dirty attributes.
+     *
+     * Computes the set of changed attributes and issues an update statement
+     * scoped to the primary key. When no changes are detected, returns true to
+     * indicate no action was required.
+     *
+     * @return bool True on success or when no changes are present
+     *
+     * @since 1.0.0
+     */
+    protected function perform_update()
+    {
+        if ($this->uses_timestamps()) {
+            $this->update_timestamps();
+        }
+        $dirty = $this->get_dirty();
+        if (empty($dirty)) {
+            return \true;
+        }
+        static::query()->where($this->get_primary_key(), '=', $this->get_key_for_save_query())->update($dirty);
+        $this->sync_changes();
+        return \true;
+    }
+    /**
+     * Get the key for save query.
+     *
+     * @return mixed
+     *
+     * @since 1.0.0
+     */
+    protected function get_key_for_save_query()
+    {
+        return $this->original[$this->get_primary_key()] ?? $this->get_primary_key_value();
+    }
+    /**
+     * Update attributes on the model and persist the changes.
+     *
+     * Merges the provided attributes using fill rules and then calls save to
+     * perform the appropriate persistence action. Returns the boolean result
+     * of the save operation.
+     *
+     * @param array $attributes The attributes to assign prior to saving
+     *
+     * @return bool True when the model is saved successfully
+     *
+     * @since 1.0.0
+     */
+    public function update(array $attributes = [])
+    {
+        if (!$this->exists) {
+            return \false;
+        }
+        return $this->fill($attributes)->save();
+    }
+    /**
+     * Delete the model's record from the database.
+     *
+     * When the model does not yet exist, returns false. Otherwise performs a
+     * delete query constrained by the primary key and returns its result.
+     *
+     * @return bool True when deletion succeeds; false if not persisted
+     *
+     * @throws Exception
+     *
+     * @since 1.0.0
+     */
+    public function delete()
+    {
+        $this->merge_attributes_from_cached_class_casts();
+        if (\is_null($this->get_primary_key())) {
+            throw new Exception('No primary key defined on model.');
+        }
+        if (!$this->exists) {
+            return \false;
+        }
+        $this->perform_delete_on_model();
+        return \true;
+    }
+    /**
+     * Delete the model's record from the database.
+     *
+     * @return void
+     *
+     * @since 1.0.0
+     */
+    protected function perform_delete_on_model()
+    {
+        static::query()->where($this->get_primary_key(), '=', $this->get_primary_key_value())->delete();
+        $this->exists = \false;
+    }
+    /**
+     * Delete one or many models by primary key.
+     *
+     * Accepts a single id or multiple, finds each, and deletes them when
+     * present. Returns the count of successfully deleted records.
+     *
+     * @param mixed $ids One id, array of ids, or variadic list of ids
+     *
+     * @return int The number of records deleted
+     *
+     * @since 1.0.0
+     */
+    public static function destroy($ids)
+    {
+        if ($ids instanceof Collection) {
+            $ids = $ids->model_keys();
+        }
+        if ($ids instanceof BaseCollection) {
+            $ids = $ids->all();
+        }
+        $ids = \is_array($ids) ? $ids : \func_get_args();
+        if (empty($ids)) {
+            return 0;
+        }
+        $key = ($instance = new static())->get_primary_key();
+        $count = 0;
+        foreach ($instance->where_in($key, $ids)->get() as $model) {
+            if ($model->delete()) {
+                $count++;
+            }
+        }
+        return $count;
+    }
+    /**
+     * Mass assign attributes allowed by fillable/guarded rules.
+     *
+     * Iterates through provided attributes, only setting those permitted by the
+     * model's configuration. Returns the model instance for chaining.
+     *
+     * @param array $attributes The attributes to attempt to assign
+     *
+     * @return $this The model instance for method chaining
+     *
+     * @since 1.0.0
+     */
+    public function fill(array $attributes)
+    {
+        $totally_guarded = $this->totally_guarded();
+        $fillable = $this->fillable_from_array($attributes);
+        foreach ($attributes as $key => $value) {
+            if ($this->is_fillable($key)) {
+                $this->set_attribute($key, $value);
+            } elseif ($totally_guarded || static::is_attribute_silently_discarding_enabled()) {
+                if (isset(static::$discarded_attribute_callback)) {
+                    \call_user_func(static::$discarded_attribute_callback, $this, [$key]);
+                } else {
+                    throw new MassAssignmentException(\sprintf('Add [%s] to fillable array to allow mass assignment on [%s].', $key, \get_class($this)));
+                }
+            }
+        }
+        if (\count($attributes) !== \count($fillable) && static::is_attribute_silently_discarding_enabled()) {
+            $keys = \array_diff(\array_keys($attributes), \array_keys($fillable));
+            if (isset(static::$discarded_attribute_callback)) {
+                \call_user_func(static::$discarded_attribute_callback, $this, $keys);
+            } else {
+                throw new MassAssignmentException(\sprintf('Add [%s] to fillable array to allow mass assignment on [%s].', \implode(', ', $keys), \get_class($this)));
+            }
+        }
+        return $this;
+    }
+    /**
+     * Update timestamp attributes when enabled.
+     *
+     * Sets updated_at on every save and created_at on initial inserts when the
+     * model is configured to manage timestamps automatically.
+     *
+     * @return void
+     *
+     * @since 1.0.0
+     */
+    protected function update_timestamps()
+    {
+        $time = Date::now();
+        if (!$this->exists()) {
+            $this->set_attribute('created_at', $time);
+        }
+        $this->set_attribute('updated_at', $time);
+    }
+    /**
+     * Hydrate a new model instance from raw data.
+     *
+     * Accepts an object or array of attributes, normalizes to an array, and
+     * sets both current and original states. Used by query results to produce
+     * model instances.
+     *
+     * @param array $items The source attributes as object or array
+     *
+     * @return Collection The hydrated model instance
+     *
+     * @since 1.0.0
+     */
+    public function hydrate(array $items)
+    {
+        $instance = $this->new_instance();
+        return $instance->new_collection(\array_map(function ($item) use($instance) {
+            return $instance->new_for_hydration($item);
+        }, $items));
+    }
+    /**
+     * Create a new collection instance.
+     *
+     * @param array $items The items to seed the collection
+     *
+     * @return Collection The new collection instance
+     *
+     * @since 1.0.0
+     */
+    public function new_collection(array $items = [])
+    {
+        return new Collection($items);
+    }
+    /**
+     * Create a new model instance from a builder.
+     *
+     * @param array $attributes The item to create the model from
+     *
+     * @return Model The new model instance
+     *
+     * @since 1.0.0
+     */
+    public function new_for_hydration($attributes = [])
+    {
+        $model = $this->new_instance([], \true);
+        $model->set_raw_attributes((array) $attributes, \true);
+        return $model;
+    }
+    /**
+     * Eager load one or more relations onto the model.
+     *
+     * Accepts a single relation or multiple and assigns the retrieved results
+     * to the model's relations array for later access and serialization.
+     *
+     * @param mixed $relations The relation name(s) to load
+     *
+     * @return static The model instance for method chaining
+     *
+     * @since 1.0.0
+     */
+    public function load($relations)
+    {
+        $query = $this->new_query_without_relations()->with(\is_string($relations) ? \func_get_args() : $relations);
+        $query->eager_load_relations(new Collection([$this]));
+        return $this;
+    }
+    /**
+     * Eager load the missing relationships for the model.
+     *
+     * @param mixed $relations The relations to eager load
+     *
+     * @return $this The model instance
+     *
+     * @since 1.0.0
+     */
+    public function load_missing($relations)
+    {
+        if (\is_string($relations)) {
+            $relations = \func_get_args();
+        }
+        $this->new_collection([$this])->load_missing($relations);
+        return $this;
+    }
+    /**
+     * Create a new query builder instance for the model's table.
+     *
+     * Instantiates a fresh model to determine the table and returns a
+     * configured query builder bound to this model class for fluent query
+     * construction and result hydration.
+     *
+     * @return QueryBuilder The query builder targeting this model's table
+     *
+     * @since 1.0.0
+     */
+    public function new_query_without_relations()
+    {
+        return $this->new_query();
+    }
+    /**
+     * Infer the foreign key name for the model.
+     *
+     * Uses the lowercase short class name with an _id suffix to determine the
+     * conventional foreign key column name used on related tables.
+     *
+     * @return string The inferred foreign key column name
+     *
+     * @since 1.0.0
+     */
+    protected function get_foreign_key()
+    {
+        return \strtolower((new ReflectionClass($this))->getShortName()) . '_id';
+    }
+    /**
+     * Compute a conventional pivot table name for two tables.
+     *
+     * Sorts the provided table names alphabetically and joins them with an
+     * underscore to produce a deterministic pivot table name.
+     *
+     * @param string $table1 The first table name
+     * @param string $table2 The second table name
+     *
+     * @return string The generated pivot table name
+     *
+     * @since 1.0.0
+     */
+    protected function get_pivot_table_name($table1, $table2)
+    {
+        $tables = [$table1, $table2];
+        \sort($tables);
+        return \implode('_', $tables);
+    }
+    /**
+     * Get a fresh model instance from the database.
+     *
+     * @param array|string $with The relations to load
+     *
+     * @return static|null The fresh model instance
+     *
+     * @since 1.0.0
+     */
+    public function fresh($with = [])
+    {
+        if (!$this->exists) {
+            return;
+        }
+        return $this->set_where_for_fresh_query($this->new_query())->with(\is_string($with) ? \func_get_args() : $with)->first();
+    }
+    /**
+     * Refresh the model instance from the database.
+     *
+     * @return static The refreshed model instance
+     *
+     * @since 1.0.0
+     */
+    public function refresh()
+    {
+        if (!$this->exists) {
+            return $this;
+        }
+        $this->set_raw_attributes($this->set_where_for_fresh_query($this->new_query())->first_or_fail()->attributes);
+        $this->load((new BaseCollection($this->relations))->keys()->all());
+        $this->sync_original();
+        return $this;
+    }
+    /**
+     * Set the where clause for a fresh query.
+     *
+     * @param QueryBuilder $query The query builder instance
+     *
+     * @return QueryBuilder The query builder instance
+     *
+     * @since 1.0.0
+     */
+    protected function set_where_for_fresh_query(QueryBuilder $query)
+    {
+        $query->where($this->get_primary_key(), '=', $this->get_primary_key_value());
+        return $query;
+    }
+    /**
+     * Get the primary key value.
+     *
+     * @return mixed The primary key value
+     *
+     * @since 1.0.0
+     */
+    public function get_primary_key_value()
+    {
+        return $this->get_attribute($this->get_primary_key());
+    }
+    /**
+     * Convert the model and loaded relations to an array.
+     *
+     * Serializes attributes and recursively converts relation values to arrays
+     * to produce a structure suitable for JSON encoding or API responses.
+     *
+     * @return array The array representation of the model
+     *
+     * @since 1.0.0
+     */
+    public function to_array()
+    {
+        return \array_merge($this->attributes_to_array(), $this->relations_to_array());
+    }
+    /**
+     * Determine if the model has a named scope.
+     *
+     * @param string $scope The scope name to check
+     *
+     * @return bool True when the scope exists; false otherwise
+     *
+     * @since 1.0.0
+     */
+    public function has_named_scope(string $scope)
+    {
+        return \method_exists($this, 'scope_' . $scope);
+    }
+    /**
+     * Call a named scope on the model.
+     *
+     * @param string $scope The scope name to call
+     * @param array $parameters The parameters to pass to the scope
+     *
+     * @return mixed The result of the scope call
+     *
+     * @since 1.0.0
+     */
+    public function call_named_scope(string $scope, ...$parameters)
+    {
+        $method = 'scope_' . $scope;
+        return $this->{$method}(...$parameters);
+    }
+    /**
+     * Convert the model and relations to a JSON string.
+     *
+     * Utilizes json_encode on the array form of the model. Useful for logging
+     * and simple serialization needs without a dedicated resource layer.
+     *
+     * @param mixed $options The options array.
+     *
+     * @return string The JSON-encoded representation of the model
+     *
+     * @since 1.0.0
+     */
+    public function to_json($options = 0)
+    {
+        return Arr::json_encode($this->to_array(), $options);
+    }
+    /**
+     * Get an attribute or relation.
+     *
+     * @param  string $offset The attribute or relation key to get
+     * @return mixed The value of the attribute or relation
+     * @since  1.0.0
+     */
+    #[\ReturnTypeWillChange]
+    public function offsetGet($offset)
+    {
+        return $this->get_attribute($offset);
+    }
+    /**
+     * Set an attribute or relation.
+     *
+     * @param string $offset The attribute or relation key to set
+     * @param mixed $value The value to assign to the attribute or relation
+     * 
+     * @return void No return value
+     * 
+     * @since 1.0.0
+     */
+    #[\ReturnTypeWillChange]
+    public function offsetSet($offset, $value) : void
+    {
+        $this->set_attribute($offset, $value);
+    }
+    /**
+     * Check if an attribute or relation is set.
+     *
+     * @param string $offset The attribute or relation key to check
+     *
+     * @return bool True when a value is present; false otherwise
+     *
+     * @since 1.0.0
+     */
+    public function offsetExists($offset) : bool
+    {
+        return isset($this->attributes[$offset]) || isset($this->relations[$offset]);
+    }
+    /**
+     * Unset an attribute or relation.
+     *
+     * @param string $offset The attribute or relation key to unset
+     *
+     * @return void
+     *
+     * @since 1.0.0
+     */
+    public function offsetUnset($offset) : void
+    {
+        unset($this->attributes[$offset], $this->relations[$offset]);
+    }
+    /**
+     * Convert the model to a JSON serializable array.
+     *
+     * @return mixed The model's attributes and relations
+     * @since  1.0.0
+     */
+    #[\ReturnTypeWillChange]
+    public function jsonSerialize()
+    {
+        return $this->to_array();
+    }
+    /**
+     * Dynamically retrieve attributes or relations via property access.
+     *
+     * Forwards to get_attribute to keep behavior consistent with explicit
+     * accessor calls while supporting PHP's magic access pattern.
+     *
+     * @param  string $key The attribute or relation name
+     * @return mixed The resolved value or null when absent
+     * @since  1.0.0
+     */
+    #[\ReturnTypeWillChange]
+    public function __get($key)
+    {
+        return $this->get_attribute($key);
+    }
+    /**
+     * Dynamically set attribute values via property access.
+     *
+     * Forwards to set_attribute to ensure consistent mutation behavior and
+     * chaining semantics when used programmatically.
+     *
+     * @param string $key The attribute name
+     * @param mixed $value The value to assign
+     *
+     * @return void
+     *
+     * @since 1.0.0
+     */
+    public function __set($key, $value)
+    {
+        $this->set_attribute($key, $value);
+    }
+    /**
+     * Determine if an attribute or relation is set.
+     *
+     * Checks both the attributes and relations arrays to report whether the
+     * given key currently resolves to a non-null value.
+     *
+     * @param string $key The attribute or relation key to test
+     *
+     * @return bool True when a value is present; false otherwise
+     *
+     * @since 1.0.0
+     */
+    public function __isset($key)
+    {
+        return $this->offsetExists($key);
+    }
+    /**
+     * Unset an attribute or relation.
+     *
+     * @param string $key The attribute or relation key to unset
+     *
+     * @return void
+     *
+     * @since 1.0.0
+     */
+    public function __unset($key)
+    {
+        $this->offsetUnset($key);
+    }
+    /**
+     * Dynamically call a method on the query builder.
+     *
+     * @param string $method The method name to call
+     * @param array $arguments The arguments to pass to the method
+     *
+     * @return mixed The result of the method call
+     *
+     * @since 1.0.0
+     */
+    public function __call($method, $arguments)
+    {
+        return $this->query()->{$method}(...$arguments);
+    }
+    /**
+     * Dynamically call a static method on the model.
+     *
+     * @param string $method The method name to call
+     * @param array $arguments The arguments to pass to the method
+     *
+     * @return mixed The result of the method call
+     *
+     * @since 1.0.0
+     */
+    public static function __callStatic($method, $arguments)
+    {
+        return (new static())->{$method}(...$arguments);
+    }
+}

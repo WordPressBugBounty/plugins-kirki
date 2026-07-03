@@ -96,12 +96,13 @@
 		}
 
 		const formData = new FormData();
-		formData.append('action', 'kirki_post_apis');
-		formData.append('endpoint', 'back-to-kirki-editor');
+		// formData.append('action', 'kirki_post_apis');
+		// formData.append('endpoint', 'back-to-kirki-editor');
 		formData.append('postId', kirki_admin.postId);
 		formData.append('title', title);
 
-		fetch(kirki_admin.ajaxUrl, {
+		// fetch(kirki_admin.ajaxUrl, {
+		fetch(`${kirki_admin.restUrl}kirki/v1/back-to-kirki-editor`, {
 			method: 'POST', // or 'PUT'
 			body: formData,
 			headers: {
@@ -118,11 +119,12 @@
 	};
 	const handleClickBackToWordpressBtn = () => {
 		const formData = new FormData();
-		formData.append('action', 'kirki_post_apis');
-		formData.append('endpoint', 'back-to-wordpress-editor');
+		// formData.append('action', 'kirki_post_apis');
+		// formData.append('endpoint', 'back-to-wordpress-editor');
 		formData.append('postId', kirki_admin.postId);
 
-		fetch(kirki_admin.ajaxUrl, {
+		// fetch(kirki_admin.ajaxUrl, {
+		fetch(`${kirki_admin.restUrl}kirki/v1/back-to-wordpress-editor`, {
 			method: 'POST', // or 'PUT'
 			body: formData,
 			headers: {

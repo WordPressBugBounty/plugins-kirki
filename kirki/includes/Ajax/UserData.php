@@ -7,6 +7,7 @@
 
 namespace Kirki\Ajax;
 
+use Exception;
 use Kirki\HelperFunctions;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -15,6 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * UserData API Class
+ * @deprecated
  */
 class UserData {
 
@@ -22,6 +24,9 @@ class UserData {
 	 * Save user controller data
 	 *
 	 * @return void wp_send_json
+	 * 
+	 * @deprecated
+	 * @see \Kirki\App\Managers\GlobalDataManager::update_global_ui_controller()
 	 */
 	public static function save_user_controller() {
 		$user_id = get_current_user_id();
@@ -39,6 +44,9 @@ class UserData {
 	 * Save user saved data
 	 *
 	 * @return void wp_send_json
+	 * 
+	 * @deprecated
+	 * @see \Kirki\App\Managers\GlobalDataManager::update_global_ui_saved_data()
 	 */
 	public static function save_user_saved_data() {
 		$user_id = get_current_user_id();
@@ -56,6 +64,9 @@ class UserData {
 	 * Save user custom fonts data
 	 *
 	 * @return void wp_send_json
+	 * 
+	 * @deprecated
+	 * @see \Kirki\App\Managers\GlobalDataManager::update_global_custom_fonts()
 	 */
 	public static function save_user_custom_fonts_data() {
 		$user_id = get_current_user_id();
@@ -73,6 +84,9 @@ class UserData {
 	 * Save the updated font data in global data
 	 *
 	 * @param object $font Font data.
+	 * 
+	 * @deprecated
+	 * @see \Kirki\App\Services\FontService::save_google_font_into_global_custom_fonts()
 	 */
 	public static function save_the_font_global_data( $font ) {
 		// first get the font data
@@ -99,6 +113,8 @@ class UserData {
 	 * @param object $font Font data.
 	 *
 	 * @return object
+	 * @deprecated 
+	 * @see \Kirki\App\Services\FontService::download_google_font()
 	 */
 	public static function make_google_font_offline() {
 		 $font = isset( $_POST['font'] ) ? $_POST['font'] : null;
@@ -117,6 +133,8 @@ class UserData {
 
 	/**
 	 * Download fonts
+	 * @deprecated 
+	 * @see \Kirki\App\Services\FontService::download_google_font()
 	 */
 	private static function download_font_offline( &$font ) {
 		if ( empty( $font['family'] ) || empty( $font['fontUrl'] ) || strpos( $font['fontUrl'], 'fonts.googleapis.com' ) === false ) {
@@ -258,6 +276,9 @@ class UserData {
 	 * @param object $font Font data.
 	 *
 	 * @return object
+	 * 
+	 * @deprecated
+	 * @see \Kirki\App\Services\FontService::remove_google_font()
 	 */
 	public static function remove_google_font_offline() {
 		$font = isset( $_POST['font'] ) ? $_POST['font'] : null;
@@ -291,6 +312,9 @@ class UserData {
 	 * Get user controller data
 	 *
 	 * @return void wp_send_json
+	 * 
+	 * @deprecated
+	 * @see \Kirki\App\Managers\GlobalDataManager::get_global_ui_controller()
 	 */
 	public static function get_user_controller() {
 		$control = HelperFunctions::get_global_data_using_key( KIRKI_USER_CONTROLLER_META_KEY );
@@ -306,6 +330,9 @@ class UserData {
 	 * Get User Saved data
 	 *
 	 * @return void wp_send_json
+	 * 
+	 * @deprecated
+	 * @see \Kirki\App\Managers\GlobalDataManager::get_global_ui_saved_data()
 	 */
 	public static function get_user_saved_data() {
 		$saved_data = HelperFunctions::get_global_data_using_key( KIRKI_USER_SAVED_DATA_META_KEY );
@@ -322,12 +349,18 @@ class UserData {
 	 * Get User login status
 	 *
 	 * @return void wp_send_json
+	 * @deprecated
+	 * @see \Kirki\Framework\Wordpress\User::is_logged_in()
 	 */
 	public static function check_user_login() {
 		wp_send_json( is_user_logged_in() );
 		die();
 	}
 
+	/**
+	 * @deprecated
+	 * @see \Kirki\App\Managers\GlobalDataManager::normalize_variable_data()
+	 */
 	public static function normalize_variable_data( $raw_data ) {
 
 		if(isset( $raw_data['data'] ) && is_array( $raw_data['data'] ) && count($raw_data['data']) > 0 && isset($raw_data['data'][0]['key'])  ) {
@@ -416,6 +449,10 @@ class UserData {
 		return $organized;
 	}
 
+	/**
+	 * @deprecated
+	 * @see \Kirki\App\Managers\GlobalDataManager::sort_variable_data()
+	 */
 	public static function sort_variable_data( $data ) {
 		// Enforce deterministic group order: Color, Number, Text style, Font family
 		$order_map = array(
@@ -438,7 +475,10 @@ class UserData {
 	}
 
 
-
+	/**
+	 * @deprecated
+	 * @see \Kirki\App\Managers\GlobalDataManager::initial_variable_data()
+	 */
 	public static function initial_variable_data() {
 		// return json_decode( '{"data":[]}', true );
 		return array(
@@ -492,6 +532,10 @@ class UserData {
 		);
 	}
 
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Managers\GlobalDataManager::get_variable_data()
+	 */
 	public static function get_kirki_variable_data() {
 		$saved_data = HelperFunctions::get_global_data_using_key( KIRKI_USER_SAVED_DATA_META_KEY );
 
@@ -509,9 +553,22 @@ class UserData {
 		return $variables;
 	}
 
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Managers\GlobalDataManager::normalize_old_variable_data()
+	 */
 	private static function normalize_old_variable_data( $variables ) {
 		// Check if data needs normalization
 		if ( ! isset( $variables['data'] ) || ! is_array( $variables['data'] ) ) {
+			return $variables;
+		}
+
+		// Check if already normalized (has the 4 standard groups with correct keys)
+		$expected_keys = array( 'color', 'size', 'text-style', 'font-family' );
+		$actual_keys = array_column( $variables['data'], 'key' );
+		
+		if ( count( $actual_keys ) === 4 && empty( array_diff( $expected_keys, $actual_keys ) ) ) {
+			// Already normalized, return as-is
 			return $variables;
 		}
 
@@ -611,6 +668,9 @@ class UserData {
 	 * Get user custom fonts data
 	 *
 	 * @return void wp_send_json
+	 * 
+	 * @deprecated
+	 * @see \Kirki\App\Managers\GlobalDataManager::get_global_custom_fonts()
 	 */
 	public static function get_user_custom_fonts_data() {
 		$custom_fonts = HelperFunctions::get_global_data_using_key( KIRKI_USER_CUSTOM_FONTS_META_KEY );
@@ -626,6 +686,9 @@ class UserData {
 	 * this method only for front end. not for editor. cause list data not completed data.
 	 *
 	 * @return array
+	 * 
+	 * @deprecated
+	 * @see \Kirki\App\Managers\GlobalDataManager::get_view_port_list()
 	 */
 	public static function get_view_port_list() {
 		$control = HelperFunctions::get_global_data_using_key( KIRKI_USER_CONTROLLER_META_KEY );
@@ -640,6 +703,9 @@ class UserData {
 	 *
 	 * @param array $arr list of view port list.
 	 * @return array
+	 * 
+	 * @deprecated
+	 * @see \Kirki\App\Managers\GlobalDataManager::sort_viewport_list()
 	 */
 	private static function sort_viewport_list( $arr ) {
 		$arr  = (array) $arr;

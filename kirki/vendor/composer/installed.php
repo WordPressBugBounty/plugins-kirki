@@ -28,5 +28,14 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
+        'themeum/framework' => array(
+            'pretty_version' => '1.0.15',
+            'version' => '1.0.15.0',
+            'reference' => 'b4995a84b5e6c599801a25d9fa8e1ae36284086e',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../themeum/framework',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
     ),
 );

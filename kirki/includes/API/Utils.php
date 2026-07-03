@@ -7,14 +7,17 @@
 
 namespace Kirki\API;
 
-if ( ! defined( 'ABSPATH' ) ) {
+if (!defined('ABSPATH')) {
 	exit; // Exit if accessed directly.
 }
+
+// @todo: remove this file. it has no use
 
 /**
  * Media Utils class
  */
-class Utils {
+class Utils
+{
 
 
 	/**
@@ -25,16 +28,17 @@ class Utils {
 	 *
 	 * @return  int     The converted bytes equivalent value.
 	 */
-	public static function to_bytes( int $value, $type = 'MB' ) {
+	public static function to_bytes(int $value, $type = 'MB')
+	{
 		$multipliers = array(
 			'gb' => 1073741824, // 1024 * 1024 * 1024
 			'mb' => 1048576,    // 1024 * 1024
 			'kb' => 1024,       // 1024
 		);
 
-		$type = strtolower( $type );
+		$type = strtolower($type);
 
-		return $value * $multipliers[ $type ];
+		return $value * $multipliers[$type];
 	}
 
 	/**
@@ -44,38 +48,39 @@ class Utils {
 	 * @param   array  $icon_libraries       The icon_libraries to search.
 	 * @return  string     The generated directory.
 	 */
-	public static function search_file( string $directory_path, array $icon_libraries ): array {
-		$it = new \RecursiveDirectoryIterator( $directory_path );
+	public static function search_file(string $directory_path, array $icon_libraries): array
+	{
+		$it = new \RecursiveDirectoryIterator($directory_path);
 
-		foreach ( $icon_libraries as $icon_name => $icon_data ) {
+		foreach ($icon_libraries as $icon_name => $icon_data) {
 			$required_files = $icon_data['requiredFiles'];
-			$css_file       = $icon_data['cssFile'];
-			$css_file_path  = '';
-			$files_found    = array();
+			$css_file = $icon_data['cssFile'];
+			$css_file_path = '';
+			$files_found = array();
 
-			foreach ( new \RecursiveIteratorIterator( $it ) as $file ) {
-				$arr      = explode( '/', $file );
-				$filename = array_pop( $arr );
+			foreach (new \RecursiveIteratorIterator($it) as $file) {
+				$arr = explode('/', $file);
+				$filename = array_pop($arr);
 
-				if ( in_array( strtolower( $filename ), $required_files, true ) ) {
-					$files_found[] = strtolower( $filename );
+				if (in_array(strtolower($filename), $required_files, true)) {
+					$files_found[] = strtolower($filename);
 
-					if ( strtolower( $filename ) === $css_file ) {
+					if (strtolower($filename) === $css_file) {
 						$css_file_path = $file;
 					}
 				}
 			}
 
-			if ( count( array_unique( $files_found ) ) === count( $required_files ) ) {
+			if (count(array_unique($files_found)) === count($required_files)) {
 				return array(
-					'icon_name'     => $icon_name,
+					'icon_name' => $icon_name,
 					'css_file_path' => $css_file_path,
 				);
 			}
 		}
 
 		return array(
-			'icon_name'     => '',
+			'icon_name' => '',
 			'css_file_path' => '',
 		);
 	}
@@ -87,27 +92,28 @@ class Utils {
 	 * @param    array  $library    The css string.
 	 * @return   array     The parsed css classes array.
 	 */
-	public static function parse_css_classes( $css, $library ) {
-		$classes              = array();
+	public static function parse_css_classes($css, $library)
+	{
+		$classes = array();
 		$math_all_css_pattern = '/([^\{\}]+)\{([^\}]*)\}|([\/\*])/ims';
-		preg_match_all( $math_all_css_pattern, $css, $match_css );
+		preg_match_all($math_all_css_pattern, $css, $match_css);
 
-		foreach ( $match_css[0] as $key => $value ) {
-			$library_prefix  = $library['prefix'];
+		foreach ($match_css[0] as $key => $value) {
+			$library_prefix = $library['prefix'];
 			$library_postfix = 'before{content';
 			$css_match_regex = '/^(.' . $library_prefix . '-)[^.]+[(:)]+(' . $library_postfix . ').*$/m';
-			$selector        = trim( $match_css[0][ $key ] );
+			$selector = trim($match_css[0][$key]);
 
-			if ( preg_match( $css_match_regex, $selector ) ) {
+			if (preg_match($css_match_regex, $selector)) {
 				$trimmed_cls = '';
 
-				$last_pattern  = '/[(:)]+(' . $library_postfix . ').*$/m';
+				$last_pattern = '/[(:)]+(' . $library_postfix . ').*$/m';
 				$first_pattern = '/^.*\./';
-				$trimmed_cls   = preg_replace( $last_pattern, '', $selector );
-				$trimmed_cls   = preg_replace( $first_pattern, '', $trimmed_cls );
-				$trimmed_cls   = $library['leadClass'] ? "{$library['leadClass']} {$trimmed_cls}" : $trimmed_cls;
+				$trimmed_cls = preg_replace($last_pattern, '', $selector);
+				$trimmed_cls = preg_replace($first_pattern, '', $trimmed_cls);
+				$trimmed_cls = $library['leadClass'] ? "{$library['leadClass']} {$trimmed_cls}" : $trimmed_cls;
 
-				if ( $trimmed_cls ) {
+				if ($trimmed_cls) {
 					$classes[] = $trimmed_cls;
 				}
 			}
@@ -123,12 +129,13 @@ class Utils {
 	 *
 	 * @return string minify css.
 	 */
-	public static function minify_css( $content ) {
-		$content = preg_replace( '/\/\*(?:(?!\*\/)[\s\S])*\*\/|[\r\n\t]+/', '', $content );
-		$content = preg_replace( '/ {2,}/', ' ', $content );
-		$content = preg_replace( '/ ([{:}]) /', '$1', $content );
-		$content = preg_replace( '/([;,]) /', '$1', $content );
-		$content = preg_replace( '/ !/', '!', $content );
+	public static function minify_css($content)
+	{
+		$content = preg_replace('/\/\*(?:(?!\*\/)[\s\S])*\*\/|[\r\n\t]+/', '', $content);
+		$content = preg_replace('/ {2,}/', ' ', $content);
+		$content = preg_replace('/ ([{:}]) /', '$1', $content);
+		$content = preg_replace('/([;,]) /', '$1', $content);
+		$content = preg_replace('/ !/', '!', $content);
 
 		return $content;
 	}
@@ -140,6 +147,7 @@ class Utils {
 	 *
 	 * @return void
 	 */
-	public static function extract_zip_file( $path ) {
+	public static function extract_zip_file($path)
+	{
 	}
 }

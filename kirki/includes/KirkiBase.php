@@ -29,53 +29,39 @@ if ( ! class_exists( 'KirkiBase' ) ) {
 					wp_raise_memory_limit( '512M' );
 				}
 			}
-			$this->define_constants();
 			register_activation_hook( $this->get_plugin_file(), array( $this, 'activate' ) );
 			register_deactivation_hook( $this->get_plugin_file(), array( $this, 'deactivate' ) );
 			add_action( 'init', array( $this, 'plugin_init' ) );
 			new PluginLoadedEvents();
 			new PluginInitEvents();
-			$this->load_version_specific_events();
 			new PluginShortcode();
 
 
 			Customizer::init();
 		}
 
+		protected static $instance = false;
 		/**
 		 * Initializes a singleton instance
 		 *
 		 * @return static
 		 */
 		public static function init() {
-			static $instance = false;
 
-			if ( ! $instance ) {
-				$instance = new static();
+			if ( ! self::$instance ) {
+				self::$instance = new static();
 			}
 
 			new Ajax();
-
 			new API();
-
 			new ContentManager();
-
 			new ElementVisibilityConditions();
 
-			return $instance;
+			return self::$instance;
 		}
 
 		public function plugin_init() {
 			new Apps();
-		}
-
-		/**
-		 * Define plugin constants
-		 *
-		 * @return void
-		 */
-		public function define_constants() {
-			require plugin_dir_path( $this->get_plugin_file() ) . 'config.php';
 		}
 
 		/**
@@ -96,18 +82,5 @@ if ( ! class_exists( 'KirkiBase' ) ) {
 			new PluginDeactivateEvents();
 		}
 
-		/**
-		 * Get the plugin file path
-		 *
-		 * @return string
-		 */
-		abstract protected function get_plugin_file();
-
-		/**
-		 * Load version-specific events (free vs pro)
-		 *
-		 * @return void
-		 */
-		abstract protected function load_version_specific_events();
 	}
 }

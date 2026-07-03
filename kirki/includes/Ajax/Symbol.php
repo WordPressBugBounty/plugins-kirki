@@ -23,6 +23,9 @@ class Symbol {
 	 * Create/save a symbol
 	 *
 	 * @return void wp_send_json.
+	 * 
+	 * @deprecated
+	 * @see \Kirki\App\Managers\SymbolManager::save()
 	 */
 	public static function save() {
 		//phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
@@ -54,6 +57,10 @@ class Symbol {
 		die();
 	}
 
+	/**
+	 * @deprecated
+	 * @see \Kirki\App\Managers\SymbolManager::save()
+	 */
 	public static function save_to_db( $data ) {
 		//phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$post_symbol_data = $data ? $data : null;
@@ -245,6 +252,10 @@ class Symbol {
 		wp_send_json( $symbol );
 	}
 
+	/**
+	 * @deprecated
+	 * @see \Kirki\App\Managers\SymbolManager::get_preview_html()
+	 */
 	private static function get_symbol_html_preview( $symbol, $options = array(), $variable_css = true ) {
 		if ( ! $symbol['symbolData'] ) {
 			return '';

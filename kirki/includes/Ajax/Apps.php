@@ -24,6 +24,9 @@ class Apps {
 	 * get_user_installed_apps_list
 	 *
 	 * @return void wp_send_json
+	 * 
+	 * @deprecated
+	 * @see \Kirki\App\Services\AppsService::get_all_apps()
 	 */
 	public static function get_app_list() {
 		 $apps = HelperFunctions::get_global_data_using_key( 'kirki_installed_apps' );
@@ -38,6 +41,9 @@ class Apps {
 	 * get_user_installed_apps_list
 	 *
 	 * @return void wp_send_json
+	 * 
+	 * @deprecated
+	 * @see \Kirki\App\Services\AppsService::get_installed_apps()
 	 */
 	public static function get_installed_apps_list() {
 		$apps = HelperFunctions::get_global_data_using_key( 'kirki_installed_apps' );
@@ -51,6 +57,9 @@ class Apps {
 	 * get_app_settings_using_slug
 	 *
 	 * @return void wp_send_json
+	 * 
+	 * @deprecated
+	 * @see Kirki\App\Services\AppsService::get_app_settings()
 	 */
 	public static function get_app_settings_using_slug() {
 		$user_id = get_current_user_id();
@@ -71,6 +80,9 @@ class Apps {
 	 * get_app_settings_using_slug
 	 *
 	 * @return void wp_send_json
+	 * 
+	 * @deprecated
+	 * @see Kirki\App\Services\AppsService::save_app_settings()
 	 */
 	public static function save_app_settings_using_slug() {
 		 $user_id = get_current_user_id();
@@ -85,6 +97,10 @@ class Apps {
 		die();
 	}
 
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Services\AppsService::install_app()
+	 */
 	public static function install_app() {
 		error_reporting( E_ALL );
 		ini_set( 'display_errors', 1 );
@@ -190,6 +206,10 @@ class Apps {
 	}
 
 
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Services\AppsService::delete_app()
+	 */
 	public static function delete_app_using_slug() {
 		$user_id = get_current_user_id();
 		if ( ! empty( $user_id ) ) {
@@ -231,6 +251,10 @@ class Apps {
 		die();
 	}
 
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Services\AppsService::update_app()
+	 */
 	public static function update_app() {
 		error_reporting( E_ALL );
 		ini_set( 'display_errors', 1 );

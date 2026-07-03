@@ -806,8 +806,8 @@ class Form {
 
 				// Handle array values by unserializing them
 				$input_value = $form_data_item['input_value'];
-				if (is_string($input_value) && @unserialize($input_value) !== false) {
-					$input_value = unserialize($input_value);
+				if (is_string($input_value) && @unserialize($input_value, ['allowed_classes' => false]) !== false) {
+					$input_value = unserialize($input_value, ['allowed_classes' => false]);
 				}
 
 				if ( isset( $data[ $form_data_item['timestamp'] ] ) ) {

@@ -8,7 +8,7 @@
 
 namespace Kirki\API\KirkiComments;
 
-if ( ! defined( 'ABSPATH' ) ) {
+if (!defined('ABSPATH')) {
 	exit; // Exit if accessed directly.
 }
 
@@ -20,8 +20,12 @@ use WP_REST_Server;
 
 /**
  * ContentManagerRest
+ * 
+ * @deprecated
+ * @see \Kirki\App\Http\Controllers\Api\CollaborationCommentController 
  */
-class KirkiCommentsRest extends WP_REST_Controller {
+class KirkiCommentsRest extends WP_REST_Controller
+{
 
 
 	/**
@@ -29,8 +33,9 @@ class KirkiCommentsRest extends WP_REST_Controller {
 	 *
 	 * @return void
 	 */
-	public function __construct() {
-		$this->namespace ='kirki/v1';
+	public function __construct()
+	{
+		$this->namespace = 'kirki/v1';
 		$this->rest_base = 'kirki-comments';
 	}
 
@@ -39,18 +44,19 @@ class KirkiCommentsRest extends WP_REST_Controller {
 	 *
 	 * @return void
 	 */
-	public function register_routes() {
+	public function register_routes()
+	{
 		register_rest_route(
 			$this->namespace,
 			'/' . $this->rest_base . '/all',
 			array(
 				array(
-					'methods'             => 'GET',
-					'callback'            => array( $this, 'get_all_comments' ),
-					'permission_callback' => array( $this, 'get_item_permissions_check' ),
-					'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::READABLE ),
+					'methods' => 'GET',
+					'callback' => array($this, 'get_all_comments'),
+					'permission_callback' => array($this, 'get_item_permissions_check'),
+					'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::READABLE),
 				),
-				'schema' => array( $this, 'get_item_schema' ),
+				'schema' => array($this, 'get_item_schema'),
 			)
 		);
 
@@ -59,12 +65,12 @@ class KirkiCommentsRest extends WP_REST_Controller {
 			'/' . $this->rest_base . '/create',
 			array(
 				array(
-					'methods'             => 'POST',
-					'callback'            => array( $this, 'create_comment' ),
-					'permission_callback' => array( $this, 'create_item_permissions_check' ),
-					'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::CREATABLE ),
+					'methods' => 'POST',
+					'callback' => array($this, 'create_comment'),
+					'permission_callback' => array($this, 'create_item_permissions_check'),
+					'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::CREATABLE),
 				),
-				'schema' => array( $this, 'get_item_schema' ),
+				'schema' => array($this, 'get_item_schema'),
 			)
 		);
 
@@ -73,12 +79,12 @@ class KirkiCommentsRest extends WP_REST_Controller {
 			'/' . $this->rest_base . '/resolve',
 			array(
 				array(
-					'methods'             => 'POST',
-					'callback'            => array( $this, 'resolve_comment' ),
-					'permission_callback' => array( $this, 'create_item_permissions_check' ),
-					'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::CREATABLE ),
+					'methods' => 'POST',
+					'callback' => array($this, 'resolve_comment'),
+					'permission_callback' => array($this, 'create_item_permissions_check'),
+					'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::CREATABLE),
 				),
-				'schema' => array( $this, 'get_item_schema' ),
+				'schema' => array($this, 'get_item_schema'),
 			)
 		);
 
@@ -87,14 +93,14 @@ class KirkiCommentsRest extends WP_REST_Controller {
 			'/' . $this->rest_base . '/all-users',
 			array(
 				array(
-					'methods'             => 'GET',
-					'callback'            => array( $this, 'get_all_users' ),
-					'permission_callback' => array( $this, 'get_item_permissions_check' ),
-					'args'                => array(
+					'methods' => 'GET',
+					'callback' => array($this, 'get_all_users'),
+					'permission_callback' => array($this, 'get_item_permissions_check'),
+					'args' => array(
 						'query' => array(
 							'description' => 'Search query for user display name.',
-							'type'        => 'string',
-							'required'    => false,
+							'type' => 'string',
+							'required' => false,
 						),
 					),
 				),
@@ -107,12 +113,12 @@ class KirkiCommentsRest extends WP_REST_Controller {
 			'/' . $this->rest_base . '/read',
 			array(
 				array(
-					'methods'             => 'POST',
-					'callback'            => array( $this, 'read_comment' ),
-					'permission_callback' => array( $this, 'create_item_permissions_check' ),
-					'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::CREATABLE ),
+					'methods' => 'POST',
+					'callback' => array($this, 'read_comment'),
+					'permission_callback' => array($this, 'create_item_permissions_check'),
+					'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::CREATABLE),
 				),
-				'schema' => array( $this, 'get_item_schema' ),
+				'schema' => array($this, 'get_item_schema'),
 			)
 		);
 
@@ -121,12 +127,12 @@ class KirkiCommentsRest extends WP_REST_Controller {
 			'/' . $this->rest_base . '/unread',
 			array(
 				array(
-					'methods'             => 'POST',
-					'callback'            => array( $this, 'unread_comment' ),
-					'permission_callback' => array( $this, 'create_item_permissions_check' ),
-					'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::CREATABLE ),
+					'methods' => 'POST',
+					'callback' => array($this, 'unread_comment'),
+					'permission_callback' => array($this, 'create_item_permissions_check'),
+					'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::CREATABLE),
 				),
-				'schema' => array( $this, 'get_item_schema' ),
+				'schema' => array($this, 'get_item_schema'),
 			)
 		);
 
@@ -135,12 +141,12 @@ class KirkiCommentsRest extends WP_REST_Controller {
 			'/' . $this->rest_base . '/delete',
 			array(
 				array(
-					'methods'             => 'POST',
-					'callback'            => array( $this, 'delete_comment' ),
-					'permission_callback' => array( $this, 'create_item_permissions_check' ),
-					'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::CREATABLE ),
+					'methods' => 'POST',
+					'callback' => array($this, 'delete_comment'),
+					'permission_callback' => array($this, 'create_item_permissions_check'),
+					'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::CREATABLE),
 				),
-				'schema' => array( $this, 'get_item_schema' ),
+				'schema' => array($this, 'get_item_schema'),
 			)
 		);
 
@@ -149,12 +155,12 @@ class KirkiCommentsRest extends WP_REST_Controller {
 			'/' . $this->rest_base . '/read-all',
 			array(
 				array(
-					'methods'             => 'POST',
-					'callback'            => array( $this, 'read_all_comments' ),
-					'permission_callback' => array( $this, 'create_item_permissions_check' ),
-					'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::CREATABLE ),
+					'methods' => 'POST',
+					'callback' => array($this, 'read_all_comments'),
+					'permission_callback' => array($this, 'create_item_permissions_check'),
+					'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::CREATABLE),
 				),
-				'schema' => array( $this, 'get_item_schema' ),
+				'schema' => array($this, 'get_item_schema'),
 			)
 		);
 
@@ -163,23 +169,24 @@ class KirkiCommentsRest extends WP_REST_Controller {
 			'/' . $this->rest_base . '/resolve-all',
 			array(
 				array(
-					'methods'             => 'POST',
-					'callback'            => array( $this, 'resolve_all_comments' ),
-					'permission_callback' => array( $this, 'create_item_permissions_check' ),
-					'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::CREATABLE ),
+					'methods' => 'POST',
+					'callback' => array($this, 'resolve_all_comments'),
+					'permission_callback' => array($this, 'create_item_permissions_check'),
+					'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::CREATABLE),
 				),
-				'schema' => array( $this, 'get_item_schema' ),
+				'schema' => array($this, 'get_item_schema'),
 			)
 		);
 	}
 
-	public function read_all_comments( $request ) {
-		$post_id = HelperFunctions::sanitize_text( isset( $request['post_id'] ) ? $request['post_id'] : '' );
+	public function read_all_comments($request)
+	{
+		$post_id = HelperFunctions::sanitize_text(isset($request['post_id']) ? $request['post_id'] : '');
 		$user_id = get_current_user_id();
 
 		global $wpdb;
 		$seen_table_name = $wpdb->prefix . KIRKI_COMMENTS_TABLE . '_seen';
-		$comments_table  = $wpdb->prefix . KIRKI_COMMENTS_TABLE;
+		$comments_table = $wpdb->prefix . KIRKI_COMMENTS_TABLE;
 
 		$wpdb->query(
 			$wpdb->prepare(
@@ -193,16 +200,17 @@ class KirkiCommentsRest extends WP_REST_Controller {
 
 		return rest_ensure_response(
 			array(
-				'status'  => 'success',
-				'message' => __( 'All comments marked as read.', 'kirki' ),
+				'status' => 'success',
+				'message' => __('All comments marked as read.', 'kirki'),
 			)
 		);
 	}
 
 
-	public function resolve_all_comments( $request ) {
-		$post_id    = HelperFunctions::sanitize_text( isset( $request['post_id'] ) ? $request['post_id'] : '' );
-		$session_id = HelperFunctions::sanitize_text( isset( $request['session_id'] ) ? $request['session_id'] : '' );
+	public function resolve_all_comments($request)
+	{
+		$post_id = HelperFunctions::sanitize_text(isset($request['post_id']) ? $request['post_id'] : '');
+		$session_id = HelperFunctions::sanitize_text(isset($request['session_id']) ? $request['session_id'] : '');
 
 		$status = 2;
 
@@ -217,25 +225,26 @@ class KirkiCommentsRest extends WP_REST_Controller {
 		);
 
 		$data = array(
-			'type'    => 'COLLABORATION_UPDATE_ALL_KIRKI_COMMENT',
-			'payload' => array( 'data' => array( 'status' => '' . $status ) ),
+			'type' => 'COLLABORATION_UPDATE_ALL_KIRKI_COMMENT',
+			'payload' => array('data' => array('status' => '' . $status)),
 		);
-		Collaboration::save_action_to_db( 'post', $post_id, $data, 1, $session_id );
+		Collaboration::save_action_to_db('post', $post_id, $data, 1, $session_id);
 
 		return rest_ensure_response(
 			array(
-				'status'  => 'success',
-				'message' => __( 'All comments marked as resolved.', 'kirki' ),
+				'status' => 'success',
+				'message' => __('All comments marked as resolved.', 'kirki'),
 			)
 		);
 	}
 
 
-	public function resolve_comment( $request ) {
-		$comment_id = intval( HelperFunctions::sanitize_text( isset( $request['id'] ) ? $request['id'] : '0' ) );
-		$post_id    = HelperFunctions::sanitize_text( isset( $request['post_id'] ) ? $request['post_id'] : '' );
-		$status     = intval( HelperFunctions::sanitize_text( isset( $request['status'] ) ? $request['status'] : '1' ) );
-		$session_id = HelperFunctions::sanitize_text( isset( $request['session_id'] ) ? $request['session_id'] : '' );
+	public function resolve_comment($request)
+	{
+		$comment_id = intval(HelperFunctions::sanitize_text(isset($request['id']) ? $request['id'] : '0'));
+		$post_id = HelperFunctions::sanitize_text(isset($request['post_id']) ? $request['post_id'] : '');
+		$status = intval(HelperFunctions::sanitize_text(isset($request['status']) ? $request['status'] : '1'));
+		$session_id = HelperFunctions::sanitize_text(isset($request['session_id']) ? $request['session_id'] : '');
 
 		global $wpdb;
 		$table_name = $wpdb->prefix . KIRKI_COMMENTS_TABLE;
@@ -248,20 +257,21 @@ class KirkiCommentsRest extends WP_REST_Controller {
 		);
 
 		$data = array(
-			'type'    => 'COLLABORATION_UPDATE_KIRKI_COMMENT',
+			'type' => 'COLLABORATION_UPDATE_KIRKI_COMMENT',
 			'payload' => array(
-				'data' => array( 'status' => '' . $status ),
-				'id'   => '' . $comment_id,
+				'data' => array('status' => '' . $status),
+				'id' => '' . $comment_id,
 			),
 		);
-		Collaboration::save_action_to_db( 'post', $post_id, $data, 1, $session_id );
+		Collaboration::save_action_to_db('post', $post_id, $data, 1, $session_id);
 
-		return rest_ensure_response( $this->get_single_comment( $comment_id ) );
+		return rest_ensure_response($this->get_single_comment($comment_id));
 	}
 
-	public function read_comment( $request ) {
-		$comment_id = intval( HelperFunctions::sanitize_text( isset( $request['id'] ) ? $request['id'] : '0' ) );
-		$user_id    = get_current_user_id();
+	public function read_comment($request)
+	{
+		$comment_id = intval(HelperFunctions::sanitize_text(isset($request['id']) ? $request['id'] : '0'));
+		$user_id = get_current_user_id();
 
 		global $wpdb;
 		$seen_table_name = $wpdb->prefix . KIRKI_COMMENTS_TABLE . '_seen';
@@ -273,12 +283,13 @@ class KirkiCommentsRest extends WP_REST_Controller {
 				$comment_id
 			)
 		);
-		return rest_ensure_response( $this->get_single_comment( $comment_id ) );
+		return rest_ensure_response($this->get_single_comment($comment_id));
 	}
 
-	public function unread_comment( $request ) {
-		$comment_id = intval( HelperFunctions::sanitize_text( isset( $request['id'] ) ? $request['id'] : '0' ) );
-		$user_id    = get_current_user_id();
+	public function unread_comment($request)
+	{
+		$comment_id = intval(HelperFunctions::sanitize_text(isset($request['id']) ? $request['id'] : '0'));
+		$user_id = get_current_user_id();
 
 		global $wpdb;
 		$seen_table_name = $wpdb->prefix . KIRKI_COMMENTS_TABLE . '_seen';
@@ -290,18 +301,19 @@ class KirkiCommentsRest extends WP_REST_Controller {
 				$user_id
 			)
 		);
-		return rest_ensure_response( $this->get_single_comment( $comment_id ) );
+		return rest_ensure_response($this->get_single_comment($comment_id));
 	}
 
-	public function delete_comment( $request ) {
-		$comment_id = intval( HelperFunctions::sanitize_text( isset( $request['id'] ) ? $request['id'] : '0' ) );
-		$post_id    = HelperFunctions::sanitize_text( isset( $request['post_id'] ) ? $request['post_id'] : '' );
-		$session_id = HelperFunctions::sanitize_text( isset( $request['session_id'] ) ? $request['session_id'] : '' );
-		$user       = wp_get_current_user();
+	public function delete_comment($request)
+	{
+		$comment_id = intval(HelperFunctions::sanitize_text(isset($request['id']) ? $request['id'] : '0'));
+		$post_id = HelperFunctions::sanitize_text(isset($request['post_id']) ? $request['post_id'] : '');
+		$session_id = HelperFunctions::sanitize_text(isset($request['session_id']) ? $request['session_id'] : '');
+		$user = wp_get_current_user();
 
-		$comment       = $this->get_single_comment( $comment_id );
-		$allowed_roles = array( 'editor', 'administrator' );
-		if ( $comment['user_id'] == $user->ID || array_intersect( $allowed_roles, $user->roles ) ) {
+		$comment = $this->get_single_comment($comment_id);
+		$allowed_roles = array('editor', 'administrator');
+		if ($comment['user_id'] == $user->ID || array_intersect($allowed_roles, $user->roles)) {
 			global $wpdb;
 			$table_name = $wpdb->prefix . KIRKI_COMMENTS_TABLE;
 			$wpdb->query(
@@ -313,28 +325,29 @@ class KirkiCommentsRest extends WP_REST_Controller {
 			);
 
 			$data = array(
-				'type'    => 'COLLABORATION_DELETE_KIRKI_COMMENT',
-				'payload' => array( 'id' => '' . $comment_id ),
+				'type' => 'COLLABORATION_DELETE_KIRKI_COMMENT',
+				'payload' => array('id' => '' . $comment_id),
 			);
-			Collaboration::save_action_to_db( 'post', $post_id, $data, 1, $session_id );
+			Collaboration::save_action_to_db('post', $post_id, $data, 1, $session_id);
 
 			return rest_ensure_response(
 				array(
-					'status'  => 'success',
-					'message' => __( 'Comment deleted successfully.', 'kirki' ),
+					'status' => 'success',
+					'message' => __('Comment deleted successfully.', 'kirki'),
 				)
 			);
 		} else {
 			return rest_ensure_response(
 				array(
-					'status'  => 'error',
-					'message' => __( 'You do not have permission to delete this comment.', 'kirki' ),
+					'status' => 'error',
+					'message' => __('You do not have permission to delete this comment.', 'kirki'),
 				)
 			);
 		}
 	}
 
-	public function get_all_users( $request ) {
+	public function get_all_users($request)
+	{
 		$roles = HelperFunctions::get_all_user_roles_by_access_levels(
 			array(
 				KIRKI_ACCESS_LEVELS['FULL_ACCESS'],
@@ -343,42 +356,43 @@ class KirkiCommentsRest extends WP_REST_Controller {
 			)
 		);
 
-		$query    = isset( $request['query'] ) ? sanitize_text_field( $request['query'] ) : '';
-		$per_page = HelperFunctions::sanitize_text( isset( $request['per_page'] ) ? $request['per_page'] : 20 );
+		$query = isset($request['query']) ? sanitize_text_field($request['query']) : '';
+		$per_page = HelperFunctions::sanitize_text(isset($request['per_page']) ? $request['per_page'] : 20);
 
 		$args = array(
-			'role__in'       => $roles,
-			'orderby'        => 'display_name',
-			'order'          => 'ASC',
-			'number'         => $per_page,
-			'search'         => '*' . esc_attr( $query ) . '*',
-			'search_columns' => array( 'user_login', 'user_nicename', 'display_name', 'user_email' ),
+			'role__in' => $roles,
+			'orderby' => 'display_name',
+			'order' => 'ASC',
+			'number' => $per_page,
+			'search' => '*' . esc_attr($query) . '*',
+			'search_columns' => array('user_login', 'user_nicename', 'display_name', 'user_email'),
 		);
 
-		$users           = get_users( $args );
+		$users = get_users($args);
 		$formatted_users = array();
 
-		foreach ( $users as $user ) {
+		foreach ($users as $user) {
 			$formatted_users[] = array(
-				'user_id'     => $user->ID,
-				'user_name'   => $user->display_name,
-				'user_avatar' => get_avatar_url( $user->ID ),
+				'user_id' => $user->ID,
+				'user_name' => $user->display_name,
+				'user_avatar' => get_avatar_url($user->ID),
 			);
 		}
 
-		return rest_ensure_response( $formatted_users );
+		return rest_ensure_response($formatted_users);
 	}
 
 
 
-	public function create_comment( $request ) {
-		$comment    = HelperFunctions::sanitize_text( isset( $request['comment'] ) ? $request['comment'] : '[]' );
-		$post_id    = HelperFunctions::sanitize_text( isset( $request['post_id'] ) ? $request['post_id'] : '' );
-		$parent_id  = HelperFunctions::sanitize_text( isset( $request['parent_id'] ) ? $request['parent_id'] : 0 );
-		$status     = HelperFunctions::sanitize_text( isset( $request['status'] ) ? $request['status'] : 1 );
-		$meta_data  = HelperFunctions::sanitize_text( isset( $request['meta_data'] ) ? $request['meta_data'] : '[]' );
-		$session_id = HelperFunctions::sanitize_text( isset( $request['session_id'] ) ? $request['session_id'] : '' );
-		$user_id    = get_current_user_id();
+	public function create_comment($request)
+	{
+		$comment = HelperFunctions::sanitize_text(isset($request['comment']) ? $request['comment'] : '[]');
+		$post_id = HelperFunctions::sanitize_text(isset($request['post_id']) ? $request['post_id'] : '');
+		$parent_id = HelperFunctions::sanitize_text(isset($request['parent_id']) ? $request['parent_id'] : 0);
+		$status = HelperFunctions::sanitize_text(isset($request['status']) ? $request['status'] : 1);
+		$meta_data = HelperFunctions::sanitize_text(isset($request['meta_data']) ? $request['meta_data'] : '[]');
+		$session_id = HelperFunctions::sanitize_text(isset($request['session_id']) ? $request['session_id'] : '');
+		$user_id = get_current_user_id();
 
 
 		global $wpdb;
@@ -396,7 +410,7 @@ class KirkiCommentsRest extends WP_REST_Controller {
 		);
 		$comment_id = $wpdb->insert_id;
 
-		if ( $parent_id === '0' ) {
+		if ($parent_id === '0') {
 			$seen_table_name = $wpdb->prefix . KIRKI_COMMENTS_TABLE . '_seen';
 			$wpdb->query(
 				$wpdb->prepare(
@@ -416,14 +430,14 @@ class KirkiCommentsRest extends WP_REST_Controller {
 			);
 		}
 
-		$comment = $this->get_single_comment( $comment_id );
-		$data    = array(
-			'type'    => 'COLLABORATION_ADD_KIRKI_COMMENT',
-			'payload' => array( 'comment' => array_merge( $comment, array( 'read' => '0' ) ) ),
+		$comment = $this->get_single_comment($comment_id);
+		$data = array(
+			'type' => 'COLLABORATION_ADD_KIRKI_COMMENT',
+			'payload' => array('comment' => array_merge($comment, array('read' => '0'))),
 		);
-		Collaboration::save_action_to_db( 'post', $post_id, $data, 1, $session_id );
+		Collaboration::save_action_to_db('post', $post_id, $data, 1, $session_id);
 
-		return rest_ensure_response( $comment );
+		return rest_ensure_response($comment);
 	}
 
 
@@ -434,34 +448,35 @@ class KirkiCommentsRest extends WP_REST_Controller {
 	 *
 	 * @return \WP_Error|WP_REST_Response
 	 */
-	public function get_all_comments( $request ) {
+	public function get_all_comments($request)
+	{
 		global $wpdb;
 
-		$post_id      = HelperFunctions::sanitize_text( isset( $request['post_id'] ) ? $request['post_id'] : null );
-		$current_page = HelperFunctions::sanitize_text( isset( $request['page'] ) ? $request['page'] : 1 );
-		$per_page     = HelperFunctions::sanitize_text( isset( $request['per_page'] ) ? $request['per_page'] : 20 );
-		$user_id      = get_current_user_id();
+		$post_id = HelperFunctions::sanitize_text(isset($request['post_id']) ? $request['post_id'] : null);
+		$current_page = HelperFunctions::sanitize_text(isset($request['page']) ? $request['page'] : 1);
+		$per_page = HelperFunctions::sanitize_text(isset($request['per_page']) ? $request['per_page'] : 20);
+		$user_id = get_current_user_id();
 
-		$table_name      = $wpdb->prefix . KIRKI_COMMENTS_TABLE;
+		$table_name = $wpdb->prefix . KIRKI_COMMENTS_TABLE;
 		$seen_table_name = $wpdb->prefix . KIRKI_COMMENTS_TABLE . '_seen';
 
-		$offset = ( $current_page - 1 ) * $per_page;
+		$offset = ($current_page - 1) * $per_page;
 
 		$params = array();
 
 		// Escape table names for security
-		$table_name_esc      = esc_sql( $table_name );
-		$seen_table_name_esc = esc_sql( $seen_table_name );
+		$table_name_esc = esc_sql($table_name);
+		$seen_table_name_esc = esc_sql($seen_table_name);
 
 		$read_data = "CASE WHEN $seen_table_name_esc.comment_id IS NOT NULL THEN 1 ELSE 0 END AS `read`";
 		$read_join = "LEFT JOIN $seen_table_name_esc ON $table_name_esc.id = $seen_table_name_esc.comment_id AND $seen_table_name_esc.user_id = %d";
-		$params[]  = $user_id;
+		$params[] = $user_id;
 
-		$where    = "WHERE $table_name_esc.parent_id = %d";
+		$where = "WHERE $table_name_esc.parent_id = %d";
 		$params[] = 0;
 
-		if ( $post_id !== null ) {
-			$where   .= " AND $table_name_esc.post_id = %d";
+		if ($post_id !== null) {
+			$where .= " AND $table_name_esc.post_id = %d";
 			$params[] = $post_id;
 		}
 
@@ -478,73 +493,77 @@ class KirkiCommentsRest extends WP_REST_Controller {
 		$params[] = $per_page;
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table names are escaped with esc_sql() above
-		$all_comments = $wpdb->get_results( $wpdb->prepare( $sql, $params ), ARRAY_A );
+		$all_comments = $wpdb->get_results($wpdb->prepare($sql, $params), ARRAY_A);
 
-		foreach ( $all_comments as $key => $comment ) {
-			$all_comments[ $key ] = $this->format_single_comment( $comment );
+		foreach ($all_comments as $key => $comment) {
+			$all_comments[$key] = $this->format_single_comment($comment);
 		}
 
 		// Count query (also conditionally add post_id)
 		$count_where = 'WHERE parent_id = 0';
-		$count_args  = array();
-		if ( $post_id !== null ) {
+		$count_args = array();
+		if ($post_id !== null) {
 			$count_where .= ' AND post_id = %d';
 			$count_args[] = $post_id;
 		}
 
 		$count_sql = "SELECT COUNT(*) FROM $table_name $count_where";
-		if ( ! empty( $count_args ) ) {
-			$count = $wpdb->get_var( $wpdb->prepare( $count_sql, $count_args ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		if (!empty($count_args)) {
+			$count = $wpdb->get_var($wpdb->prepare($count_sql, $count_args)); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 		} else {
-			$count = $wpdb->get_var( $count_sql ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			$count = $wpdb->get_var($count_sql); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 		}
 
 		$res = array(
-			'total'        => $count,
-			'per_page'     => $per_page,
+			'total' => $count,
+			'per_page' => $per_page,
 			'current_page' => $current_page,
-			'data'         => $all_comments,
+			'data' => $all_comments,
 		);
 
-		return rest_ensure_response( $res );
+		return rest_ensure_response($res);
 	}
 
-	private function get_single_comment( $comment_id ) {
+	private function get_single_comment($comment_id)
+	{
 		global $wpdb;
 
-		$user_id         = get_current_user_id();
-		$table_name      = $wpdb->prefix . KIRKI_COMMENTS_TABLE;
+		$user_id = get_current_user_id();
+		$table_name = $wpdb->prefix . KIRKI_COMMENTS_TABLE;
 		$seen_table_name = $wpdb->prefix . KIRKI_COMMENTS_TABLE . '_seen';
 
 		$read_data = "CASE WHEN $seen_table_name.comment_id IS NOT NULL THEN 1 ELSE 0 END AS `read`";
-		$read_join = $wpdb->prepare( "LEFT JOIN $seen_table_name ON $table_name.id = $seen_table_name.comment_id AND $seen_table_name.user_id = %d", $user_id );
+		$read_join = $wpdb->prepare("LEFT JOIN $seen_table_name ON $table_name.id = $seen_table_name.comment_id AND $seen_table_name.user_id = %d", $user_id);
 
-		$sql     = $wpdb->prepare( "SELECT $table_name.*, $read_data FROM $table_name $read_join WHERE $table_name.id = %d", $comment_id );
-		$comment = $wpdb->get_row( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-		return $this->format_single_comment( $comment );
+		$sql = $wpdb->prepare("SELECT $table_name.*, $read_data FROM $table_name $read_join WHERE $table_name.id = %d", $comment_id);
+		$comment = $wpdb->get_row($sql, ARRAY_A); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		return $this->format_single_comment($comment);
 	}
-	private function format_single_comment( $comment ) {
-		$comment['replies']     = $this->get_all_replies( $comment['id'] );
-		$comment['meta_data']   = json_decode( $comment['meta_data'], true );
-		$comment['comment']     = json_decode( $comment['comment'], true );
-		$comment['user_avatar'] = get_avatar_url( $comment['user_id'] );
-		$comment['user_name']   = get_the_author_meta( 'display_name', $comment['user_id'] );
+	private function format_single_comment($comment)
+	{
+		$comment['replies'] = $this->get_all_replies($comment['id']);
+		$comment['meta_data'] = json_decode($comment['meta_data'], true);
+		$comment['comment'] = json_decode($comment['comment'], true);
+		$comment['user_avatar'] = get_avatar_url($comment['user_id']);
+		$comment['user_name'] = get_the_author_meta('display_name', $comment['user_id']);
 		return $comment;
 	}
 
-	private function get_all_replies( $comment_id ) {
+	private function get_all_replies($comment_id)
+	{
 		global $wpdb;
 		$table_name = $wpdb->prefix . KIRKI_COMMENTS_TABLE;
-		$sql        = $wpdb->prepare( "SELECT * FROM $table_name WHERE parent_id = %d ORDER BY created_at ASC", $comment_id );
-		$all_replies = $wpdb->get_results( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-		foreach ( $all_replies as $key => $reply ) {
-			$all_replies[ $key ] = $this->format_single_comment( $reply );
+		$sql = $wpdb->prepare("SELECT * FROM $table_name WHERE parent_id = %d ORDER BY created_at ASC", $comment_id);
+		$all_replies = $wpdb->get_results($sql, ARRAY_A); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		foreach ($all_replies as $key => $reply) {
+			$all_replies[$key] = $this->format_single_comment($reply);
 		}
 		return $all_replies;
 	}
 
-	public function get_item_permissions_check( $request ) {
-		if ( HelperFunctions::is_api_call_from_editor_preview() && HelperFunctions::is_api_header_post_editor_preview_token_valid() ) {
+	public function get_item_permissions_check($request)
+	{
+		if (HelperFunctions::is_api_call_from_editor_preview() && HelperFunctions::is_api_header_post_editor_preview_token_valid()) {
 			return true;
 		}
 
@@ -557,7 +576,8 @@ class KirkiCommentsRest extends WP_REST_Controller {
 		);
 	}
 
-	public function create_item_permissions_check( $request ) {
+	public function create_item_permissions_check($request)
+	{
 		return HelperFunctions::has_access(
 			array(
 				KIRKI_ACCESS_LEVELS['FULL_ACCESS'],

@@ -7,7 +7,7 @@
  * Plugin Name: Kirki
  * Plugin URI: https://kirki.com
  * Description: Kirki is an all-in-one no-code builder that empowers users to build professional-grade WordPress sites without writing any code. It’s a promising glimpse into the future of website development.
- * Version: 6.0.12
+ * Version: 6.0.13
  * Author: Kirki
  * Author URI: https://kirki.com
  * License: GPLv2 or later
@@ -20,32 +20,31 @@
 
 use Kirki\HelperFunctions;
 
-if ( ! defined( 'ABSPATH' ) ) {
+if (!defined('ABSPATH')) {
 	exit; // Exit if accessed directly.
 }
 
 // Define KIRKI_VERSION early to prevent bundled Kirki versions from loading.
 if ( ! defined( 'KIRKI_VERSION' ) ) {
-	define( 'KIRKI_VERSION', '6.0.12' );
+	define( 'KIRKI_VERSION', '6.0.13' );
 }
 
+require_once plugin_dir_path( __FILE__ ) . 'config.php';
+require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/customizer/class-customizer.php';
+require_once __DIR__ . '/includes/KirkiBase.php';
 
-if ( ! class_exists( 'KirkiProMain' ) && ! class_exists( 'KirkiMain' ) && ! class_exists( 'Droip' ) ) {
-	require_once __DIR__ . '/vendor/autoload.php';
-	require_once __DIR__ . '/customizer/class-customizer.php';
-	require_once __DIR__ . '/includes/KirkiBase.php';
+do_action( 'kirki_loaded' );
 
-	if (!defined('KIRKI_PLUGIN_FILE')) {
-		define('KIRKI_PLUGIN_FILE', plugin_dir_path(__FILE__) . 'kirki.php');
-	}
-
-	final class KirkiMain extends KirkiBase {
-
-		protected function get_plugin_file() {
+if ( !class_exists('KirkiMain') && !class_exists('Droip') ) {
+	final class KirkiMain extends KirkiBase
+	{
+		protected function get_plugin_file(){
 			return __FILE__;
 		}
 
-		protected function load_version_specific_events() {
+		protected function load_version_specific_events(){
+			// TODO: This method will be removed in future version
 		}
 	}
 
@@ -54,19 +53,26 @@ if ( ! class_exists( 'KirkiProMain' ) && ! class_exists( 'KirkiMain' ) && ! clas
 	 *
 	 * @return \Kirki
 	 */
-	if ( ! function_exists( 'KirkiMain' ) ) {
+	if (!function_exists('KirkiMain')) {
 		/**
 		 * This function for entry point
 		 */
-		function KirkiMain() {
+		function KirkiMain()
+		{
 			return KirkiMain::init();
 		}
 
 		try {
 			// kick-off the plugin.
 			KirkiMain();
-		} catch ( Exception $e ) {
-			HelperFunctions::store_error_log( wp_json_encode( $e ) );
+		} catch (Exception $e) {
 		}
 	}
+}
+
+add_action('init', 'kirki_boot_application', 0);
+
+function kirki_boot_application()
+{
+	require_once KIRKI_PLUGIN_PATH . '/bootstrap/app.php';
 }

@@ -17,6 +17,8 @@ use Kirki\Ajax\Page;
 use Kirki\Frontend;
 use Kirki\HelperFunctions;
 
+use function Kirki\Framework\is_rest_request;
+
 /**
  * Do some task during plugin activation
  */
@@ -42,7 +44,7 @@ class PluginLoadedEvents {
 	public function init_plugin() {
 		if ( is_admin() ) {
 			new Admin();
-		} else {
+		} elseif (!is_rest_request()) {
 			new Frontend();
 		}
 	}
@@ -91,7 +93,7 @@ class PluginLoadedEvents {
 			$meta_key   = $value['meta_key'];     // Meta key name
 			$meta_value = $value['meta_value']; // Serialized meta value
 
-			$meta_value = unserialize( $meta_value ); // Convert serialized data to array
+			$meta_value = unserialize( $meta_value, ['allowed_classes' => false] ); // Convert serialized data to array
 
 			// If the meta value has a 'blocks' key, handle it as a full page data
 			if ( isset( $meta_value['blocks'] ) ) {

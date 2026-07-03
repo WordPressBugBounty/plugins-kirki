@@ -12,6 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 use Kirki\HelperFunctions;
 
+// use function Kirki\Framework\migrator;
 
 /**
  * Do some task during plugin activation
@@ -35,7 +36,8 @@ class PluginActiveEvents {
 
 		self::update_rbac();
 		self::create_custom_tables();
-		
+
+		// migrator()->run();
 	}
 
 	/**
@@ -259,7 +261,5 @@ class PluginActiveEvents {
 		dbDelta( $sql );
 		dbDelta( $sql2 );
 	}
-
-	
 
 }

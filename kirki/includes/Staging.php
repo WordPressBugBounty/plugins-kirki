@@ -20,7 +20,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Staging {
 
-
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Managers\PageManager::get_most_recent_stage_version()
+	 */
 	public static function get_most_recent_stage_version( $post_id, $stage_must = true, $restoring = false, $old_version = false ) {
 		$staged_versions      = self::get_all_staged_versions( $post_id, true );
 		$recent_stage_version = false;
@@ -45,6 +48,10 @@ class Staging {
 		return $version_number;
 	}
 
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Managers\PageManager::get_all_staged_versions()
+	 */
 	public static function get_all_staged_versions( $post_id, $internal = false, $withname = false ) {
 		// delete_post_meta($post_id, KIRKI_META_NAME_FOR_STAGED_VERSIONS);
 		$staged_versions = get_post_meta( $post_id, KIRKI_META_NAME_FOR_STAGED_VERSIONS, true );
@@ -60,6 +67,10 @@ class Staging {
 		wp_send_json( $staged_versions );
 	}
 
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Managers\PageManager::publish_stage_version()
+	 */
 	public static function publish_stage_version( $internal = false, $post_id = false ) {
 		if ( ! $internal ) {
 			$post_id = HelperFunctions::sanitize_text( isset( $_POST['post_id'] ) ? $_POST['post_id'] : null );
@@ -87,6 +98,10 @@ class Staging {
 	}
 
 
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Managers\PageManager::get_published_stage_version()
+	 */
 	public static function get_published_stage_version( $post_id ) {
 		$staged_versions = self::get_all_staged_versions( $post_id, true, true );
 
@@ -102,6 +117,10 @@ class Staging {
 		return isset( $published_version['version'] ) ? $published_version['version'] : false;
 	}
 
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Managers\PageManager::get_published_staged_version_info()
+	 */
 	public static function get_published_stage_version_info( $post_id ) {
 		$staged_versions = self::get_all_staged_versions( $post_id, true, true );
 
@@ -134,6 +153,10 @@ class Staging {
 
 	// This function receives the page data (blocks, styleblocks...) and saves in stage version whichever required in stage
 	// returns the data which needs to be saved in Publish version
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Managers\PageManager::save_staging_data()
+	 */
 	public static function save_page_staging_data_to_db( $post_id, $page_data ) {
 		$staging_version = self::get_most_recent_stage_version( $post_id );
 		self::update_last_edited_datetime_of_stage_version( $post_id );
@@ -323,6 +346,10 @@ class Staging {
 		wp_send_json( $staged_versions );
 	}
 
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Managers\PageManager::get_staged_meta_name()
+	 */
 	public static function get_staged_meta_name( $meta_name, $post_id, $stage_version = false, $stage_only = false ) {
 		$version = $stage_version;
 		if ( ! $version ) {
@@ -374,6 +401,10 @@ class Staging {
 		return $versions;
 	}
 
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Managers\PageManager::create_first_stage_version()
+	 */
 	private static function create_first_stage_version( $post_id ) {
 		$new_version = self::add_stage_version( $post_id, 1 );
 
@@ -408,6 +439,10 @@ class Staging {
 		return self::publish_stage_version( true, $post_id );
 	}
 
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Managers\PageManager::set_last_edited_datetime_of_stage_version()
+	 */
 	private static function update_last_edited_datetime_of_stage_version( $post_id ) {
 		$staged_versions = self::get_all_staged_versions( $post_id, true, true );
 		if ( count( $staged_versions ) === 0 ) {
@@ -421,6 +456,10 @@ class Staging {
 		return $staged_versions;
 	}
 
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Managers\PageManager::add_stage_version()
+	 */
 	private static function add_stage_version( $post_id, $version_number, $prev_versions = array(), $being_restored = false ) {
 		$format   = 'F j g:i A';
 		$datetime = new \DateTime( 'now', wp_timezone() );
@@ -440,6 +479,10 @@ class Staging {
 		return $version_number;
 	}
 
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Managers\PageManager::get_most_recent_unpublished_stage_version()
+	 */
 	public static function get_most_recent_unpublished_stage_id( $post_id ) {
 		$staged_versions      = get_post_meta( $post_id, 'kirki_stage_versions', true ) ?: array();
 		$most_recent_stage_id = false;

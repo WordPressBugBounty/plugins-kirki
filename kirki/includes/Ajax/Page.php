@@ -25,6 +25,9 @@ class Page {
 	 * Save page data
 	 *
 	 * @return void wp_send_json.
+	 * 
+	 * @deprecated
+	 * @see Kirki\App\Services\PageService::save_page_data()
 	 */
 	public static function save_page_data() {
         //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
@@ -60,6 +63,9 @@ class Page {
 	 * Delete page
 	 *
 	 * @return void wp_send_json.
+	 * 
+	 * @deprecated
+	 * @see Kirki\App\Services\PageService::delete_page()
 	 */
 	public static function delete_page() {
         //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
@@ -76,6 +82,9 @@ class Page {
 	 * Add new page
 	 *
 	 * @return void wp_send_json.
+	 * 
+	 * @deprecated
+	 * @see Kirki\App\Services\PageService::save()
 	 */
 	public static function add_new_page() {
         //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
@@ -133,16 +142,28 @@ class Page {
 		}
 	}
 
+	/**
+	 * @deprecated 
+	 * @see \Kirki\App\Supports\Template::assign_utility_page_template()
+	 */
 	public static function initialize_predefine_template_data( $post_id, $type ) {
 		if ( $type === '404' || $type === 'login' || $type === 'sign_up' || $type === 'forgot_password' || $type === 'reset_password' || $type === 'retrive_username' ) {
 			self::fetch_template_data( $post_id, $type );
 		}
 	}
 
+	/**
+	 * @deprecated 
+	 * @see \Kirki\App\Supports\Template::assign_custom_page_template()
+	 */
 	public static function add_custom_template_to_page( $post_id, $template_url ) {
 		self::fetch_template_data( $post_id, $template_url, true );
 	}
 
+	/**
+	 * @deprecated 
+	 * @see \Kirki\App\Supports\Template::process_template()
+	 */
 	public static function fetch_template_data( $post_id, $type, $custom = false ) {
 		$zip_file_path = KIRKI_PUBLIC_ASSETS_URL . '/pre-built-pages/basic/' . $type . '.zip';
 		if ( $custom ) {
@@ -168,6 +189,9 @@ class Page {
 	 * Update current page data
 	 *
 	 * @return void wp_send_json.
+	 * @deprecated
+	 * @see \Kirki\App\Services\PageService::update()
+	 * @see \Kirki\App\Services\PageService::update_popup_data()
 	 */
 	public static function update_page_data() {
         //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
@@ -221,6 +245,8 @@ class Page {
 	 * Duplicate page data
 	 *
 	 * @return void wp_send_json.
+	 * @deprecated
+	 * @see \Kirki\App\Services\PageService::duplicate_page()
 	 */
 	public static function duplicate_page() {
         //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
@@ -275,6 +301,9 @@ class Page {
 	 * Back to kirki editor
 	 *
 	 * @return void wp_send_json.
+	 * 
+	 * @deprecated
+	 * @see \Kirki\App\Services\EditorService::back_to_kirki_editor()
 	 */
 	public static function back_to_kirki_editor() {
         //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
@@ -307,6 +336,9 @@ class Page {
 	 * Back to WordPress editor
 	 *
 	 * @return void wp_send_json.
+	 * 
+	 * @deprecated
+	 * @see \Kirki\App\Services\EditorService::back_to_wordpress_editor()
 	 */
 	public static function back_to_wordpress_editor() {
         //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
@@ -390,6 +422,9 @@ class Page {
 	 *
 	 * @param int $post_id post id.
 	 * @return object|null post with custom data.
+	 * 
+	 * @deprecated 
+	 * @see \Kirki\App\Resources\PageResource
 	 */
 	public function format_single_post( $post_id ) {
 		$post = get_post( $post_id );
@@ -444,12 +479,20 @@ class Page {
 		return null;
 	}
 
+	/**
+	 * @deprecated
+	 * @see \Kirki\App\Resources\PageResource::get_staged_last_updated()
+	 */
 	public static function add_published_staged_info( $page ){
 		$staged_info = Staging::get_published_stage_version_info( $page['id'] );
 		$page['staged_last_updated'] = isset($staged_info['last_updated']) ? $staged_info['last_updated'] : null;
 		return $page;
 	}
 
+	/**
+	 * @deprecated
+	 * @see \Kirki\App\Managers\PageManager::get_variable_mode()
+	 */
 	public static function get_variable_mode( $post_id ) {
 		$variable_mode = get_post_meta( $post_id, 'kirki_variable_mode', true );
 		return $variable_mode ? $variable_mode : 'inherit';
@@ -657,6 +700,7 @@ class Page {
 	 * then it will remove all unused style blocks from option meta
 	 *
 	 * @return void wp_send_json.
+	 * 
 	 */
 	public static function remove_unused_style_block_from_db() {
 		$post_id = (int) HelperFunctions::sanitize_text( $_POST['post_id'] ?? '' );
@@ -669,6 +713,9 @@ class Page {
 		$all_used_style_ids = array_flip( self::get_all_used_style_ids() ); // faster lookup
 
 		// Helper to clean any style array
+		/**
+		 * @see Kirki\App\Managers\PageManager::clean_styles()
+		 */
 		$clean_styles = function ( array $styles ) use ( $all_used_style_ids ) {
 			$changed = false;
 			foreach ( $styles as $key => $style ) {
@@ -788,6 +835,9 @@ class Page {
 	 * Collect all post IDs (including draft, published)
 	 *
 	 * @return array
+	 * 
+	 * @deprecated 
+	 * @see \Kirki\App\Managers\PageManager::get_all_block_post_ids()
 	 */
 	private static function get_all_post_ids() {
 		global $wpdb;
@@ -858,6 +908,10 @@ class Page {
 		);
 	}
 
+	/**
+	 * @deprecated 
+	 * @see function \Kirki\App\soft_flush_rewrite_rules()
+	 */
 	private static function flush_utility_rewrite_rules() {
 		flush_rewrite_rules( false );
 	}
@@ -1008,6 +1062,10 @@ class Page {
 		return $unused_keys;
 	}
 
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Services\PageService::toggle_disabled_page_symbols()
+	 */
 	public static function toggle_disabled_page_symbols() {
         //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$post_id     = (int) HelperFunctions::sanitize_text( isset( $_POST['post_id'] ) ? $_POST['post_id'] : get_the_ID() );

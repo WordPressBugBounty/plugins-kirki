@@ -1292,6 +1292,19 @@ class TemplateImport {
 					$dc['type'] = ContentManagerHelper::get_child_post_post_type_value( $this->post_id_tracker[ $post_parent ] );
 				}
 
+				if ( isset( $dc['filters'] ) ) {
+					foreach ( $dc['filters'] as $filter_key => $filter ) {
+						if ( empty( $filter['items'] ) ) {
+							continue;
+						}
+						foreach ( $filter['items'] as $item_key => $item ) {
+							if ( isset( $this->post_id_tracker[ $item['value'] ] ) ) {
+								$dc['filters'][ $filter_key ]['items'][ $item_key ]['value'] = $this->post_id_tracker[ $item['value'] ];
+							}
+						}
+					}
+				}
+
 				$block['properties'][$dynamic_content_key] = $dc;
 			} elseif ( isset( $dc['collectionType'], $dc['type'] ) && $dc['collectionType'] === KIRKI_CONTENT_MANAGER_PREFIX . '_multi_reference' ) {
 				$post_parent = isset( $dc['cm_ref_collection_id'] ) ? $dc['cm_ref_collection_id'] : '';

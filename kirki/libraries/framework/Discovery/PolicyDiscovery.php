@@ -1,0 +1,211 @@
+<?php
+
+/**
+ * Discovers authorization policy classes in app/Policies and associates them with model classes by naming convention.
+ * Caches the policy map for production and validates policy class names.
+ * Feeds PolicyManager with model-to-policy bindings.
+ *
+ * @package    Framework
+ * @subpackage Discovery
+ * @since      1.0.0
+ */
+namespace Kirki\Framework\Discovery;
+
+\defined('ABSPATH') || exit;
+use Kirki\Framework\Contracts\Cacheable;
+use Kirki\Framework\Contracts\Discoverable;
+use Kirki\Framework\Supports\Facades\File;
+use function Kirki\Framework\app;
+use function Kirki\Framework\app_path;
+use function Kirki\Framework\config_path;
+use function Kirki\Framework\Polyfill\str_ends_with;
+class PolicyDiscovery implements Discoverable, Cacheable
+{
+    /**
+     * The discovered policies array.
+     *
+     * @var array
+     *
+     * @since 1.0.0
+     */
+    protected array $policies = [];
+    /**
+     * Discover the policies from the file system.
+     *
+     * @return self
+     *
+     * @since 1.0.0
+     */
+    public function discover()
+    {
+        // For the production mode we will cache the policies to improve the performance.
+        // So don't need to discover the policies from the filesystem.
+        if (!app()->is_dev_mode()) {
+            return $this->discover_once();
+        }
+        return $this->create_cache_file();
+    }
+    /**
+     * Discover the policies from the cache.
+     *
+     * @return self
+     *
+     * @since 1.0.0
+     */
+    protected function discover_once()
+    {
+        $policies_cache_path = config_path('policies.cache.php');
+        if (!\file_exists($policies_cache_path)) {
+            return $this;
+        }
+        return $this->create_cache_file();
+    }
+    /**
+     * Create the cache file.
+     *
+     * @return self
+     *
+     * @since 1.0.0
+     */
+    protected function create_cache_file()
+    {
+        $policies_directory = app_path('Policies');
+        if (!\file_exists($policies_directory)) {
+            return $this;
+        }
+        $policy_files = \glob($policies_directory . '/*.php');
+        if (empty($policy_files)) {
+            return $this;
+        }
+        foreach ($policy_files as $policy_file) {
+            $policy_name = $this->filename($policy_file);
+            if (!$this->is_valid_policy_name($policy_name)) {
+                continue;
+            }
+            $policy = $this->policy_class($policy_name);
+            $model = $this->associated_model($policy_name);
+            $this->add_policy($model, $policy);
+        }
+        return $this;
+    }
+    /**
+     * Get the filename of the policy.
+     *
+     * @param string $path The path.
+     *
+     * @return string
+     *
+     * @since 1.0.0
+     */
+    protected function filename(string $path)
+    {
+        return \basename($path, '.php');
+    }
+    /**
+     * Add a policy to the policies array.
+     *
+     * @param string $model The model instance.
+     * @param string $policy The policy.
+     *
+     * @return void
+     *
+     * @since 1.0.0
+     */
+    protected function add_policy(string $model, string $policy)
+    {
+        $this->policies[] = \compact('model', 'policy');
+    }
+    /**
+     * Get the policies array.
+     *
+     * @return array
+     *
+     * @since 1.0.0
+     */
+    public function policies()
+    {
+        return $this->policies;
+    }
+    /**
+     * Get the policy class from the policy name.
+     *
+     * @param string $policy_name The policy name.
+     *
+     * @return string
+     *
+     * @since 1.0.0
+     */
+    protected function policy_class(string $policy_name)
+    {
+        $app_namespace = \rtrim(app()->get_namespace(), '\\');
+        $policy_base_namespace = $app_namespace . '\\Policies\\';
+        return $policy_base_namespace . $policy_name;
+    }
+    /**
+     * Get the model class from the policy name.
+     *
+     * @param string $policy_name The policy name.
+     *
+     * @return string
+     *
+     * @since 1.0.0
+     */
+    protected function associated_model(string $policy_name)
+    {
+        $app_namespace = \rtrim(app()->get_namespace(), '\\');
+        $model_base_namespace = $app_namespace . '\\Models\\';
+        $model_name = \str_replace('Policy', '', $policy_name);
+        return $model_base_namespace . $model_name;
+    }
+    /**
+     * Check if the policy name is valid.
+     *
+     * @param string $policy_name The policy name.
+     *
+     * @return bool
+     *
+     * @since 1.0.0
+     */
+    protected function is_valid_policy_name(string $policy_name)
+    {
+        if (!str_ends_with($policy_name, 'Policy')) {
+            return \false;
+        }
+        $model_class = $this->associated_model($policy_name);
+        if (!\class_exists($model_class)) {
+            return \false;
+        }
+        return \true;
+    }
+    /**
+     * Cache the policies.
+     *
+     * @param ?string $path The path.
+     *
+     * @return $this
+     *
+     * @since 1.0.0
+     */
+    public function cache(?string $path = null)
+    {
+        $path = $path ?? config_path('policies.cache.php');
+        if (!$this->is_cacheable($path)) {
+            return $this;
+        }
+        File::put($path, "<?php \r\n\r\n/** Auto generated by discovering the policies. Don't edit this file manually." . " */\r\n\r\nreturn " . \var_export($this->policies(), \true) . ';');
+        return $this;
+    }
+    /**
+     * Check if the policies are cacheable.
+     *
+     * @param string $path The path.
+     *
+     * @return bool
+     *
+     * @since 1.0.0
+     */
+    public function is_cacheable(string $path)
+    {
+        return app()->is_dev_mode() || File::missing($path);
+    }
+}

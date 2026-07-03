@@ -110,6 +110,12 @@ class FormController extends FrontendRESTController {
 			exit;
 		}
 
+		// Verify the WP REST nonce (action "wp_rest") used by the front‑end form.
+		if ( ! wp_verify_nonce( $wpnonce, 'wp_rest' ) ) {
+			wp_send_json_error( 'Nonce verification failed', 403 );
+			exit;
+		}
+
 		// Parse form metadata
 		$metadata    = $this->parse_form_metadata( $form_meta_data_base64 );
 		$form_id     = $metadata['form_id'];
