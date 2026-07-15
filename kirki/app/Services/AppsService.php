@@ -16,6 +16,7 @@ use Kirki\Framework\Supports\Facades\File;
 use Kirki\Framework\Supports\Facades\Http;
 use Throwable;
 
+use function Kirki\Framework\clean_path;
 use function Kirki\Framework\collection;
 
 class AppsService
@@ -25,9 +26,7 @@ class AppsService
      */
     public function get_all_apps()
     {
-        $apps = Http::get(KIRKI_APPS_BASE_URL . '/apps.json', [
-            'sslverify' => false
-        ]);
+        $apps = Http::get(KIRKI_APPS_BASE_URL . '/apps.json');
 
         if ($apps->failed()) {
             throw new Exception(esc_html__('Failed to get apps.', 'kirki'));
@@ -94,9 +93,13 @@ class AppsService
             throw new Exception(esc_html__('Failed to download the app zip file. Please check the remote URL.', 'kirki'));
         }
 
+        $zip_file_path = clean_path($zip_file_path, false);
+
+        FileHandler::verify_directory_traversal($zip_file_path);
+
         // Get the WordPress wp-content directory
         $base_upload_dir = WP_CONTENT_DIR; // Absolute path to 'uploads'
-        $temp_folder_path     = $base_upload_dir . '/kirki-apps';
+        $temp_folder_path     = clean_path($base_upload_dir . '/kirki-apps', false);
 
         if (!File::is_writable($base_upload_dir)) {
             File::delete($zip_file_path);
@@ -164,8 +167,8 @@ class AppsService
         }
 
         $base_upload_dir = WP_CONTENT_DIR;
-        $apps_folder     = $base_upload_dir . '/kirki-apps';
-        $app_folder      = $apps_folder . '/' . $app_slug;
+        $apps_folder     = clean_path($base_upload_dir . '/kirki-apps', false);
+        $app_folder      = clean_path($apps_folder . '/' . $app_slug, false);
         $backup_folder   = $app_folder . '_backup_' . time();
 
         // Create backup of current app
@@ -182,6 +185,10 @@ class AppsService
             File::move($backup_folder, $app_folder);
             throw new Exception(esc_html__('Failed to download the new app version.', 'kirki'));
         }
+
+        $zip_file_path = clean_path($zip_file_path, false);
+
+        FileHandler::verify_directory_traversal($zip_file_path);
 
         $result = FileHandler::extract_zip_file($zip_file_path, $apps_folder);
 
@@ -247,7 +254,9 @@ class AppsService
         }
 
         $base_upload_dir = WP_CONTENT_DIR; // Absolute path to 'uploads'
-        $app_folder      = $base_upload_dir . '/kirki-apps/' . $app_slug;
+        $app_folder      = clean_path($base_upload_dir . '/kirki-apps/' . $app_slug, false);
+
+        FileHandler::verify_directory_traversal($app_folder);
 
         $installed_apps = collection($installed_apps)->filter(function(InstalledAppDTO $app) use ($app_slug) {
             return $app->app_slug !== $app_slug;

@@ -21,6 +21,7 @@ use Kirki\Ajax\UserData;
 use Kirki\Ajax\Users;
 use Kirki\Ajax\WpAdmin;
 use Kirki\API\ContentManager\ContentManagerHelper;
+use Kirki\App\Supports\FileHandler;
 use Kirki\Frontend\Preview\DataHelper;
 use Kirki\Frontend\Preview\Preview;
 use WP_Post;
@@ -2416,7 +2417,9 @@ class HelperFunctions
 			}
 		}
 
-		$args['tax_query'] = $tax_query;
+		if (count($tax_query) > 1) {
+			$args['tax_query'] = $tax_query;
+		}
 
 		if (isset($sorting)) {
 			// Set the sort order (ASC/DESC)
@@ -2497,7 +2500,11 @@ class HelperFunctions
 			$kirki_content_manager_post_type_fields = ContentManagerHelper::get_post_type_custom_field_keys($post_parent);
 		}
 
-		foreach ($posts as &$post) {
+		foreach ( $posts as $key => &$post ) {
+			if (is_null($post)) {
+				unset($posts[$key]);
+				continue;
+			}
 			if (
 				KIRKI_CONTENT_MANAGER_PREFIX === $post->post_type && is_array($kirki_content_manager_post_type_fields)
 			) {
@@ -3339,14 +3346,14 @@ class HelperFunctions
 	 * @param string $action ajax action name.
 	 *
 	 * @return void
-	 * 
-	 * @deprecated
-	 * @see Kirki\App\Http\Middlewares\RestNonceMiddleware::class
 	 */
 	public static function verify_nonce($action = -1)
 	{
 		//phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		$nonce = self::sanitize_text(isset($_SERVER['HTTP_X_WP_NONCE']) ? $_SERVER['HTTP_X_WP_NONCE'] : null);
+		$headers = static::getallheaders();
+		$header_nonce = isset($headers['X-Wp-Nonce']) ? static::sanitize_text($headers['X-Wp-Nonce']) : '';
+		$nonce = $header_nonce ? $header_nonce : static::sanitize_text(isset($_GET['_wpnonce']) ? $_GET['_wpnonce'] : '');
+
 		if (!wp_verify_nonce($nonce, $action)) {
 			wp_send_json_error('Not authorized');
 			exit;
@@ -4067,42 +4074,43 @@ class HelperFunctions
 	 */
 	public static function download_zip_from_remote($remote_file, $new_name)
 	{
-		$file_ext = explode('.', $remote_file); // ['file', 'ext']
-		$file_ext = strtolower(end($file_ext)); // 'ext'
-		$allowed = ['zip'];
-		if (!in_array($file_ext, $allowed)) {
-			return false;
-		}
+		return FileHandler::download_zip_from_remote($remote_file, $new_name);
+		// $file_ext = explode('.', $remote_file); // ['file', 'ext']
+		// $file_ext = strtolower(end($file_ext)); // 'ext'
+		// $allowed = ['zip'];
+		// if (!in_array($file_ext, $allowed)) {
+		// 	return false;
+		// }
 
-		try {
-			// error_reporting(E_ALL);
-			// ini_set('display_errors', 1);
-			// Download the file from the remote server.
-			// Create a stream context to disable SSL verification
-			$options = [
-				"http" => [
-					"method" => "GET",
-					"header" => "User-Agent: WordPress\r\n"
-				],
-				"ssl" => [
-					"verify_peer" => false,      // Disable verification of the peer's certificate
-					"verify_peer_name" => false // Disable verification of the peer's name
-				]
-			];
-			$context = stream_context_create($options);
-			$file_contents = file_get_contents($remote_file, false, $context);
+		// try {
+		// 	// error_reporting(E_ALL);
+		// 	// ini_set('display_errors', 1);
+		// 	// Download the file from the remote server.
+		// 	// Create a stream context to disable SSL verification
+		// 	$options = [
+		// 		"http" => [
+		// 			"method" => "GET",
+		// 			"header" => "User-Agent: WordPress\r\n"
+		// 		],
+		// 		"ssl" => [
+		// 			"verify_peer" => false,      // Disable verification of the peer's certificate
+		// 			"verify_peer_name" => false // Disable verification of the peer's name
+		// 		]
+		// 	];
+		// 	$context = stream_context_create($options);
+		// 	$file_contents = file_get_contents($remote_file, false, $context);
 
-			// Save the file locally.
-			if ($file_contents !== false) {
-				// Local path to save the downloaded file.
-				$local_file = wp_upload_dir()['basedir'] . '/' . $new_name;
-				file_put_contents($local_file, $file_contents);
-				return $local_file;
-			}
-		} catch (\Throwable $th) {
-			// throw $th;
-		}
-		return false;
+		// 	// Save the file locally.
+		// 	if ($file_contents !== false) {
+		// 		// Local path to save the downloaded file.
+		// 		$local_file = wp_upload_dir()['basedir'] . '/' . $new_name;
+		// 		file_put_contents($local_file, $file_contents);
+		// 		return $local_file;
+		// 	}
+		// } catch (\Throwable $th) {
+		// 	// throw $th;
+		// }
+		// return false;
 	}
 
 	public static function filterZipFile($zip, $zip_file_path)

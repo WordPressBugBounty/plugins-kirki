@@ -18,7 +18,7 @@ use DOMXPath;
 use InvalidArgumentException;
 use ZipArchive;
 use enshrined\svgSanitize\Sanitizer;
-
+use Kirki\App\Services\FontService;
 
 /**
  * Media API Class
@@ -991,26 +991,28 @@ class Media {
 		}
 		$fonts = json_decode( stripslashes( $data ), true );
 
-		foreach ( $fonts as $key => $value ) {
-			$upload_root_dir = wp_upload_dir()['basedir'];
-			$upload_dir      = $upload_root_dir . '/' .'kirki-fonts/' . $value['family'];
-			if ( is_dir( $upload_dir ) ) {
-				self::delete_dir( $upload_dir );
-			}
+		(new FontService())->remove_custom_fonts_permanently( $fonts );
 
-			// Remove font from local.
-			$font_family_slug = sanitize_title_with_dashes( $value['family'] );
-			$font_local_dir   = WP_CONTENT_DIR . "/uploads/kirki-fonts/{$font_family_slug}";
+		// foreach ( $fonts as $key => $value ) {
+		// 	$upload_root_dir = wp_upload_dir()['basedir'];
+		// 	$upload_dir      = $upload_root_dir . '/' .'kirki-fonts/' . $value['family'];
+		// 	if ( is_dir( $upload_dir ) ) {
+		// 		self::delete_dir( $upload_dir );
+		// 	}
 
-			if ( is_dir( $font_local_dir ) ) {
-				HelperFunctions::delete_directory( $font_local_dir );
-			}
-		}
+		// 	// Remove font from local.
+		// 	$font_family_slug = sanitize_title_with_dashes( $value['family'] );
+		// 	$font_local_dir   = WP_CONTENT_DIR . "/uploads/kirki-fonts/{$font_family_slug}";
+
+		// 	if ( is_dir( $font_local_dir ) ) {
+		// 		HelperFunctions::delete_directory( $font_local_dir );
+		// 	}
+		// }
 		wp_send_json(
 			array(
 				'status'  => 'success',
 				'message' => 'Font folder deleted success',
-				'url'     => $upload_dir,
+				// 'url'     => $upload_dir,
 			)
 		);
 	}

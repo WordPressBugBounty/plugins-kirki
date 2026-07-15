@@ -851,7 +851,13 @@ class Preview extends ExceptionalElements {
 						$s .= "$name:" . $variable['value'][$mode]['value'] . $variable['value'][$mode]['unit'] . ";";
 						break;
 					case 'font-family':
-						$s .= "$name:\"" . $variable['value'][$mode] . "\";";
+						$font_value = $variable['value'][$mode];
+						if (strpos($font_value, '"') === 0 || strpos($font_value, "'") === 0) {
+							$s .= "$name:" . $font_value . ";";
+						} else {
+							$s .= "$name:\"" . $font_value . "\";";
+						}
+						// $s .= "$name:\"" . $variable['value'][$mode] . "\";";
 						break;
 					case 'color':
 						$s .= "$name:" . $variable['value'][$mode] . ";";

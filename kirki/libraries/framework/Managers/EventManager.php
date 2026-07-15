@@ -58,7 +58,7 @@ class EventManager
      *
      * @param mixed $event The event.
      *
-     * @return void
+     * @return array
      *
      * @throws \InvalidArgumentException
      *
@@ -71,12 +71,14 @@ class EventManager
         }
         $event_class = \get_class($event);
         if (!isset($this->listeners[$event_class])) {
-            return;
+            return [];
         }
         $event_listeners = $this->listeners[$event_class] ?? [];
+        $response = [];
         foreach ($event_listeners as $listener) {
-            $this->resolve($listener, $event);
+            $response[] = $this->resolve($listener, $event);
         }
+        return $response;
     }
     /**
      * Dispatch the event if the boolean is true.
@@ -84,14 +86,14 @@ class EventManager
      * @param Closure $boolean The boolean.
      * @param mixed $event The event.
      *
-     * @return void
+     * @return mixed
      *
      * @since 1.0.0
      */
     public function dispatch_if(Closure $boolean, $event)
     {
         if ($boolean($event)) {
-            $this->dispatch($event);
+            return $this->dispatch($event);
         }
     }
     /**
@@ -100,23 +102,23 @@ class EventManager
      * @param Closure $boolean The boolean.
      * @param mixed $event The event.
      *
-     * @return void
+     * @return mixed
      *
      * @since 1.0.0
      */
     public function dispatch_unless(Closure $boolean, $event)
     {
         if (!$boolean($event)) {
-            $this->dispatch($event);
+            return $this->dispatch($event);
         }
     }
     /**
      * Resolve.
      *
-     * @param mixed $listener The listener.
+     * @param class-string<Listener> $listener The listener.
      * @param mixed $event The event.
      *
-     * @return void
+     * @return mixed
      *
      * @throws \InvalidArgumentException
      *

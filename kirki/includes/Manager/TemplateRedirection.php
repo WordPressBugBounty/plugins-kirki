@@ -13,14 +13,15 @@ use Kirki\Ajax\Taxonomy;
 use Kirki\Ajax\Users;
 use Kirki\HelperFunctions;
 
-if ( ! defined( 'ABSPATH' ) ) {
+if (!defined('ABSPATH')) {
 	exit; // Exit if accessed directly.
 }
 
 /**
  * Do some task on WordPress template redirection
  */
-class TemplateRedirection {
+class TemplateRedirection
+{
 
 
 	/**
@@ -28,73 +29,88 @@ class TemplateRedirection {
 	 *
 	 * @return void
 	 */
-	public function __construct() {
-		 /* update the the content with our kirki data if page is kirki */
-		add_filter( 'template_include', array( $this, 'load_page_template_to_check_staging' ), PHP_INT_MAX );
+	public function __construct()
+	{
+		/* update the the content with our kirki data if page is kirki */
+		add_filter('template_include', array($this, 'load_page_template_to_check_staging'), PHP_INT_MAX);
 
-		add_action( 'login_form_login', array( $this, 'redirect_to_custom_login_if_has_kirki_utility_page' ) );
-		add_action( 'login_form_register', array( $this, 'redirect_to_custom_register_if_has_kirki_utility_page' ) );
-		add_action( 'login_form_lostpassword', array( $this, 'redirect_to_custom_lostpassword_if_has_kirki_utility_page' ) );
-		add_action( 'login_form_rp', array( $this, 'redirect_to_custom_rp_if_has_kirki_utility_page' ) );
-		add_action( 'login_form_resetpass', array( $this, 'redirect_to_custom_resetpass_if_has_kirki_utility_page' ) );
+		add_action('login_form_login', array($this, 'redirect_to_custom_login_if_has_kirki_utility_page'));
+		add_action('login_form_register', array($this, 'redirect_to_custom_register_if_has_kirki_utility_page'));
+		add_action('login_form_lostpassword', array($this, 'redirect_to_custom_lostpassword_if_has_kirki_utility_page'));
+		add_action('login_form_rp', array($this, 'redirect_to_custom_rp_if_has_kirki_utility_page'));
+		add_action('login_form_resetpass', array($this, 'redirect_to_custom_resetpass_if_has_kirki_utility_page'));
 
-		add_filter( 'post_link', array( $this, 'custom_utility_page_link' ), 10, 2 );
-		add_filter( 'query_vars', array( $this, 'kirki_utility_pages_query_vars' ) );
+		add_filter('post_link', array($this, 'custom_utility_page_link'), 10, 2);
+		add_filter('query_vars', array($this, 'kirki_utility_pages_query_vars'));
 	}
 
-	public function custom_utility_page_link( $permalink, $post ) {
-		if ( $post && $post->post_type =='kirki_utility' ) {
-			return home_url( '/' . $post->post_name );
+	public function custom_utility_page_link($permalink, $post)
+	{
+		if ($post && $post->post_type == 'kirki_utility') {
+			return home_url('/' . $post->post_name);
 		}
 		return $permalink;
 	}
-	public function redirect_to_custom_login_if_has_kirki_utility_page() {
-		$this->check_and_redirect_to_custom_utility_page( 'login' );
+	public function redirect_to_custom_login_if_has_kirki_utility_page()
+	{
+		$this->check_and_redirect_to_custom_utility_page('login');
 	}
-	public function redirect_to_custom_register_if_has_kirki_utility_page() {
-			$this->check_and_redirect_to_custom_utility_page( 'sign_up' );
+	public function redirect_to_custom_register_if_has_kirki_utility_page()
+	{
+		$this->check_and_redirect_to_custom_utility_page('sign_up');
 	}
-	public function redirect_to_custom_lostpassword_if_has_kirki_utility_page() {
-			$this->check_and_redirect_to_custom_utility_page( 'forgot_password' );
+	public function redirect_to_custom_lostpassword_if_has_kirki_utility_page()
+	{
+		$this->check_and_redirect_to_custom_utility_page('forgot_password');
 	}
-	public function redirect_to_custom_rp_if_has_kirki_utility_page() {
-			$this->check_and_redirect_to_custom_utility_page( 'reset_password' );
+	public function redirect_to_custom_rp_if_has_kirki_utility_page()
+	{
+		$this->check_and_redirect_to_custom_utility_page('reset_password');
 	}
-	public function redirect_to_custom_resetpass_if_has_kirki_utility_page() {
-			$this->check_and_redirect_to_custom_utility_page( 'forgot_password' );
+	public function redirect_to_custom_resetpass_if_has_kirki_utility_page()
+	{
+		$this->check_and_redirect_to_custom_utility_page('forgot_password');
 	}
 
-	private function check_and_redirect_to_custom_utility_page( $type ) {
-			$utility_pages = Page::fetch_list('kirki_utility', true, array( 'publish' ) );
-		foreach ( $utility_pages as $key => $page ) {
+	private function check_and_redirect_to_custom_utility_page($type)
+	{
+		$utility_pages = Page::fetch_list('kirki_utility', true, array('publish'));
+		foreach ($utility_pages as $key => $page) {
 			$utility_page_type = $page['utility_page_type'];
-			if ( $utility_page_type == $type ) {
+			if ($utility_page_type == $type) {
 				// Get current GET parameters
 				$query_args = $_GET;
 
-				// Base redirect URL
-				$url = site_url( '/' . $page['slug'] );
-
-				// Append existing GET params if any
-				if ( ! empty( $query_args ) ) {
-					$url = add_query_arg( $query_args, $url );
+				if (isset($query_args['redirect_to'])) {
+					// Validate it using WordPress's built-in validator
+					$query_args['redirect_to'] = wp_validate_redirect($query_args['redirect_to'], home_url());
 				}
 
-				wp_redirect( $url );
+				// Base redirect URL
+				$url = site_url('/' . $page['slug']);
+
+				// Append existing GET params if any
+				if (!empty($query_args)) {
+					$url = add_query_arg($query_args, $url);
+				}
+
+				wp_safe_redirect($url);
 				exit; // Always call exit after wp_redirect to stop execution
 			}
 		}
 	}
 
 
-	public function load_page_template_to_check_staging( $original ) {
-		$staging_version         = isset( $_GET['staging_version'] ) ? intval( HelperFunctions::sanitize_text( $_GET['staging_version'] ) ) : false;
-		$nonce                   = HelperFunctions::sanitize_text( isset( $_GET['nonce'] ) ? $_GET['nonce'] : 'false' );
-		$preview_staging_version = ( $staging_version && wp_verify_nonce( $nonce, 'kirki_preview_staging_nonce' ) ) ? $staging_version : false;
-		return $this->load_page_template( $original, $preview_staging_version );
+	public function load_page_template_to_check_staging($original)
+	{
+		$staging_version = isset($_GET['staging_version']) ? intval(HelperFunctions::sanitize_text($_GET['staging_version'])) : false;
+		$nonce = HelperFunctions::sanitize_text(isset($_GET['nonce']) ? $_GET['nonce'] : 'false');
+		$preview_staging_version = ($staging_version && wp_verify_nonce($nonce, 'kirki_preview_staging_nonce')) ? $staging_version : false;
+		return $this->load_page_template($original, $preview_staging_version);
 	}
 
-	public function kirki_utility_pages_query_vars( $vars ) {
+	public function kirki_utility_pages_query_vars($vars)
+	{
 		$vars[] = 'kirki_utility_page_type';
 		$vars[] = 'kirki_utility_page_id';
 		return $vars;
@@ -108,69 +124,70 @@ class TemplateRedirection {
 	 * @param string $original wp action for template file load.
 	 * @return string template name.
 	 */
-	public function load_page_template( $original, $staging_version = false ) {
+	public function load_page_template($original, $staging_version = false)
+	{
 		$original = HelperFunctions::normalize_kirki_full_canvas_template_path($original);
 		$post_id = HelperFunctions::get_post_id_if_possible_from_url();
-		$post    = null;
-		if ( $post_id ) {
+		$post = null;
+		if ($post_id) {
 			// this is for template and utility preview
-			$post = get_post( $post_id );
-			if ( $post && $post->post_type ==='kirki_template' ) {
+			$post = get_post($post_id);
+			if ($post && $post->post_type === 'kirki_template') {
 				// this is for template preview.(kirki_template post type)
-				$template_content = apply_filters( 'the_content', get_the_content( null, false, $post_id ) );
+				$template_content = apply_filters('the_content', get_the_content(null, false, $post_id));
 
 				$custom_data = array(
 					'kirki_template_content' => $template_content, // Example: Get the current post ID
-					'kirki_template_id'      => $post->ID,
+					'kirki_template_id' => $post->ID,
 				);
 				// Set a global variable with custom data to make it available in the template
-				set_query_var('kirki_custom_data', $custom_data );
+				set_query_var('kirki_custom_data', $custom_data);
 
-				if ( file_exists( HelperFunctions::get_kirki_full_canvas_template_path() ) ) {
+				if (file_exists(HelperFunctions::get_kirki_full_canvas_template_path())) {
 					$original = HelperFunctions::get_kirki_full_canvas_template_path();
 				}
-			} elseif ( $post && $post->post_type ==='kirki_utility' ) {
+			} elseif ($post && $post->post_type === 'kirki_utility') {
 				// this is for template preview.(kirki_template post type)
-				$custom_post_content = apply_filters( 'the_content', get_the_content( null, false, $post_id ) );
+				$custom_post_content = apply_filters('the_content', get_the_content(null, false, $post_id));
 
 				$custom_data = array(
 					'kirki_custom_post_content' => $custom_post_content, // Example: Get the current post ID
 					'kirki_custom_post_id' => $post->ID,
 				);
 				// Set a global variable with custom data to make it available in the template
-				set_query_var('kirki_custom_data', $custom_data );
+				set_query_var('kirki_custom_data', $custom_data);
 
-				if ( file_exists( HelperFunctions::get_kirki_full_canvas_template_path() ) ) {
+				if (file_exists(HelperFunctions::get_kirki_full_canvas_template_path())) {
 					$original = HelperFunctions::get_kirki_full_canvas_template_path();
 				}
 			}
 		}
 
-		if ( $original !== HelperFunctions::get_kirki_full_canvas_template_path() ) {
+		if ($original !== HelperFunctions::get_kirki_full_canvas_template_path()) {
 			$context = HelperFunctions::get_current_page_context(); // {id, type}
-			if ( ! empty( $context ) ) {
-				switch ( $context['type'] ) {
-					case 'user':{
-						$user     = Users::get_user_by_id( $context['id'] );
-						$template = HelperFunctions::find_template_for_this_context( 'user', $user );
-						if ( $template ) {
-							$options         = array();
+			if (!empty($context)) {
+				switch ($context['type']) {
+					case 'user': {
+						$user = Users::get_user_by_id($context['id']);
+						$template = HelperFunctions::find_template_for_this_context('user', $user);
+						if ($template) {
+							$options = array();
 							$options['user'] = $user;
-							$original        = $this->set_template_or_post_content_for_kirki_full_canvas_template( $template, $options, $original, $staging_version );
+							$original = $this->set_template_or_post_content_for_kirki_full_canvas_template($template, $options, $original, $staging_version);
 						}
 						break;
 					}
-					case 'post':{
-						$template = HelperFunctions::find_template_for_this_context( 'post', $post );
-						if ( $template ) {
-							$options  = array();
-							$original = $this->set_template_or_post_content_for_kirki_full_canvas_template( $template, $options, $original, $staging_version );
+					case 'post': {
+						$template = HelperFunctions::find_template_for_this_context('post', $post);
+						if ($template) {
+							$options = array();
+							$original = $this->set_template_or_post_content_for_kirki_full_canvas_template($template, $options, $original, $staging_version);
 						} else {
-							if ( is_page() ) {
-								$template_name = get_post_meta( $post_id, '_wp_page_template', true );
+							if (is_page()) {
+								$template_name = get_post_meta($post_id, '_wp_page_template', true);
 								$template_name = HelperFunctions::normalize_kirki_full_canvas_template_path($template_name);
-								if ( ! empty( $template_name ) && $template_name !== $original && HelperFunctions::get_kirki_full_canvas_template_path() === $template_name ) {
-									add_action( 'wp_enqueue_scripts', array( new HelperFunctions(), 'remove_theme_style' ) ); // we can remove it. need to rethink. dequeue_all_except_my_plugin
+								if (!empty($template_name) && $template_name !== $original && HelperFunctions::get_kirki_full_canvas_template_path() === $template_name) {
+									add_action('wp_enqueue_scripts', array(new HelperFunctions(), 'remove_theme_style')); // we can remove it. need to rethink. dequeue_all_except_my_plugin
 									$original = $template_name;
 								}
 							}
@@ -178,35 +195,35 @@ class TemplateRedirection {
 						break;
 					}
 					case 'term': {
-						$term = Taxonomy::get_term_by_id( $context['id'] );
+						$term = Taxonomy::get_term_by_id($context['id']);
 
-						$template = HelperFunctions::find_template_for_this_context( 'term', $term );
+						$template = HelperFunctions::find_template_for_this_context('term', $term);
 
-						if ( $template ) {
-							$options         = array();
+						if ($template) {
+							$options = array();
 							$options['term'] = $term;
-							$original        = $this->set_template_or_post_content_for_kirki_full_canvas_template( $template, $options, $original, $staging_version );
+							$original = $this->set_template_or_post_content_for_kirki_full_canvas_template($template, $options, $original, $staging_version);
 						}
 						break;
 					}
 
-					case '404':{
-						$template = HelperFunctions::find_utility_page_for_this_context( '404', 'type' );
-						$options  = array();
-						$original = $this->set_template_or_post_content_for_kirki_full_canvas_template( $template, $options, $original, $staging_version );
+					case '404': {
+						$template = HelperFunctions::find_utility_page_for_this_context('404', 'type');
+						$options = array();
+						$original = $this->set_template_or_post_content_for_kirki_full_canvas_template($template, $options, $original, $staging_version);
 						break;
 					}
-					case 'kirki_utility':{
+					case 'kirki_utility': {
 						$kirki_utility_page_type = $context['kirki_utility_page_type'];
-						$kirki_utility_page_id   = $context['kirki_utility_page_id'];
-						if ( HelperFunctions::check_utility_page_visibility_condition( $kirki_utility_page_type ) ) {
-							$template = HelperFunctions::find_utility_page_for_this_context( $kirki_utility_page_id, 'id' );
-							$options  = array();
-							$original = $this->set_template_or_post_content_for_kirki_full_canvas_template( $template, $options, $original, $staging_version );
+						$kirki_utility_page_id = $context['kirki_utility_page_id'];
+						if (HelperFunctions::check_utility_page_visibility_condition($kirki_utility_page_type)) {
+							$template = HelperFunctions::find_utility_page_for_this_context($kirki_utility_page_id, 'id');
+							$options = array();
+							$original = $this->set_template_or_post_content_for_kirki_full_canvas_template($template, $options, $original, $staging_version);
 						}
 						break;
 					}
-					default:{
+					default: {
 						break;
 					}
 				}
@@ -214,39 +231,40 @@ class TemplateRedirection {
 		}
 
 		global $kirki_custom_header, $kirki_custom_footer;
-		$kirki_custom_header = HelperFunctions::get_page_custom_section( 'header' );
-		$kirki_custom_footer = HelperFunctions::get_page_custom_section( 'footer' );
+		$kirki_custom_header = HelperFunctions::get_page_custom_section('header');
+		$kirki_custom_footer = HelperFunctions::get_page_custom_section('footer');
 
-		if ( $original !== HelperFunctions::get_kirki_full_canvas_template_path() ) {
-			if ( $kirki_custom_header || $kirki_custom_footer ) {
+		if ($original !== HelperFunctions::get_kirki_full_canvas_template_path()) {
+			if ($kirki_custom_header || $kirki_custom_footer) {
 				// $original = HelperFunctions::get_kirki_full_canvas_template_path();
 			}
 		}
 
 		return $original;
 	}
-	private function set_template_or_post_content_for_kirki_full_canvas_template( $template, $options, $original_template_path, $staging_version = false ) {
-		if ( ! $template ) {
+	private function set_template_or_post_content_for_kirki_full_canvas_template($template, $options, $original_template_path, $staging_version = false)
+	{
+		if (!$template) {
 			return $original_template_path;
 		}
 
-		$kirki_data = HelperFunctions::is_kirki_type_data( $template['id'], $staging_version );
+		$kirki_data = HelperFunctions::is_kirki_type_data($template['id'], $staging_version);
 
-		if ( $kirki_data ) {
+		if ($kirki_data) {
 
 			$params = array(
-				'blocks'       => $kirki_data['blocks'],
+				'blocks' => $kirki_data['blocks'],
 				'style_blocks' => $kirki_data['styles'],
-				'root'         => 'body',
-				'post_id'      => $template['id'],
-				'options'      => $options,
+				'root' => 'body',
+				'post_id' => $template['id'],
+				'options' => $options,
 			);
 
-			$template_content = HelperFunctions::get_html_using_preview_script( $params );
+			$template_content = HelperFunctions::get_html_using_preview_script($params);
 			// $template_content .= HelperFunctions::get_page_popups_html(); //need to check all popup front end render logic
 			$custom_data = array();
 
-			if ( $template['post_type'] ==='kirki_utility' ) {
+			if ($template['post_type'] === 'kirki_utility') {
 				$custom_data = array(
 					'kirki_custom_post_content' => $template_content, // Example: Get the current post ID
 					'kirki_custom_post_id' => $template['id'],
@@ -254,12 +272,12 @@ class TemplateRedirection {
 			} else {
 				$custom_data = array(
 					'kirki_template_content' => $template_content, // Example: Get the current post ID
-					'kirki_template_id'      => $template['id'],
+					'kirki_template_id' => $template['id'],
 				);
 			}
 
 			// Set a global variable with custom data to make it available in the template
-			set_query_var('kirki_custom_data', $custom_data );
+			set_query_var('kirki_custom_data', $custom_data);
 
 			add_filter(
 				'kirki_assets_should_load',
@@ -267,7 +285,7 @@ class TemplateRedirection {
 					return true;
 				}
 			);
-			if ( file_exists( HelperFunctions::get_kirki_full_canvas_template_path() ) ) {
+			if (file_exists(HelperFunctions::get_kirki_full_canvas_template_path())) {
 				return HelperFunctions::get_kirki_full_canvas_template_path();
 			}
 		}

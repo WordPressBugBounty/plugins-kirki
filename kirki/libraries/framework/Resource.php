@@ -16,7 +16,8 @@ use Kirki\Framework\Contracts\Support\Jsonable;
 use Kirki\Framework\Collections\Collection;
 use Kirki\Framework\Database\Query\Paginator;
 use Kirki\Framework\Supports\Arr;
-abstract class Resource implements Arrayable, Jsonable
+use JsonSerializable;
+abstract class Resource implements Arrayable, Jsonable, JsonSerializable
 {
     /**
      * The resource instance.
@@ -54,18 +55,15 @@ abstract class Resource implements Arrayable, Jsonable
     /**
      * Create a new resource instance, or return null if the resource is null.
      *
-     * @param mixed $resource The resource to create a new instance of.
+     * @param mixed $parameters The resource to create a new instance of.
      *
-     * @return array|null
+     * @return array
      *
      * @since 1.0.0
      */
-    public static function make($resource)
+    public static function make(...$parameters)
     {
-        if ($resource === null) {
-            return null;
-        }
-        return (new static($resource))->to_array();
+        return (new static(...$parameters))->to_array();
     }
     /**
      * Converts an iterable of resources into an array of resource representations.
@@ -74,25 +72,22 @@ abstract class Resource implements Arrayable, Jsonable
      * class for each item, then calls the to_array method on the resource to
      * obtain its representation as an array.
      *
-     * @param iterable $resources The iterable of resources to convert.
+     * @param mixed    $parameters The parameters to pass to the resource constructor.
      *
      * @return array The array of resource representations.
      *
      * @since 1.0.0
      */
-    public static function collection($resources)
+    public static function collection(...$parameters)
     {
-        $data = [];
-        if (empty($resources)) {
-            return $data;
+        if (empty($parameters)) {
+            return [];
         }
-        if ($resources instanceof Collection) {
-            $resources = $resources->all();
+        $resource = \array_shift($parameters);
+        if ($resource instanceof Collection) {
+            $resource = $resource->all();
         }
-        foreach ($resources as $resource) {
-            $data[] = (new static($resource))->to_array();
-        }
-        return $data;
+        return Arr::map($resource, fn($resource) => (new static($resource, ...$parameters))->to_array());
     }
     /**
      * Converts a paginator object into an array of resource representations,
@@ -103,16 +98,17 @@ abstract class Resource implements Arrayable, Jsonable
      * the resource to obtain its representation as an array.
      *
      * @param Paginator $paginator The paginator object to convert.
+     * @param mixed    $parameters The parameters to pass to the resource constructor.
      *
      * @return array The array of resource representations, including pagination metadata.
      *
      * @since 1.0.0
      */
-    public static function paginated(Paginator $paginator)
+    public static function paginated(Paginator $paginator, ...$parameters)
     {
         $paginated_data = $paginator->to_array();
         foreach ($paginated_data['results'] as $key => $resource) {
-            $paginated_data['results'][$key] = (new static($resource))->to_array();
+            $paginated_data['results'][$key] = (new static($resource, ...$parameters))->to_array();
         }
         return $paginated_data;
     }
@@ -148,6 +144,17 @@ abstract class Resource implements Arrayable, Jsonable
     public function __isset($name)
     {
         return isset($this->resource->{$name});
+    }
+    /**
+     * Convert the resource to a JSON string.
+     *
+     * @return array The JSON-encoded resource representation
+     *
+     * @since 1.0.0
+     */
+    public function jsonSerialize() : array
+    {
+        return $this->to_array();
     }
     /**
      * Dynamically pass properties of the underlying resource to the caller.

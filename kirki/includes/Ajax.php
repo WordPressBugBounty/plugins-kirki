@@ -401,24 +401,15 @@ class Ajax
 	 */
 	public function kirki_get_apis()
 	{
-		if (HelperFunctions::is_api_call_from_editor_preview() && !HelperFunctions::is_api_header_post_editor_preview_token_valid()) {
+		HelperFunctions::verify_nonce('wp_rest');
+
+		if (!$this->user_can_access_get_apis()) {
 			wp_send_json_error('Not authorized');
 		}
 
 		//phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$endpoint = HelperFunctions::sanitize_text(isset($_GET['endpoint']) ? $_GET['endpoint'] : null);
-		if (in_array($endpoint, array('collect-collaboration-actions', 'delete-collaboration-connection'), true)) {
-			if (!$this->user_can_access_wp_apis()) {
-				wp_send_json_error('Not authorized');
-			}
-		} else {
-			// TODO: Need to verify for collaboration.
-			HelperFunctions::verify_nonce('wp_rest');
-		}
 
-		if (!is_admin()) {
-			wp_send_json_error('Not authorized');
-		}
 		/**
 		 * PAGE APIS
 		 */
@@ -748,8 +739,12 @@ class Ajax
 	 *
 	 * @return bool
 	 */
-	private function user_can_access_wp_apis()
+	private function user_can_access_get_apis()
 	{
+		if (HelperFunctions::is_api_call_from_editor_preview() && HelperFunctions::is_api_header_post_editor_preview_token_valid()) {
+			return true;
+		}
+
 		return is_user_logged_in() && HelperFunctions::has_access(
 			array(
 				KIRKI_ACCESS_LEVELS['FULL_ACCESS'],
@@ -766,6 +761,8 @@ class Ajax
 	 */
 	public function kirki_wp_admin_post_apis()
 	{
+		HelperFunctions::verify_nonce('wp_rest');
+
 		if (!HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
 			wp_send_json_error('Not authorized');
 		}
@@ -842,6 +839,8 @@ class Ajax
 	 */
 	public function kirki_wp_admin_get_apis()
 	{
+		HelperFunctions::verify_nonce('wp_rest');
+
 		if (!is_admin()) {
 			wp_send_json_error('Not authorized', 401);
 		}

@@ -4,10 +4,13 @@ namespace Kirki\App\Supports;
 
 defined('ABSPATH') || exit;
 
+use Exception;
 use Kirki\Framework\Supports\Facades\File as FileHelper;
+use Kirki\Framework\Supports\Facades\Http;
 use PclZip;
 
 use function Kirki\App\get_upload_directory;
+use function Kirki\Framework\clean_path;
 use function Kirki\Framework\Polyfill\array_last;
 
 class FileHandler 
@@ -22,13 +25,13 @@ class FileHandler
 	/**
 	 * Download zip file from remote server
 	 * 
-	 * @param string $remote_file
+	 * @param string $remote_file_url
 	 * @param string $file_name
 	 * @return string|false -- if failed return false
 	 */
-    public static function download_zip_from_remote(string $remote_file, string $file_name)
+    public static function download_zip_from_remote(string $remote_file_url, string $file_name)
     {
-        $file_ext = explode('.', $remote_file); // ['file', 'ext']
+        $file_ext = explode('.', $remote_file_url); // ['file', 'ext']
 		$file_ext = strtolower(array_last($file_ext)); // 'ext'
 		$allowed = ['zip'];
 
@@ -37,34 +40,30 @@ class FileHandler
 		}
 
 		// Download the file from the remote server.
-		// Create a stream context to disable SSL verification
-		$options = [
-			"http" => [
-				"method" => "GET",
-				"header" => "User-Agent: WordPress\r\n"
-			],
-			"ssl" => [
-				"verify_peer" => false,      // Disable verification of the peer's certificate
-				"verify_peer_name" => false // Disable verification of the peer's name
-			]
-		];
-		$context = @stream_context_create($options);
-		$file_contents = @file_get_contents($remote_file, false, $context);
+		$response = Http::timeout(120)
+			->with_options([
+				'redirection' => 0
+			])
+			->with_user_agent('WordPress')
+			->get($remote_file_url);
 
-		if ($file_contents === false) {
+		if ($response->failed()) {
 			return false;
 		}
 
 		// Save the file locally.
 		// Local path to save the downloaded file.
-		$local_file = get_upload_directory() . '/' . $file_name;
-		$is_downloaded = FileHelper::put($local_file, $file_contents);
+		$local_file_path = clean_path(get_upload_directory() . '/' . $file_name, false);
+
+		static::verify_directory_traversal($local_file_path);
+		
+		$is_downloaded = FileHelper::put($local_file_path, $response->body());
 
 		if (!$is_downloaded) {
 			return false;
 		}
 		
-		return $local_file;
+		return $local_file_path;
     }
 
 	/**
@@ -77,6 +76,8 @@ class FileHandler
 			require_once ABSPATH . 'wp-admin/includes/class-pclzip.php';
 		}
 
+		$zip_file_path = clean_path($zip_file_path, false);
+
 		if (FileHelper::missing($zip_file_path)) {
 			return false;
 		}
@@ -84,6 +85,8 @@ class FileHandler
 		if (!FileHelper::is_directory($destination_dir)) {
 			FileHelper::make_dir($destination_dir);
 		}
+
+		static::verify_directory_traversal($destination_dir);
 
 		$zip = new PclZip($zip_file_path);
 
@@ -97,5 +100,12 @@ class FileHandler
 		}
 
 		return false;
+	}
+
+	Public static function verify_directory_traversal(string $path) {
+		if (preg_match('#(^|/)\.\.(/|$)#', clean_path($path, false))) {
+			/* translators: %s: File Path */
+			throw new Exception(esc_html__(sprintf('Directory traversal detected in %s.', $path), 'kirki'));
+		}
 	}
 }

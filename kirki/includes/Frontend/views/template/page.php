@@ -38,7 +38,8 @@ $theme_dir = get_template_directory();
 ?>
 
 <?php
-if ( ! $kirki_custom_header && locate_template( 'header.php' ) ) {
+$has_header = file_exists( get_stylesheet_directory() . '/header.php' ) || file_exists( get_template_directory() . '/header.php' );
+if ( ! $kirki_custom_header && $has_header ) {
 	get_header();
 } else {
 	?>
@@ -67,7 +68,8 @@ if ( ! $kirki_custom_header && locate_template( 'header.php' ) ) {
 	}
 	?>
 	<?php
-	if ( ! $kirki_custom_footer && locate_template( 'footer.php' ) ) {
+	$has_footer = file_exists( get_stylesheet_directory() . '/footer.php' ) || file_exists( get_template_directory() . '/footer.php' );
+	if ( ! $kirki_custom_footer && $has_footer ) {
 		get_footer();
 	} else {
 		wp_footer();

@@ -3,7 +3,7 @@ Contributors: themeum
 Tags: page builder, website builder, drag and drop, form builder, freeform canvas
 Requires at least: 5.9
 Tested up to: 7.0
-Stable tag: 6.0.13
+Stable tag: 6.0.14
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -190,6 +190,18 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 ---
 
 == Changelog ==
+
+= 6.0.14 =
+* Fix: Fixed a CSRF vulnerability affecting admin AJAX POST requests.
+* Fix: Hardened redirect handling by sanitizing redirect URLs.
+* Fix: Improved file path validation to prevent unauthorized file access.
+* Fix: Fixed datetime handling in the comment resource after Carbon removal.
+* Fix: Fixed double-quote handling in font family variables.
+* Fix: Fixed text style tag application for non-text elements.
+* Update: Enhanced permission checks for AJAX endpoints.
+* Update: Enabled SSL certificate verification for ZIP downloads.
+* Update: Improved collaboration performance by running collaboration tasks in a separate thread.
+
 
 = 6.0.13 =
 * New: Added support for dragging and dropping local media files directly into Grid cells.

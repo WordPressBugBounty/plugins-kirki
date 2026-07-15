@@ -1941,6 +1941,23 @@ class QueryBuilder
         return $this->order_by($column, 'ASC');
     }
     /**
+     * Add a ORDER BY clause to the query with raw SQL condition
+     *
+     * @param string $sql The raw SQL query to execute
+     * @param array $bindings Parameter values to bind to the query
+     *
+     * @return QueryBuilder Returns the QueryBuilder instance for method chaining
+     *
+     * @since 1.0.0
+     */
+    public function order_by_raw($sql, $bindings = [])
+    {
+        $type = 'raw';
+        $this->orders[] = \compact('type', 'sql');
+        $this->add_bindings($bindings, 'order');
+        return $this;
+    }
+    /**
      * Set the maximum number of records to return
      *
      * This method limits the number of records returned by the query. It's commonly used

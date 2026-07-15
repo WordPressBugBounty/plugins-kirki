@@ -20,13 +20,13 @@ trait Dispatchable
     /**
      * Dispatch the event.
      *
-     * @return void
+     * @return mixed
      *
      * @since 1.0.0
      */
     public static function dispatch()
     {
-        Event::dispatch(new static(...\func_get_args()));
+        return Event::dispatch(new static(...\func_get_args()));
     }
     /**
      * Dispatch the event if the boolean is true.

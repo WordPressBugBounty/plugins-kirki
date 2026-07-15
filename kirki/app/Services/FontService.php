@@ -2,17 +2,19 @@
 
 namespace Kirki\App\Services;
 
+defined('ABSPATH') || exit;
+
 use Exception;
 use Kirki\App\DTO\GoogleFontDTO;
 use Kirki\App\Supports\Facades\GlobalData;
+use Kirki\App\Supports\FileHandler;
 use Kirki\Framework\Http\Response;
 use Kirki\Framework\Supports\Facades\File;
 use Kirki\Framework\Supports\Facades\Http;
 
 use function Kirki\App\get_upload_directory;
 use function Kirki\App\get_upload_directory_url;
-
-defined('ABSPATH') || exit;
+use function Kirki\Framework\clean_path;
 
 class FontService
 {
@@ -24,7 +26,7 @@ class FontService
     public function download_google_font(GoogleFontDTO $payload)
     {
 		// Extra security: keep only a-z, 0-9, and hyphens
-		$font_family_slug = preg_replace('/[^a-z0-9\-]/i', '', sanitize_title_with_dashes($payload->family));
+		$font_family_slug = preg_replace('/[^a-z0-9\-]/i', '', sanitize_title_with_dashes(basename($payload->family)));
 
         if (empty($font_family_slug) || strpos($font_family_slug, '..') !== false) {
             throw new Exception(esc_html__('Not valid font family.', 'kirki'), Response::FORBIDDEN);
@@ -36,15 +38,27 @@ class FontService
             throw new Exception(esc_html__('Upload directory is not writable.', 'kirki'), Response::FORBIDDEN);
         }
 
-        $font_dir = get_upload_directory() . "/kirki-fonts/{$font_family_slug}";
-        $css_file_path = $font_dir . "/{$font_family_slug}.css";
+        $font_dir = clean_path(get_upload_directory() . "/kirki-fonts/{$font_family_slug}", false);
+        $css_file_path = clean_path($font_dir . "/{$font_family_slug}.css", false);
+
+        FileHandler::verify_directory_traversal($css_file_path);
 
         if (File::exists($css_file_path)) {
             throw new Exception(esc_html__('Font already downloaded.', 'kirki'), Response::FORBIDDEN);
         }
 
-        if (stripos($payload->fontUrl, 'fonts.googleapis.com') === false) {
-            throw new Exception(esc_html__('Only Google Fonts is supported.', 'kirki'), Response::FORBIDDEN);
+        $font_url_parts = wp_parse_url($payload->fontUrl);
+
+        if (!$font_url_parts) {
+            throw new Exception(esc_html__('Invalid URL.', 'kirki'));
+        }
+
+        if (($font_url_parts['scheme'] ?? '') !== 'https') {
+            throw new Exception(esc_html__('Only HTTPS is allowed.', 'kirki'));
+        }
+
+        if (($font_url_parts['host'] ?? '') !== 'fonts.googleapis.com') {
+            throw new Exception(esc_html__('Only Google Fonts is supported.', 'kirki'));
         }
 
         try {
@@ -52,9 +66,11 @@ class FontService
 				File::make_dir($font_dir);
 			}
 
-            $css = Http::get($payload->fontUrl);
+            $response = Http::with_options([
+                'redirection' => 0
+            ])->get($payload->fontUrl);
 
-            if ($css->failed()) {
+            if ($response->failed()) {
                 throw new Exception(esc_html__('Failed to fetch Google Fonts CSS.', 'kirki'));
             }
 
@@ -80,16 +96,34 @@ class FontService
 					throw new Exception(esc_html(sprintf(__('Invalid or unsafe file extension: %s.', 'kirki'), $extension)));
 				}
 
+                $url_parts = wp_parse_url($url);
+
+                if (!$url_parts) {
+                    throw new Exception(esc_html__('Invalid URL.', 'kirki'));
+                }
+
+                if (($url_parts['scheme'] ?? '') !== 'https') {
+                    throw new Exception(esc_html__('Only HTTPS is allowed.', 'kirki'));
+                }
+
+                if (($url_parts['host'] ?? '') !== 'fonts.gstatic.com') {
+                    throw new Exception(esc_html__('Only Google Fonts is supported.', 'kirki'));
+                }
+
 				$file_name = "{$weight}.{$extension}";
-				$file_path = $font_dir . '/' . $file_name;
+				$file_path = clean_path($font_dir . '/' . $file_name, false);
 
-				$font_data = Http::get($url);
+                FileHandler::verify_directory_traversal($file_path);
 
-				if ($font_data->failed()) {
+				$font_response = Http::with_options([
+                    'redirection' => 0
+                ])->get($url);
+
+				if ($font_response->failed()) {
 					throw new Exception(esc_html__('Failed to fetch font file.', 'kirki'));
 				}
 
-                File::put($file_path, $font_data->__toString());
+                File::put($file_path, $font_response->__toString());
 
 				$format = $formats[$extension] ?? 'truetype';
 				$local_css .= "@font-face {
@@ -106,7 +140,7 @@ class FontService
 			}
 
             File::put($css_file_path, $local_css);
-			$payload->localUrl = get_upload_directory_url() . "/kirki-fonts/{$font_family_slug}/{$font_family_slug}.css";
+			$payload->localUrl = clean_path(get_upload_directory_url() . "/kirki-fonts/{$font_family_slug}/{$font_family_slug}.css", false);
 
             $this->save_google_font_into_global_custom_fonts($payload);
 
@@ -122,8 +156,10 @@ class FontService
     }
 
     public function remove_google_font(GoogleFontDTO $payload) {
-        $font_family_slug = sanitize_title_with_dashes( basename( $payload->family ) );
-		$font_dir = get_upload_directory() . "/kirki-fonts/{$font_family_slug}";
+        $font_family_slug = sanitize_title_with_dashes(basename($payload->family));
+		$font_dir = clean_path(get_upload_directory() . "/kirki-fonts/{$font_family_slug}", false);
+
+        FileHandler::verify_directory_traversal($font_dir);
 
         if (File::is_directory($font_dir)) {
             File::delete($font_dir);
@@ -154,15 +190,11 @@ class FontService
     public function remove_custom_fonts_permanently(array $fonts)
     {
         foreach ($fonts as $font) {
-			$upload_dir = get_upload_directory() . '/kirki-fonts/' . $font['family'];
-
-            if (File::is_directory($upload_dir)) {
-                File::delete($upload_dir);
-            }
-
 			// Remove font from local.
-			$font_family_slug = sanitize_title_with_dashes($font['family']);
-            $font_local_dir = get_upload_directory() . "/kirki-fonts/{$font_family_slug}";
+			$font_family_slug = sanitize_title_with_dashes(basename($font['family']));
+            $font_local_dir = clean_path(get_upload_directory() . "/kirki-fonts/{$font_family_slug}", false);
+
+            FileHandler::verify_directory_traversal($font_local_dir);
 
             if (File::is_directory($font_local_dir)) {
                 File::delete($font_local_dir);

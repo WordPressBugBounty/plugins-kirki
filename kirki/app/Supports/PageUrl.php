@@ -150,11 +150,18 @@ class PageUrl {
      */
     public function get_editor_url()
     {
+        $query_param = [
+            'action' => KIRKI_EDITOR_ACTION
+        ];
+
+        if ($this->page->post_type === PostTypes::UTILITY) {
+            $query_param['p'] = $this->page->ID;
+        }
+
         $editor_url = add_query_arg(
-            ['action' => KIRKI_EDITOR_ACTION],
+            $query_param,
             $this->get_page_permalink()
         );
-
         
         if (EditorPreview::is_valid_request() && EditorPreview::has_valid_token()) {
             $token = EditorPreview::get_token_from_header();

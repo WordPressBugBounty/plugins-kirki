@@ -11,6 +11,11 @@
 namespace Kirki\Framework;
 
 \defined('ABSPATH') || exit;
+/**
+ * Base class for event listeners defining a default priority of zero.
+ * 
+ * @method mixed handle(mixed $event)
+ */
 class Listener
 {
     /**
