@@ -412,10 +412,12 @@ class Ajax
 
 		/**
 		 * PAGE APIS
+		 * @deprecated
+		 * @see GET /pages/{page_id}
 		 */
-		if ($endpoint === 'get-page-data') {
-			Page::get_page_blocks_and_styles();
-		}
+		// if ($endpoint === 'get-page-data') {
+		// 	Page::get_page_blocks_and_styles();
+		// }
 
 		if ($endpoint === 'get-wp-single-post') {
 			if (!HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {

@@ -63,7 +63,7 @@ class PageResource extends Resource
 
         if ($this->post_type === PostTypes::POPUP) {
             $data['blocks'] = $meta[PageMetaKeys::BLOCKS] ?? [];
-            $data['styleBlocks'] = $meta[PageMetaKeys::STYLE_BLOCK_RANDOM] ?? [];
+            $data['styleBlocks'] = $meta[PageMetaKeys::STYLE_BLOCKS] ?? [];
             $data['usedFonts'] = $meta[PageMetaKeys::USED_FONT_LIST] ?? [];
         }
 

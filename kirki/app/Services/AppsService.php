@@ -50,7 +50,7 @@ class AppsService
      */
     public function get_app_settings(string $app_slug)
     {
-        $settings = GlobalData::get(GlobalDataKeys::APP_SETTINGS . $app_slug) ?? [];
+        $settings = GlobalData::get(sprintf('%s%s', GlobalDataKeys::APP_SETTINGS, $app_slug)) ?? [];
 
 		return FilterHooks::kirki_apps_configuration($app_slug, $settings);
     }
@@ -62,7 +62,7 @@ class AppsService
      */
     public function save_app_settings(string $app_slug, array $settings)
     {
-        GlobalData::update(GlobalDataKeys::APP_SETTINGS . $app_slug, $settings);
+        GlobalData::update(sprintf('%s%s', GlobalDataKeys::APP_SETTINGS, $app_slug), $settings);
 
         return $settings;
     }
@@ -72,6 +72,9 @@ class AppsService
         $app_slug = preg_replace('/[^a-zA-Z0-9\-]/', '', $payload->slug);
         $src = $payload->src;
         $version = $payload->version;
+
+        FileHandler::verify_directory_traversal($src);
+        FileHandler::verify_directory_traversal($app_slug);
 
         $installed_apps = $this->get_installed_apps();
 
@@ -92,10 +95,6 @@ class AppsService
         if ($zip_file_path === false) {
             throw new Exception(esc_html__('Failed to download the app zip file. Please check the remote URL.', 'kirki'));
         }
-
-        $zip_file_path = clean_path($zip_file_path, false);
-
-        FileHandler::verify_directory_traversal($zip_file_path);
 
         // Get the WordPress wp-content directory
         $base_upload_dir = WP_CONTENT_DIR; // Absolute path to 'uploads'
@@ -152,6 +151,9 @@ class AppsService
 		$src         = $payload->src;
 		$new_version = $payload->version;
 
+        FileHandler::verify_directory_traversal($src);
+        FileHandler::verify_directory_traversal($app_slug);
+
         $installed_apps = $this->get_installed_apps();
 
         if (empty($installed_apps)) {
@@ -185,10 +187,6 @@ class AppsService
             File::move($backup_folder, $app_folder);
             throw new Exception(esc_html__('Failed to download the new app version.', 'kirki'));
         }
-
-        $zip_file_path = clean_path($zip_file_path, false);
-
-        FileHandler::verify_directory_traversal($zip_file_path);
 
         $result = FileHandler::extract_zip_file($zip_file_path, $apps_folder);
 

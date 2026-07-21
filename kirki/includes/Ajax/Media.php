@@ -976,7 +976,7 @@ class Media {
 	 * @return void wp_send_json.
 	 * 
 	 * @deprecated
-	 * @see \Kirki\App\Services\FontService::remove_custom_fonts_permanently()
+	 * @see \Kirki\App\Services\FontService::remove_custom_fonts_permanently_from_directory()
 	 */
 	public static function remove_custom_font_folder_from_server() {        //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$data = HelperFunctions::sanitize_text( isset( $_POST['data'] ) ? $_POST['data'] : null );
@@ -1023,6 +1023,8 @@ class Media {
 	 * @param string $dir_path directory path string.
 	 * @throws InvalidArgumentException If the $dir_path is not a directory.
 	 * @return void
+	 * @deprecated
+	 * @see \Kirki\Framework\Supports\Facades\File::delete()
 	 */
 	public static function delete_dir( $dir_path ) {
 		global $wp_filesystem;

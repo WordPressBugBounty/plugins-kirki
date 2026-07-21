@@ -35,7 +35,7 @@ class PostMeta extends Model
     public static function get_meta_value(int $post_id, string $meta_key, $default = null)
     {
         $meta = static::where('post_id', $post_id)->where('meta_key', $meta_key)->first();
-        return $meta && $meta->meta_value !== '' ? $meta->meta_value : $default;
+        return $meta && $meta->meta_value !== null && $meta->meta_value !== '' ? $meta->meta_value : $default;
     }
 
     /**

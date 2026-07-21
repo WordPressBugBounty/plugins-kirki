@@ -72,8 +72,12 @@ class API
 			return;
 		}
 
+		if (!isset($_GET['download_file_nonce']) || !wp_verify_nonce($_GET['download_file_nonce'], 'download_file_action')) {
+			wp_send_json_error(esc_html__('Not authorized.', 'kirki'));
+		}
+
 		if (!HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
-			wp_send_json_error('Not authorized', 401);
+			wp_send_json_error(esc_html__('Not authorized', 'kirki'), 401);
 		}
 
 		// TODO: need to check nonce
@@ -83,11 +87,11 @@ class API
 	private function downloadZIP()
 	{
 		$upload_dir = wp_upload_dir();
-		$file_name = HelperFunctions::sanitize_text($_GET['file-name']);
+		$file_name = sanitize_file_name($_GET['file-name']);
 		$file_name = basename($file_name);
 		// Check if the file has a .zip extension
 		if (pathinfo($file_name, PATHINFO_EXTENSION) !== 'zip') {
-			echo 'Invalid file type.';
+			echo esc_html__('Invalid file type.', 'kirki');
 			die();
 		}
 		$zipFilePath = $upload_dir['basedir'] . "/$file_name";

@@ -8,7 +8,10 @@ use Kirki\Framework\DTO;
 
 class EditorPagePayloadDTO extends DTO 
 {
-    /** @var array */
+    /** 
+     * @var array
+     * array keys : blocks, styles, usedStyles, usedStyleIdsRandom, usedFonts
+     */
     public $data;
 
     /** @var \Kirki\App\Models\Page */
@@ -16,7 +19,4 @@ class EditorPagePayloadDTO extends DTO
 
     /** @var bool */
     public $is_staging = false;
-
-    /** @var string|null */
-    public $session_id = null;
 }

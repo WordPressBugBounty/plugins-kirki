@@ -106,8 +106,14 @@ abstract class FrontendRESTController extends WP_REST_Controller {
 			return false;
 		}
 
-		if ( 'publish' === $post->post_status ) {
+		$is_password_protected = !empty( $post->post_password );
+
+		if ( 'publish' === $post->post_status && ! $is_password_protected ) {
 			return true;
+		}
+
+		if ( 'publish' === $post->post_status && $is_password_protected ) {
+			return ! post_password_required( $post ) || current_user_can( 'read_post', $post_id );
 		}
 
 		return current_user_can( 'read_post', $post_id );

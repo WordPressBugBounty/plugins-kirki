@@ -18,22 +18,25 @@ class PageMetaKeys
     /**
      * @see KIRKI_GLOBAL_STYLE_BLOCK_META_KEY
      */
-    const STYLE_BLOCK = 'kirki_global_style_block';
+    const GLOBAL_STYLE_BLOCK_DEPRECATED = 'kirki_global_style_block';
 
     /**
+     * Current Page Style Blocks
      * @see KIRKI_GLOBAL_STYLE_BLOCK_META_KEY_RANDOM
      */
-    const STYLE_BLOCK_RANDOM = 'kirki_global_style_block_random';
+    const STYLE_BLOCKS = 'kirki_global_style_block_random';
 
     /**
+     * Used Global Style Block IDs
      * @see KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS
      */
-    const USED_STYLE_BLOCK_IDS = 'kirki_used_style_block_ids';
+    const USED_GLOBAL_STYLE_BLOCK_IDS = 'kirki_used_style_block_ids';
 
     /**
+     * Used Current Page Style Block IDS
      * @see KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS_RANDOM
      */
-    const USED_STYLE_BLOCK_IDS_RANDOM = 'kirki_used_style_block_ids_random';
+    const USED_STYLE_BLOCK_IDS = 'kirki_used_style_block_ids_random';
 
     /**
      * @see KIRKI_META_NAME_FOR_USED_FONT_LIST
@@ -78,7 +81,7 @@ class PageMetaKeys
             static::TEMPLATE_COLLECTION_TYPE,
             static::UTILITY_PAGE_TYPE,
             static::BLOCKS,
-            static::STYLE_BLOCK_RANDOM,
+            static::STYLE_BLOCKS,
             static::USED_FONT_LIST,
         ];
     }

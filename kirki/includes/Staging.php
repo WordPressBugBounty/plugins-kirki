@@ -155,7 +155,7 @@ class Staging {
 	// returns the data which needs to be saved in Publish version
 	/**
 	 * @deprecated
-	 * @see Kirki\App\Managers\PageManager::save_staging_data()
+	 * @see Kirki\App\Services\PageService::save_page_data()
 	 */
 	public static function save_page_staging_data_to_db( $post_id, $page_data ) {
 		$staging_version = self::get_most_recent_stage_version( $post_id );

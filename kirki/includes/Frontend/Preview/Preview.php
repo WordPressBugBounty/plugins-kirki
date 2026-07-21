@@ -18,6 +18,8 @@ use Kirki\Ajax\WpAdmin;
 use Kirki\API\ContentManager\ContentManagerHelper;
 use Kirki\HelperFunctions;
 
+use function Kirki\Framework\dd;
+
 /**
  * Preview class
  */
@@ -628,13 +630,20 @@ class Preview extends ExceptionalElements {
 		$selector   = $this->getSelectorFromBlock( $block );
 		$variants   = $block['variant'];
 
+		$global_css = "";
+		$local_css = "";
+
 		foreach ( $variants as $key => $value ) {
 			$variant = explode( '_', $key );
 			if ( $variant[0] === $vp['id'] ) {
-				$css_string .= $this->createMediaQueryString( $selector, $key, $value, $vp );
+				if( $block && isset($block['isGlobalStyle']) && $block['isGlobalStyle'] === true){
+					$global_css .= $this->createMediaQueryString( $selector, $key, $value, $vp );
+				}else{
+					$local_css .= $this->createMediaQueryString( $selector, $key, $value, $vp );
+				}
 			}
 		}
-		return $css_string;
+		return $global_css . $local_css;
 	}
 
 	/**
@@ -2338,10 +2347,16 @@ class Preview extends ExceptionalElements {
 	private function getClassNames( $this_element ) {
 		$class_array = array();
 
-		if ( isset( $this_element['styleIds'] ) ) {
-			$style_ids_count = count( $this_element['styleIds'] );
+		$style_ids = isset( $this_element['styleIds'] ) ? $this_element['styleIds'] : array();
+
+		$manageble_style_ids = isset( $this_element['properties'], $this_element['properties']['classesIds'] ) ? $this_element['properties']['classesIds'] : array();
+		// add in first in styleids
+		$style_ids = array_merge($manageble_style_ids, $style_ids);
+
+		if ( ! empty( $style_ids ) ) {
+			$style_ids_count = count( $style_ids );
 			for ( $i = 0; $i < $style_ids_count; $i++ ) {
-				$style_id = $this_element['styleIds'][ $i ];
+				$style_id = $style_ids[ $i ];
 				$s_block  = isset( $this->style_blocks[ $style_id ] ) ? $this->style_blocks[ $style_id ] : null;
 				if ( ! isset( $s_block ) ) {
 					continue;

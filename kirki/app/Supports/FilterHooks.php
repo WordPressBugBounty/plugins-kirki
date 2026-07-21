@@ -19,10 +19,10 @@ class FilterHooks
         $filtered_settings = apply_filters('kirki_apps_configuration_' . $app_slug, $default_settings);
 
         if (!is_array($filtered_settings)) {
-             throw new Exception(esc_html__(
+            throw new Exception(sprintf(
                 /* translators: %s: app slug */
-                sprintf('The filter "kirki_apps_configuration_%s" must return an array.', $app_slug), 
-                'kirki'
+                esc_html__('The filter "kirki_apps_configuration_%s" must return an array.', 'kirki'),
+                esc_html($app_slug)
             ));
         }
         

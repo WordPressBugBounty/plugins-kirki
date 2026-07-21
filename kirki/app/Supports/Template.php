@@ -4,6 +4,7 @@ namespace Kirki\App\Supports;
 
 defined('ABSPATH') || exit;
 
+use Kirki\App\Constants\PageContentTypes;
 use Kirki\App\Constants\UtilityPageType;
 use Kirki\App\DTO\Page\EditorPagePayloadDTO;
 use Kirki\App\DTO\Symbol\SymbolDTO;
@@ -139,6 +140,7 @@ class Template
 			$style['name'] = static::add_prefix_to_class_name($style['name'], 'post-' . $page_id);
 			unset($style['isGlobal']);
 			unset($style['isDefault']);
+			unset($style['isGlobalStyle']);
 			$kirki_json_data['styles'][$key] = $style;
 		}
 
@@ -147,7 +149,11 @@ class Template
 			'data' => $kirki_json_data
 		]);
 
-		PageService::create()->save_page_data($payload);
+		foreach (PageContentTypes::get_constant_values() as $page_content_type) {
+			(new PageService())->save_page_data($payload, $page_content_type);
+		}
+
+		return $kirki_json_data;
 	}
 
 	/**

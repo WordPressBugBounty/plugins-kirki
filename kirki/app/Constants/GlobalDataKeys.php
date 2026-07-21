@@ -18,7 +18,9 @@ class GlobalDataKeys
     /**
      * @see KIRKI_GLOBAL_STYLE_BLOCK_META_KEY
      */
-    const STYLE_BLOCK = 'kirki_global_style_block';
+    const STYLE_BLOCK_DEPRECATED = 'kirki_global_style_block';
+
+    const STYLE_BLOCKS = 'kirki_class_manager_style_blocks';
 
     /**
      * @see KIRKI_USER_CUSTOM_FONTS_META_KEY

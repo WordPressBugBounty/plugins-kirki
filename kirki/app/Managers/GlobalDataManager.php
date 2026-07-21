@@ -127,17 +127,13 @@ class GlobalDataManager
 	}
 
 	/**
-	 * Get global style blocks
+	 * Get deprecated global style blocks
 	 * 
 	 * @return array
 	 */
-	public function get_global_style_blocks()
+	public function get_deprecated_global_style_blocks()
 	{
-		if (!is_null($this->global_style_blocks)) {
-			return $this->global_style_blocks;
-		}
-
-		return $this->global_style_blocks = $this->get(GlobalDataKeys::STYLE_BLOCK) ?? [];
+		return $this->get(GlobalDataKeys::STYLE_BLOCK_DEPRECATED) ?? [];
 	}
 
 	/**
@@ -145,15 +141,29 @@ class GlobalDataManager
 	 * 
 	 * @param array $styles
 	 */
-	public function update_global_style_blocks($styles)
+	public function update_style_blocks($styles)
 	{
 		if (!is_array($styles)) {
-			return;
+			$styles = [];
 		}
 
-		$this->update(GlobalDataKeys::STYLE_BLOCK, $styles);
+		$this->update(GlobalDataKeys::STYLE_BLOCKS, $styles);
 
 		$this->global_style_blocks = null;
+	}
+
+	/**
+	 * Get global style blocks
+	 * 
+	 * @return array
+	 */
+	public function get_style_blocks()
+	{
+		if (!is_null($this->global_style_blocks)) {
+			return $this->global_style_blocks;
+		}
+
+		return $this->global_style_blocks = $this->get(GlobalDataKeys::STYLE_BLOCKS) ?? [];
 	}
 
 	/**

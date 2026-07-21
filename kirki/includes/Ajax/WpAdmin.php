@@ -62,6 +62,10 @@ class WpAdmin {
 			$new_data['image_optimization'] = $data['image_optimization'];
 		}
 
+		if ( isset( $data['google_font_api_key'] ) ) {
+			$new_data['google_font_api_key'] = $data['google_font_api_key'];
+		}
+
 		if ( isset( $data['unsplash_api_key'] ) ) {
 			$new_data['unsplash_api_key'] = $data['unsplash_api_key'];
 		}

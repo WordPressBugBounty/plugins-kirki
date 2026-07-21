@@ -130,13 +130,10 @@ class PageUrl {
             switch ($type) {
                 case CollectionTypes::POST:
                     return $this->process_page_permalink($data[0]['ID']);
-                    break;
                 case CollectionTypes::USER:
                     return get_author_posts_url($data[0]['ID']);
-                    break;
                 case CollectionTypes::TERM:
                     return get_term_link($data[0]['ID']);
-                    break;
             }
 		}
 
@@ -163,7 +160,7 @@ class PageUrl {
             $this->get_page_permalink()
         );
         
-        if (EditorPreview::is_valid_request() && EditorPreview::has_valid_token()) {
+        if (EditorPreview::has_valid_token()) {
             $token = EditorPreview::get_token_from_header();
 
             $editor_url = add_query_arg(

@@ -35,10 +35,8 @@ class UtilityPageService
     {
         if (!in_array($utility_type, UtilityPageType::get_constant_values(), true)) {
             throw new Exception(
-                esc_html(
-                    /* translators: %s: Utility page type */
-                    sprintf(__('Invalid utility page type: %s'), $utility_type)
-                ), 
+                /* translators: %s: Utility page type */
+                sprintf(esc_html__('Invalid utility page type: %s', 'kirki'), esc_html($utility_type)), 
                 Response::UNPROCESSABLE_ENTITY
             );
         }

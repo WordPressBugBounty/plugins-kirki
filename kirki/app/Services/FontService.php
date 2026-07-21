@@ -18,11 +18,6 @@ use function Kirki\Framework\clean_path;
 
 class FontService
 {
-    public static function create()
-    {
-        return new static();
-    }
-
     public function download_google_font(GoogleFontDTO $payload)
     {
 		// Extra security: keep only a-z, 0-9, and hyphens
@@ -93,7 +88,7 @@ class FontService
 
 				if (!in_array($extension, $allowed_ext, true)) {
                     /* translators: %s: file extension */
-					throw new Exception(esc_html(sprintf(__('Invalid or unsafe file extension: %s.', 'kirki'), $extension)));
+                    throw new Exception(sprintf(esc_html__('Invalid or unsafe file extension: %s.', 'kirki'), $extension));
 				}
 
                 $url_parts = wp_parse_url($url);
@@ -187,7 +182,7 @@ class FontService
 		}
 	}
 
-    public function remove_custom_fonts_permanently(array $fonts)
+    public function remove_custom_fonts_permanently_from_directory(array $fonts)
     {
         foreach ($fonts as $font) {
 			// Remove font from local.

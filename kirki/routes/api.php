@@ -2,6 +2,7 @@
 
 defined('ABSPATH') || exit;
 
+use Kirki\App\Constants\PageContentTypes;
 use Kirki\App\Supports\Role;
 use Kirki\App\Http\Controllers\Api\AppsController;
 use Kirki\App\Http\Controllers\Api\MediaController;
@@ -19,6 +20,7 @@ use Kirki\App\Http\Middlewares\ViewAccessMiddleware;
 use Kirki\App\Http\Middlewares\ViewOrPreviewMiddleware;
 use Kirki\Framework\Http\Request;
 use Kirki\Framework\Route;
+use Kirki\Framework\Supports\Arr;
 
 use function Kirki\Framework\app;
 use function Kirki\Framework\response;
@@ -27,9 +29,7 @@ Route::set_namespace('kirki/v1');
 
 Route::get('/ping', function (Request $request) {
     return response()->json([
-        // 'query' => $query,
-        'test' => Role::get_roles_by_levels(['content']),
-        'dev' => app()->is_dev_mode()
+        'is_working' => true,
     ]);
 });
 
@@ -42,13 +42,23 @@ Route::group([
 ], function () {
     Route::post('/pages/{page_id}/{page_content_type}', [PageController::class, 'save_page_data'])
         ->where('page_id', '[\d]+')
-        ->where('page_content_type', '(?:blocks|styles|used-styles|used-style-ids-random|used-fonts)');
+        ->where(
+            'page_content_type', 
+            '(?:' . Arr::join([
+                PageContentTypes::BLOCKS, 
+                PageContentTypes::STYLES, 
+                PageContentTypes::USED_STYLES, 
+                PageContentTypes::USED_STYLE_IDS_RANDOM, 
+                PageContentTypes::USED_FONTS
+            ], '|') . ')'
+        );
     Route::put('/pages/{page_id}', [PageController::class, 'update'])->where('page_id', '[\d]+');
     Route::put('/popups/{popup_id}', [PageController::class, 'update_popup'])->where('popup_id', '[\d]+');
 
     // Global data routes
     Route::put('/global-ui-controller', [GlobalDataController::class, 'update_ui_controller']);
     Route::put('/global-ui-saved-data', [GlobalDataController::class, 'update_ui_saved_data']);
+    Route::post('/global-styles', [GlobalDataController::class, 'save_global_styles']);
 });
 
 Route::group([
@@ -78,16 +88,17 @@ Route::group([
     Route::put('/update-app', [AppsController::class, 'update_app']);
     Route::delete('/remove-app', [AppsController::class, 'remove_app']);
     Route::put('/app-settings', [AppsController::class, 'save_app_settings']);
-});
-
-// Apps routes
-Route::group(['middleware' => ViewOrPreviewMiddleware::class], function () {
-    Route::get('/app-list', [AppsController::class, 'get_all_apps']);
-    Route::get('/installed-app-list', [AppsController::class, 'get_installed_apps']);
     Route::get('/app-settings', [AppsController::class, 'get_app_settings_using_slug']);
 });
 
 Route::group(['middleware' => ViewOrPreviewMiddleware::class], function () {
+    // Page Routes
+    Route::get('/pages/{page_id}', [PageController::class, 'get_page_content'])->where('page_id', '[\d]+');
+
+    // Apps routes
+    Route::get('/app-list', [AppsController::class, 'get_all_apps']);
+    Route::get('/installed-app-list', [AppsController::class, 'get_installed_apps']);
+
     // Global data routes
     Route::get('/global-ui-controller', [GlobalDataController::class, 'get_ui_controller']);
     Route::get('/global-ui-saved-data', [GlobalDataController::class, 'get_ui_saved_data']);
@@ -99,7 +110,7 @@ Route::group(['middleware' => ViewOrPreviewMiddleware::class], function () {
     Route::get('/content-manager/collections', [CollectionController::class, 'index']);
     Route::get('/content-manager/collections/{collection_id}', [CollectionController::class, 'show'])
         ->where('collection_id', '\d+');
-    Route::get('/content-manager/validate_slug', [CollectionController::class, 'validate_slug']);
+    Route::get('/content-manager/validate_slug', [CollectionController::class, 'validate_slug'])->middleware(ViewAccessMiddleware::class);
 });
 
 Route::group(['middleware' => EditAccessMiddleware::class], function () {
@@ -126,10 +137,11 @@ Route::group(['middleware' => EditAccessMiddleware::class], function () {
 Route::get('/media', [MediaController::class, 'paginated'])->middleware(EditAccessMiddleware::class);
 
 // Comment Routes
-Route::group(['middleware' => ViewOrPreviewMiddleware::class], function () {
+Route::group(['middleware' => ViewAccessMiddleware::class], function () {
     Route::get('/collaboration-comments', [CollaborationCommentController::class, 'index']);
+    Route::get('/collaboration-comments/all-users', [CollaborationCommentController::class, 'users']);
 });
-    
+
 Route::get('/collaboration-comments/all-users', [CollaborationCommentController::class, 'users'])->middleware(ViewAccessMiddleware::class);
 
 Route::group(['middleware' => EditAccessMiddleware::class], function () {

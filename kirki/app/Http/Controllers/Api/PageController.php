@@ -17,6 +17,7 @@ use Kirki\App\Http\Requests\Page\PageUpdateRequest;
 use Kirki\App\Http\Requests\Page\PopupRequest;
 use Kirki\App\Http\Requests\Page\TogglePageSymbolRequest;
 use Kirki\App\Models\Page as PageModel;
+use Kirki\App\Resources\PageContentResource;
 use Kirki\App\Resources\PageResource;
 use Kirki\App\Services\PageService;
 use Kirki\App\Supports\Facades\Page;
@@ -42,12 +43,12 @@ class PageController
         $page = $this->service->save($payload);
 
         return response()->json([
-            'data' => PageResource::make($page),
+            'data' => new PageResource($page),
             'message' => __('Page created successfully.', 'kirki'),
         ], Response::OK);
     }
 
-    public function save_page_data(PageDataRequest $request, int $page_id)
+    public function save_page_data(PageDataRequest $request, int $page_id, string $page_content_type)
     {
         $page = PageModel::find($page_id);
 
@@ -60,7 +61,7 @@ class PageController
 
         return response()->json([
             'data' => [
-                'staging_version' => $this->service->save_page_data($payload),
+                'staging_version' => $this->service->save_page_data($payload, $page_content_type),
                 'status' => __('Page data saved.', 'kirki'),
             ],
             'message' => __('Page data saved.', 'kirki'),
@@ -94,7 +95,7 @@ class PageController
         $page = $this->service->update($page, $payload);
 
         return response()->json([
-            'data' => PageResource::make($page),
+            'data' => new PageResource($page),
             'message' => __('Page updated successfully.', 'kirki'),
         ], Response::OK);
     }
@@ -112,7 +113,7 @@ class PageController
         $popup = $this->service->update_popup_data($popup, $payload);
 
         return response()->json([
-            'data' => PageResource::make($popup),
+            'data' => new PageResource($popup),
             'message' => __('Popup updated successfully.', 'kirki'),
         ], Response::OK);
     }
@@ -145,7 +146,7 @@ class PageController
         }
 
         return response()->json([
-            'data' => PageResource::make($this->service->duplicate_page($page)),
+            'data' => new PageResource($this->service->duplicate_page($page)),
             'message' => __('Unused style blocks removed.', 'kirki'),
         ], Response::OK);
     }
@@ -165,6 +166,21 @@ class PageController
                 'status' => __('Page deleted.', 'kirki'),
             ],
             'message' => __('Page deleted.', 'kirki'),
+        ]);
+    }
+
+    public function get_page_content(Request $request)
+    {
+        $page = PageModel::find($request->int('page_id'));
+
+        if (empty($page)) {
+            throw new Exception(esc_html__('Page not found.', 'kirki'), Response::NOT_FOUND);
+        }
+
+        $stage_version = $request->int('stage_version') ?? false;
+
+        return response()->json([
+            'data' => new PageContentResource($page, $stage_version),
         ]);
     }
 }

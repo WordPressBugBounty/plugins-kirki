@@ -352,6 +352,9 @@ class Page {
 	 * This function is called from EDITOR panel
 	 *
 	 * @return void wp_send_json.
+	 * 
+	 * @deprecated
+	 * @see \Kirki\App\Resources\PageContentResource::class
 	 */
 	public static function get_page_blocks_and_styles() {
         //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized

@@ -86,9 +86,9 @@ class FileHandler
 			FileHelper::make_dir($destination_dir);
 		}
 
-		static::verify_directory_traversal($destination_dir);
-
 		$zip = new PclZip($zip_file_path);
+
+		static::validate_zip_file($zip);
 
 		$result = $zip->extract(
 			PCLZIP_OPT_PATH,
@@ -102,10 +102,45 @@ class FileHandler
 		return false;
 	}
 
+	public static function validate_zip_file(PclZip $zip)
+	{
+		$list = $zip->listContent();
+
+		if (!is_array($list)) {
+			throw new Exception(esc_html__('Failed to read ZIP file.', 'kirki'));
+		}
+
+		foreach ($list as $entry) {
+			 if (!isset($entry['filename'])) {
+				throw new Exception(esc_html__('Invalid ZIP file.', 'kirki'));
+			}
+
+			static::validate_zip_entry($entry['filename']);
+		}
+	}
+
+	private static function validate_zip_entry(string $entry_filename)
+	{
+		$entry_filename = clean_path($entry_filename, false);
+
+		if (
+			$entry_filename === '' ||
+			str_contains($entry_filename, "\0") ||
+			str_starts_with($entry_filename, '/') ||
+			preg_match('/^[A-Za-z]:\//', $entry_filename)
+		) {
+			throw new Exception(esc_html__('Invalid ZIP file.', 'kirki'));
+		}
+
+		return static::verify_directory_traversal($entry_filename);
+	}
+
 	Public static function verify_directory_traversal(string $path) {
 		if (preg_match('#(^|/)\.\.(/|$)#', clean_path($path, false))) {
 			/* translators: %s: File Path */
-			throw new Exception(esc_html__(sprintf('Directory traversal detected in %s.', $path), 'kirki'));
+			throw new Exception(sprintf(esc_html__('Directory traversal detected in %s.', 'kirki'), $path));
 		}
+
+		return true;
 	}
 }
