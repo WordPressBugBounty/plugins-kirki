@@ -84,11 +84,14 @@ abstract class FrontendRESTController extends WP_REST_Controller {
 			return null;
 		}
 
-		return match ( $context['type'] ) {
-			'post'    => isset( $context['id'] )      ? absint( $context['id'] )      : null,
-			'comment' => isset( $context['post_id'] ) ? absint( $context['post_id'] ) : null,
-			default   => null,
-		};
+		switch( $context['type'] ) {
+			case 'post':
+				return isset( $context['id'] )      ? absint( $context['id'] )      : null;
+			case 'comment':
+				return isset( $context['post_id'] ) ? absint( $context['post_id'] ) : null;
+			default:
+				return null;
+		}
 	}
 
 	/**

@@ -14,10 +14,10 @@ class AsSerialize implements CastsAttributes
       * Cast the given value.
       *
       * @param  array<string, mixed>  $attributes
-      * 
+      *
       * @return mixed
       */
-     public function get(Model $model, string $key, mixed $value, array $attributes)
+     public function get(Model $model, string $key, $value, array $attributes)
      {
           return $value !== '' ? maybe_unserialize($value) : null;
      }
@@ -26,10 +26,10 @@ class AsSerialize implements CastsAttributes
       * Prepare the given value for storage.
       *
       * @param  array<string, mixed>  $attributes
-      * 
+      *
       * @return string
       */
-     public function set(Model $model, string $key, mixed $value, array $attributes)
+     public function set(Model $model, string $key, $value, array $attributes)
      {
           return $value ? maybe_serialize($value) : '';
      }

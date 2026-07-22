@@ -3,7 +3,7 @@ Contributors: themeum
 Tags: page builder, website builder, drag and drop, form builder, freeform canvas
 Requires at least: 5.9
 Tested up to: 7.0
-Stable tag: 6.1.0
+Stable tag: 6.1.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -191,22 +191,25 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 
 == Changelog ==
 
+= 6.1.1 =
+* Fix: Resolved php 7.4 compatibility issue.
+
 = 6.1.0 =
-New: Introduced a centralized Class Manager.
-New: Added Mix Blend Mode support to the Style Panel.
-Fix: Fixed filter and backdrop-filter properties being removed when deleting styles.
-Fix: Applied !important to the Liquid Glass backdrop filter for proper rendering.
-Fix: Fixed video audio playback for hover and autoplay when the audio toggle is enabled.
-Fix: Fixed an issue where color changes from the Selection Color Panel affected multiple elements.
-Fix: Resolved a double-click issue with legacy Rich Text content.
-Fix: Fixed cloned elements not syncing newly created style blocks with the server.
-Fix: Improved API security by validating editor preview tokens.
-Fix: Added validation for ZIP file uploads.
-Fix: Fixed frontend REST API validation for password-protected posts.
-Update: A curated set of Google Fonts now loads by default. A Google API key is needed to access the full library.
-Update: Redesigned range sliders to numerical input fields, so values can be set by dragging.
-Update: Updated the App Settings route middleware for preview tokens.
-Update: Implemented paginated loading for Kirki editor comments.
+* New: Introduced a centralized Class Manager.
+* New: Added Mix Blend Mode support to the Style Panel.
+* Fix: Fixed filter and backdrop-filter properties being removed when deleting styles.
+* Fix: Applied !important to the Liquid Glass backdrop filter for proper rendering.
+* Fix: Fixed video audio playback for hover and autoplay when the audio toggle is enabled.
+* Fix: Fixed an issue where color changes from the Selection Color Panel affected multiple elements.
+* Fix: Resolved a double-click issue with legacy Rich Text content.
+* Fix: Fixed cloned elements not syncing newly created style blocks with the server.
+* Fix: Improved API security by validating editor preview tokens.
+* Fix: Added validation for ZIP file uploads.
+* Fix: Fixed frontend REST API validation for password-protected posts.
+* Update: A curated set of Google Fonts now loads by default. A Google API key is needed to access the full library.
+* Update: Redesigned range sliders to numerical input fields, so values can be set by dragging.
+* Update: Updated the App Settings route middleware for preview tokens.
+* Update: Implemented paginated loading for Kirki editor comments.
 
 = 6.0.14 =
 * Fix: Fixed CSRF vulnerability in admin POST AJAX requests (kirki_wp_admin_post_apis).
