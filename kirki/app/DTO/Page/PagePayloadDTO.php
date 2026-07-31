@@ -28,4 +28,10 @@ class PagePayloadDTO extends DTO
 
     /** @var array|null */
     public $custom_template;
+
+    /** @var int|null */
+    public $content_manager_collection_id;
+
+    /** @var string|null */
+    public $content_manager_page_kind;
 }

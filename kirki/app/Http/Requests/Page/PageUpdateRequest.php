@@ -12,9 +12,9 @@ class PageUpdateRequest extends Request
     public function rules()
     {
         return [
-            'post_title' => 'string',
-            'post_name' => 'string',
-            'post_status' => 'string',
+            'post_title' => 'nullable|string',
+            'post_name' => 'nullable|string',
+            'post_status' => 'nullable|string',
         ];
     }
 

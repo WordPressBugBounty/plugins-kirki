@@ -1,43 +1,49 @@
 <?php
 
 /**
- * Rule to ensure a value exists within a predefined set.
+ * In rule class.
  *
  * @package    Framework
- * @subpackage Validation\Rules
+ * @subpackage Validation
  * @since      1.0.0
  */
 namespace Kirki\Framework\Validation\Rules;
 
+use Kirki\Framework\Validation\ValidationRule;
 \defined('ABSPATH') || exit;
-use function Kirki\Framework\message;
-class InRule extends BaseRule
+class InRule extends ValidationRule
 {
     /**
-     * Check if the value is in the allowed list.
+     * The rule name.
+     *
+     * @var string
+     *
+     * @since 1.0.0
+     */
+    protected string $rule = 'in';
+    /**
+     * Validate the rule.
      *
      * @return bool
      *
      * @since 1.0.0
      */
-    public function validate_rule()
+    public function validate() : bool
     {
-        $in = $this->rule_value;
-        if (\is_string($in)) {
-            $in = \str_replace(' ', '', $in);
-            $in = \explode(',', $in);
+        if (!\in_array($this->value, $this->args)) {
+            return $this->fails($this->default_messages['default']);
         }
-        return \in_array($this->value, $in);
+        return \true;
     }
     /**
-     * Get the error message if the value is not in the allowed list.
+     * Get the error message.
      *
      * @return string
      *
      * @since 1.0.0
      */
-    public function get_error_message()
+    public function messages()
     {
-        return message('validator.in', $this->last_key_segment(), $this->rule_value);
+        return $this->process_messages($this->messages);
     }
 }

@@ -1,80 +1,94 @@
 <?php
 
 /**
- * Validates that a value is present and not null.
+ * Required rule class.
  *
  * @package    Framework
- * @subpackage Validation\Rules
+ * @subpackage Validation
  * @since      1.0.0
  */
 namespace Kirki\Framework\Validation\Rules;
 
+use Closure;
+use Kirki\Framework\Supports\Arr;
+use Kirki\Framework\Validation\ValidationRule;
+use InvalidArgumentException;
+use function Kirki\Framework\deep_get;
+use function Kirki\Framework\Polyfill\array_first;
 \defined('ABSPATH') || exit;
-use function Kirki\Framework\message;
-class RequiredIfRule extends BaseRule
+class RequiredIfRule extends ValidationRule
 {
     /**
-     * Determine if the value is present.
+     * The rule name.
+     *
+     * @var string
+     *
+     * @since 1.0.0
+     */
+    protected string $rule = 'required_if';
+    /**
+     * Whether the rule is an implicit rule.
+     *
+     * @var bool
+     *
+     * @since 1.0.0
+     */
+    public bool $is_implicit = \true;
+    /**
+     * Validate the rule.
      *
      * @return bool
      *
      * @since 1.0.0
      */
-    public function validate_rule()
+    public function validate() : bool
     {
-        list($field, $values) = \explode(',', $this->rule_value, 2);
-        $values = \explode(';', $values);
-        $values = \array_map(function ($value) {
-            return $this->filter_value($value);
-        }, $values);
-        if (\array_key_exists($field, $this->data) && \in_array($this->data[$field], $values, \true)) {
-            if (\is_array($this->value) && empty($this->value)) {
-                return \false;
-            }
-            return !\is_null($this->value) && $this->value !== '';
+        $callback = $this->get_callback();
+        if (!$callback()) {
+            return \true;
+        }
+        if (static::is_nullish($this->value)) {
+            return $this->fails($this->default_messages['default']);
         }
         return \true;
     }
     /**
-     * Get the error message for a missing required field.
+     * Get the callback.
+     *
+     * @return Closure
+     *
+     * @since 1.0.0
+     */
+    protected function get_callback()
+    {
+        $arguments = Arr::wrap($this->args);
+        $other = array_first($arguments);
+        $value = \array_slice($arguments, 1);
+        if (!$other instanceof Closure) {
+            $other = function () use($other, $value) {
+                if (empty($value)) {
+                    throw new InvalidArgumentException('The second argument must be a non-empty string.');
+                }
+                $data = deep_get($this->data, (string) $other);
+                if (\count($value) > 1) {
+                    return \in_array($data, $value);
+                }
+                return $data == array_first($value);
+            };
+        }
+        return $other;
+    }
+    // other => true
+    // other,1
+    /**
+     * Get the error message.
      *
      * @return string
      *
      * @since 1.0.0
      */
-    public function get_error_message()
+    public function messages()
     {
-        return message('validator.required_if', $this->last_key_segment());
-    }
-    /**
-     * Ignore rule check.
-     *
-     * @return void
-     *
-     * @since 1.0.0
-     */
-    protected function ignore_rule_check()
-    {
-        return \false;
-    }
-    /**
-     * Filter value.
-     *
-     * @param mixed $value The value.
-     *
-     * @return void
-     *
-     * @since 1.0.0
-     */
-    protected function filter_value($value)
-    {
-        if ($value === 'false' || $value === 'FALSE') {
-            $value = \false;
-        } elseif ($value === 'true' || $value === 'TRUE') {
-            $value = \true;
-        } elseif ($value === 'null' || $value === 'NULL') {
-            $value = null;
-        }
-        return $value;
+        return $this->process_messages($this->messages);
     }
 }

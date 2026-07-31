@@ -13,8 +13,6 @@ namespace Kirki\Framework\Database;
 
 \defined('ABSPATH') || exit;
 use Kirki\Framework\Supports\Arr;
-use Kirki\Framework\Supports\Facades\DB;
-use Kirki\Framework\Supports\Facades\Log;
 use Throwable;
 use function Kirki\Framework\app;
 class Seeder

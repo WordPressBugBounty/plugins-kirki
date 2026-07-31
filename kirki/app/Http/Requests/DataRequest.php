@@ -7,27 +7,22 @@ defined('ABSPATH') || exit;
 use Kirki\Framework\Http\Request;
 use Kirki\Framework\Sanitizer;
 
+use function Kirki\App\ensure_array;
 use function Kirki\Framework\is_valid_json;
 
 class DataRequest extends Request
 {
+    protected function prepare_for_validation()
+    {
+        $this->merge([
+            'data' => ensure_array($this->data),
+        ]);
+    }
+
     public function rules()
     {
         return [
-            'data' => [
-                'required',
-                function ($value) {
-                    if (is_array($value)) {
-                        return true;
-                    }
-
-                    if (is_valid_json($value)) {
-                        return true;
-                    }
-
-                    return __("The data must be an array or a valid JSON string.", 'kirki');
-                }
-            ],
+            'data' => 'required|array'
         ];
     }
 

@@ -7,26 +7,30 @@
 
 namespace Kirki\API\Frontend;
 
-if ( ! defined( 'ABSPATH' ) ) {
+use Kirki\API\Frontend\Controllers\FormController;
+
+if (!defined('ABSPATH')) {
 	exit; // Exit if accessed directly.
 }
 
 use Kirki\API\Frontend\Controllers\CollectionController;
-use Kirki\API\Frontend\Controllers\FormController;
 
 
 /**
  * Frontend API Class
  */
-class FrontendApi {
+class FrontendApi
+{
 
 	/**
 	 * Register all routes
 	 *
 	 * @return void
 	 */
-	public static function register() {
-		( new FormController() )->register_routes();
-		( new CollectionController() )->register_routes();
+	public static function register()
+	{
+		// @todo: remove later
+		// (new FormController())->register_routes();
+		(new CollectionController())->register_routes();
 	}
 }

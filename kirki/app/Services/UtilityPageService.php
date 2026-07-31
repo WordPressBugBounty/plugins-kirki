@@ -42,6 +42,7 @@ class UtilityPageService
         }
 
         return PageModel::query()
+            ->exclude_trash()
             ->where('post_type', '=', PostTypes::UTILITY)
             ->where_has('meta', function (QueryBuilder $query) use ($utility_type) {
                 $query->where('meta_key', '=', PageMetaKeys::UTILITY_PAGE_TYPE)
@@ -64,6 +65,7 @@ class UtilityPageService
                         ->where_in('meta_value', UtilityPageType::get_constant_values());
                 }
             ])
+            ->exclude_trash()
             ->where('post_type', '=', PostTypes::UTILITY)
             ->get();
     }

@@ -24,7 +24,7 @@ class EditorController
 
     public function back_to_kirki_editor(Request $request)
     {
-        $page = PageModel::find($request->int('postId'));
+        $page = PageModel::exclude_trash()->find($request->int('postId'));
 
         if (empty($page)) {
             throw new Exception(esc_html__('Page not found.', 'kirki'), Response::NOT_FOUND);
@@ -41,7 +41,7 @@ class EditorController
 
     public function back_to_wordpress_editor(Request $request)
     {
-        $page = PageModel::find($request->int('postId'));
+        $page = PageModel::exclude_trash()->find($request->int('postId'));
 
         if (empty($page)) {
             throw new Exception(esc_html__('Page not found.', 'kirki'), Response::NOT_FOUND);

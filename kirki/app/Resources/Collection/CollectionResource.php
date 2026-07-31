@@ -37,6 +37,7 @@ class CollectionResource extends Resource
             'menu_order' => (int) $this->menu_order,
             'post_type' => $this->post_type,
             'comment_count' => (int) $this->comment_count,
+            'preset_type' => $this->preset_type ? ($this->preset_type->meta_value ?? 'generic') : 'generic',
 
             'fields' => !empty($this->fields->meta_value) ? $this->fields->meta_value : [],
             'item_count' => $this->items_count ?? 0,

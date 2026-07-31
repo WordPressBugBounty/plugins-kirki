@@ -15,8 +15,10 @@ use Faker\Factory;
 use Faker\Generator;
 use Kirki\Framework\Application;
 use Kirki\Framework\Collections\Collection;
+use Kirki\Framework\Contracts\Support\Arrayable;
 use Kirki\Framework\Database\Migrations\Migrator;
 use Kirki\Framework\Http\Request;
+use Kirki\Framework\Http\RedirectResponse;
 use Kirki\Framework\Wordpress\User;
 use Kirki\Framework\Http\Response;
 use Kirki\Framework\Supports\Arr;
@@ -25,6 +27,9 @@ use Kirki\Framework\Supports\MessagesBag;
 use Kirki\Framework\Supports\Str;
 use Kirki\Framework\Supports\Url;
 use Kirki\Framework\Supports\Utils;
+use Kirki\Framework\View\TemplateEngine;
+use Kirki\Framework\View\View;
+use Kirki\Framework\View\ViewContext;
 use Symfony\Component\VarDumper\Cloner\VarCloner;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
 use Symfony\Component\VarDumper\Dumper\HtmlDumper;
@@ -108,7 +113,63 @@ if (!\function_exists('Kirki\\Framework\\deep_get')) {
             } elseif (\is_object($target) && isset($target->{$segment})) {
                 $target = $target->{$segment};
             } else {
-                return $default;
+                return value($default);
+            }
+        }
+        return $target;
+    }
+}
+if (!\function_exists('Kirki\\Framework\\deep_set')) {
+    /**
+     * Set a value in an array using a dot notation key.
+     *
+     * @param array $target The target array to set the value in.
+     * @param string|array $key The key to set the value in.
+     * @param mixed $value The value to set.
+     * @return void
+     */
+    function deep_set(&$target, $key, $value, $overwrite = \true)
+    {
+        $segments = \is_array($key) ? $key : \explode('.', $key);
+        $segment = \array_shift($segments);
+        if ($segment === '*') {
+            if (!Arr::accessible($target)) {
+                $target = [];
+            }
+            if ($segments) {
+                foreach ($target as &$inner) {
+                    deep_set($inner, $segments, $value, $overwrite);
+                }
+                unset($inner);
+            } elseif ($overwrite) {
+                foreach ($target as &$inner) {
+                    $inner = $value;
+                }
+            }
+        } elseif (Arr::accessible($target)) {
+            if ($segments) {
+                if (!Arr::exists($target, $segment)) {
+                    $target[$segment] = [];
+                }
+                deep_set($target[$segment], $segments, $value, $overwrite);
+            } elseif ($overwrite || !Arr::exists($target, $segment)) {
+                $target[$segment] = $value;
+            }
+        } elseif (\is_object($target)) {
+            if ($segments) {
+                if (!isset($target->{$segment})) {
+                    $target->{$segment} = [];
+                }
+                deep_set($target->{$segment}, $segments, $value, $overwrite);
+            } elseif ($overwrite || !isset($target->{$segment})) {
+                $target->{$segment} = $value;
+            }
+        } else {
+            $target = [];
+            if ($segments) {
+                deep_set($target[$segment], $segments, $value, $overwrite);
+            } elseif ($overwrite) {
+                $target[$segment] = $value;
             }
         }
         return $target;
@@ -161,6 +222,87 @@ if (!\function_exists('Kirki\\Framework\\response')) {
     function response()
     {
         return app()->make(Response::class)->with_headers(['X-Content-Type-Options' => 'nosniff', 'X-Frame-Options' => 'SAMEORIGIN', 'X-XSS-Protection' => '1; mode=block', 'Referrer-Policy' => 'no-referrer-when-downgrade', 'Cache-Control' => 'public, max-age=60, stale-while-revalidate=30']);
+    }
+}
+if (!\function_exists('Kirki\\Framework\\view')) {
+    /**
+     * Create a view instance for the given template.
+     *
+     * @param string $template The template name in dot notation.
+     * @param array $data The data to pass to the template.
+     *
+     * @return View
+     *
+     * @since 1.0.0
+     */
+    function view(string $template, array $data = [])
+    {
+        return new View($template, $data);
+    }
+}
+if (!\function_exists('Kirki\\Framework\\view_data')) {
+    /**
+     * Read data from the innermost authorized view context.
+     *
+     * Supports dot notation for nested keys (e.g. `product.name`).
+     *
+     * @param string|null $key Data key (dot notation allowed), or null for the full array.
+     * @param mixed $default Default when missing or unauthorized.
+     *
+     * @return mixed
+     *
+     * @since 2.1.2
+     */
+    function view_data($key = null, $default = null)
+    {
+        return app(ViewContext::class)->get($key, $default);
+    }
+}
+if (!\function_exists('Kirki\\Framework\\template_engine')) {
+    /**
+     * Get the template engine instance.
+     *
+     * @return TemplateEngine
+     */
+    function template_engine()
+    {
+        return app(TemplateEngine::class);
+    }
+}
+if (!\function_exists('Kirki\\Framework\\include_view')) {
+    /**
+     * Include a nested pure-PHP view partial (Laravel @include equivalent).
+     *
+     * Explicit $data (plus TemplateEngine shared data) is pushed as a child
+     * ViewContext frame. The partial must read values via view_data().
+     *
+     * @param string $view The view name in dot notation.
+     * @param array $data Data for the partial.
+     *
+     * @return void
+     *
+     * @since 2.1.2
+     * @throws \RuntimeException When the view cannot be resolved.
+     */
+    function include_view(string $view, array $data = [])
+    {
+        app(\Kirki\Framework\View\TemplateEngine::class)->include($view, $data, \false);
+    }
+}
+if (!\function_exists('Kirki\\Framework\\redirect')) {
+    /**
+     * Create a redirect response.
+     *
+     * @param string $url The redirect target URL.
+     * @param int $status The HTTP status code.
+     *
+     * @return RedirectResponse
+     *
+     * @since 1.0.0
+     */
+    function redirect(string $url, int $status = 302)
+    {
+        return new RedirectResponse($url, $status);
     }
 }
 if (!\function_exists('Kirki\\Framework\\request')) {
@@ -221,6 +363,11 @@ if (!\function_exists('Kirki\\Framework\\without_prefix')) {
 if (!\function_exists('Kirki\\Framework\\redirect')) {
     /**
      * Redirect to the given location.
+     * 
+     * @param string $location
+     * @return void
+     * 
+     * @since 1.0.0
      */
     function redirect($location)
     {
@@ -341,7 +488,7 @@ if (!\function_exists('Kirki\\Framework\\configure_dumper')) {
             return;
         }
         $configured = \true;
-        $is_cli = \defined('WP_CLI') && WP_CLI;
+        $is_cli = \defined('WP_CLI') && \WP_CLI;
         if ($is_cli) {
             VarDumper::setHandler(function ($var) {
                 $dumper = new CliDumper();
@@ -452,6 +599,21 @@ if (!\function_exists('Kirki\\Framework\\resource_path')) {
         return app()->resource_path($path);
     }
 }
+if (!\function_exists('Kirki\\Framework\\view_path')) {
+    /**
+     * Get the path to the views directory.
+     *
+     * @param string $path
+     *
+     * @return string
+     *
+     * @since 1.0.0
+     */
+    function view_path($path = '')
+    {
+        return app()->view_path($path);
+    }
+}
 if (!\function_exists('Kirki\\Framework\\bootstrap_path')) {
     /**
      * Get the path to the bootstrap directory.
@@ -549,7 +711,9 @@ if (!\function_exists('Kirki\\Framework\\message')) {
      * @param string $key the key of the message
      * @param mixed $args the arguments to pass to the message
      *
-     * @return string
+     * @return string|null
+     * 
+     * @since 1.0.0
      */
     function message($key, ...$args)
     {

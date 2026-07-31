@@ -44,6 +44,11 @@ class Collection extends Model
         return $this->has_one(PostMeta::class, 'post_id', 'ID')->where('meta_key', with_prefix('cm_basic_fields'));
     }
 
+    public function preset_type()
+    {
+        return $this->has_one(PostMeta::class, 'post_id', 'ID')->where('meta_key', with_prefix('cm_preset_type'));
+    }
+
     public function items()
     {
         return $this->has_many(CollectionItem::class, 'post_parent', 'ID')->where('post_type', 'like', PostTypes::CONTENT_MANAGER . '_%');

@@ -1,38 +1,68 @@
 <?php
 
 /**
- * Validates that a value is an object.
+ * Object rule class.
  *
  * @package    Framework
- * @subpackage Validation\Rules
+ * @subpackage Validation
  * @since      1.0.0
  */
 namespace Kirki\Framework\Validation\Rules;
 
+use Kirki\Framework\Validation\ValidationRule;
 \defined('ABSPATH') || exit;
-use function Kirki\Framework\message;
-class ObjectRule extends BaseRule
+/**
+ * Validates that the given value is an object or an associative array.
+ */
+class ObjectRule extends ValidationRule
 {
     /**
-     * Check if the value is a valid object.
+     * The rule name.
+     *
+     * @var string
+     *
+     * @since 1.0.0
+     */
+    protected string $rule = 'object';
+    /**
+     * Validate the rule.
      *
      * @return bool
      *
      * @since 1.0.0
      */
-    public function validate_rule()
+    public function validate() : bool
     {
-        return \is_object($this->value);
+        if (\is_object($this->value) || $this->is_associative_array($this->value)) {
+            return \true;
+        }
+        return $this->fails($this->default_messages['default']);
     }
     /**
-     * Get the error message for an invalid object value.
+     * Check whether the value is a non-empty associative array.
      *
-     * @return string
+     * @param mixed $value The value to check.
+     *
+     * @return bool
      *
      * @since 1.0.0
      */
-    public function get_error_message()
+    protected function is_associative_array($value)
     {
-        return message('validator.object', $this->last_key_segment());
+        if (!\is_array($value) || $value === []) {
+            return \false;
+        }
+        return \array_keys($value) !== \range(0, \count($value) - 1);
+    }
+    /**
+     * Get the error messages.
+     *
+     * @return array
+     *
+     * @since 1.0.0
+     */
+    public function messages()
+    {
+        return $this->process_messages($this->messages);
     }
 }

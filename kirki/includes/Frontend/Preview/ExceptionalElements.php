@@ -347,6 +347,19 @@ class ExceptionalElements {
 			case 'slider_nav':{
 				return $this->slider_nav_element( $this_data, $attributes, $options );
 			}
+			case 'tabs':{
+				return $this->tabs_element( $this_data, $attributes, $options );
+			}
+			case 'tab':{
+				return $this->tab_element( $this_data, $attributes, $options );
+			}
+			case 'tab_pane':{
+				return $this->tab_pane_element( $this_data, $attributes, $options );
+			}
+			case 'tab_content':
+			case 'tab_menu':{
+				return $this->tab_menu_and_content_element( $this_data, $attributes, $options );
+			}
 		}
 	}
 
@@ -1406,6 +1419,108 @@ class ExceptionalElements {
 				'tag'          => $tag,
 			)
 		);
+	}
+
+	private function tabs_element( $this_data, $attributes, $options ) {
+		$tag      = isset( $this_data['properties']['tag'] ) ? $this_data['properties']['tag'] : 'div';
+		$children = $this_data['children'] ?? array();
+		$markup   = '';
+
+		foreach ( $children as $child ) {
+			$merged_options = array_merge(
+					$options,
+					array(
+						'active_tab_index' => isset($this_data['properties'],$this_data['properties']['active_tab']) ? $this_data['properties']['active_tab'] : 0,
+					)
+				);
+
+			$markup .= $this->recGenHTML( $child, $merged_options );
+		}
+
+		return "<$tag $attributes>
+						$markup
+					</$tag>";
+	}
+
+	private function tab_element( $this_data, $attributes, $options ) {
+		$tag      = isset( $this_data['properties']['tag'] ) ? $this_data['properties']['tag'] : 'div';
+		$children = $this_data['children'] ?? array();
+		$markup   = '';
+
+		$active_tab_index = isset( $options['active_tab_index'] ) ? $options['active_tab_index'] : 0;
+		$item_index       = isset( $options['item_index'] ) ? $options['item_index'] : 0;
+
+		if ( $active_tab_index === $item_index ) {
+			// Add kirki-current-tab class to attributes
+			if ( preg_match( '/class="([^"]*)"/', $attributes, $matches ) ) {
+				// Class attribute exists, append to it
+				$existing_classes = $matches[1];
+				$new_classes      = trim( $existing_classes . ' kirki-current-tab' );
+				$attributes       = preg_replace(
+					'/class="[^"]*"/',
+					'class="' . esc_attr( $new_classes ) . '"',
+					$attributes
+				);
+			} else {
+				// No class attribute, add it
+				$attributes .= ' class="kirki-current-tab"';
+			}
+		}
+
+		// foreach ( $children as $child ) {
+		// 	$markup .= $this->recGenHTML( $child, $options );
+		// }
+		$markup = $this->get_child_content_or_childrens( $this_data, $options );
+		return "<$tag $attributes>
+						$markup
+					</$tag>";
+	}
+
+	private function tab_pane_element( $this_data, $attributes, $options ) {
+		$tag      = isset( $this_data['properties']['tag'] ) ? $this_data['properties']['tag'] : 'div';
+		$children = $this_data['children'] ?? array();
+		$markup   = '';
+
+		$active_tab_index = isset( $options['active_tab_index'] ) ? $options['active_tab_index'] : 0;
+		$item_index       = isset( $options['item_index'] ) ? $options['item_index'] : 0;
+
+		if ( $active_tab_index === $item_index ) {
+			// Add kirki-tab-active class to attributes
+			if ( preg_match( '/class="([^"]*)"/', $attributes, $matches ) ) {
+				// Class attribute exists, append to it
+				$existing_classes = $matches[1];
+				$new_classes      = trim( $existing_classes . ' kirki-tab-active' );
+				$attributes       = preg_replace(
+					'/class="[^"]*"/',
+					'class="' . esc_attr( $new_classes ) . '"',
+					$attributes
+				);
+			} else {
+				// No class attribute, add it
+				$attributes .= ' class="kirki-tab-active"';
+			}
+		}
+
+		$markup = $this->get_child_content_or_childrens( $this_data, $options );
+		return "<$tag $attributes>
+						$markup
+					</$tag>";
+	}
+
+	private function tab_menu_and_content_element( $this_data, $attributes, $options ) {
+		$tag      = isset( $this_data['properties']['tag'] ) ? $this_data['properties']['tag'] : 'div';
+		$children = $this_data['children'] ?? array();
+		$markup   = '';
+
+		$markup = $this->get_child_content_or_childrens( $this_data, $options );
+		if($this_data['name'] === 'tab_menu'){
+			$attributes .= ' data-kirki_tab="tab_menu"';
+		}else{
+			$attributes .= ' data-kirki_tab="tab_content"';
+		}
+		return "<$tag $attributes>
+						$markup
+					</$tag>";
 	}
 
 }

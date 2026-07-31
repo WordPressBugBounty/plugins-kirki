@@ -22,6 +22,8 @@ class Walkthrough {
 	 * Get walkthrough state
 	 *
 	 * @return void wp_send_json.
+	 * @deprecated
+	 * @see \Kirki\App\Http\Controllers\Api\UserController::get_walkthrough_state()
 	 */
 	public static function get_walkthrough_state() {
 			$user_id   = get_current_user_id();
@@ -40,6 +42,8 @@ class Walkthrough {
 	 * Set walkthrough state
 	 *
 	 * @return void wp_send_json.
+	 * @deprecated
+	 * @see \Kirki\App\Http\Controllers\Api\UserController::set_walkthrough_state()
 	 */
 	public static function set_walkthrough_state() {
 			//phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized

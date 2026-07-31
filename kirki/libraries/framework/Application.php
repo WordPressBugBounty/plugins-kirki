@@ -35,7 +35,6 @@ use Kirki\Framework\Managers\PolicyManager;
 use Kirki\Framework\ServiceProvider;
 use Kirki\Framework\Filesystem\FileSystemServiceProvider;
 use Kirki\Framework\Http\Request;
-use Kirki\Framework\Managers\DateManager;
 use Kirki\Framework\Filesystem\Path;
 use Kirki\Framework\Http\Client\Request as ClientRequest;
 use Kirki\Framework\CoreServiceProvider;
@@ -99,6 +98,14 @@ class Application extends Container
      * @since 1.0.0
      */
     protected $resource_path;
+    /**
+     * View path
+     *
+     * @var string|null
+     *
+     * @since 1.0.0
+     */
+    protected $view_path;
     /**
      * Service providers
      *
@@ -213,6 +220,7 @@ class Application extends Container
         $this->instance('path.config', $this->config_path());
         $this->instance('path.database', $this->database_path());
         $this->instance('path.resource', $this->resource_path());
+        $this->instance('path.view', $this->view_path());
     }
     /**
      * Registering the core bindings to the application container.
@@ -262,7 +270,7 @@ class Application extends Container
      */
     protected function register_base_aliases()
     {
-        foreach (['db' => DatabaseManager::class, 'schema' => SchemaManager::class, 'option' => OptionManager::class, 'policy' => PolicyManager::class, 'event' => EventManager::class, 'log' => LogManager::class, 'date' => DateManager::class, 'client-request' => ClientRequest::class, 'command' => CommandManager::class, RequestContract::class => Request::class, 'request' => Request::class] as $key => $abstract) {
+        foreach (['db' => DatabaseManager::class, 'schema' => SchemaManager::class, 'option' => OptionManager::class, 'policy' => PolicyManager::class, 'event' => EventManager::class, 'log' => LogManager::class, 'client-request' => ClientRequest::class, 'command' => CommandManager::class, RequestContract::class => Request::class, 'request' => Request::class] as $key => $abstract) {
             $this->alias($key, $abstract);
         }
     }
@@ -493,6 +501,21 @@ class Application extends Container
         return $this;
     }
     /**
+     * Register a view path.
+     *
+     * @param string $path The view path.
+     *
+     * @return static
+     *
+     * @since 1.0.0
+     */
+    public function use_view_path($path)
+    {
+        $this->view_path = $path;
+        $this->instance('path.view', $path);
+        return $this;
+    }
+    /**
      * Join paths.
      *
      * @param string $base_path The base path to join.
@@ -585,6 +608,19 @@ class Application extends Container
         return $this->join_paths($this->resource_path ?: $this->base_path('resources'), $path);
     }
     /**
+     * Get or set the path to the views directory.
+     *
+     * @param string $path Optional path to join or absolute path when setting via use_view_path.
+     *
+     * @return string
+     *
+     * @since 1.0.0
+     */
+    public function view_path($path = '')
+    {
+        return $this->join_paths($this->view_path ?: $this->resource_path('views'), $path);
+    }
+    /**
      * Get the path to the bootstrap providers file.
      *
      * @return string The path to the bootstrap providers file.
@@ -620,7 +656,7 @@ class Application extends Container
      */
     public function is_cli_available()
     {
-        return \defined('WP_CLI') && WP_CLI;
+        return \defined('WP_CLI') && \WP_CLI;
     }
     /**
      * Register a booting callback.

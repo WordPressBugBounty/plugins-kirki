@@ -452,7 +452,7 @@ class HelperFunctions
 
 	/**
 	 * @deprecated
-	 * @see Kirki\App\Managers\PageManager::generate_unique_style_block_name()
+	 * @see Kirki\App\Managers\PageManager::make_duplicate_classes_to_unique()
 	 */
 	private static function check_or_generate_new_class_names($class_match, $global_class_names, $random_class_names)
 	{
@@ -2208,7 +2208,7 @@ class HelperFunctions
 			'paged' => $current_page,
 			'offset' => $offset,
 			'post_type' => $name,
-			'suppress_filters' => false,
+			'suppress_filters' => true,
 			'post_status' => $post_status,
 			's' => $query,
 		);
@@ -2219,16 +2219,30 @@ class HelperFunctions
 			remove_filter('posts_where', [HelperFunctions::class, 'posts_where_filter_callback']);
 		}
 
-		if (count($IDs) > 0) {
-			$args['post__in'] = $IDs;
-			unset($args['post_parent']);
-			$args['post_type'] = 'any';
-			$inherit = false;
-			$post_parent = false;
-		}
-
 		$filters = self::handle_legacy_filter_to_new_filter($filters);
 		$added_filters = array();
+
+		/**
+		 * Combine search and filters with AND logic
+		 * 
+		 * When both search query and filters are present, we need to ensure they work together:
+		 * - Search creates meta_query with 'OR' relation (matches any custom field)
+		 * - Filters add additional conditions
+		 * - Final structure: AND(search_conditions, filter_conditions)
+		 * 
+		 * This makes filters compulsory when searching, narrowing results further.
+		 */
+		$search_meta_query = isset($args['meta_query']) ? $args['meta_query'] : null;
+		$has_search = !empty($query) && $search_meta_query !== null;
+		$has_filters = !empty($filters) && is_array($filters);
+
+		// Reset meta_query if both search and filters exist to rebuild with AND relation
+		if ($has_search && $has_filters) {
+			$args['meta_query'] = [
+				'relation' => 'AND',
+				$search_meta_query, // Search conditions (with OR relation internally)
+			];
+		}
 
 		if (isset($filters) && is_array($filters)) {
 			foreach ($filters as $filter_item) {
@@ -2251,6 +2265,7 @@ class HelperFunctions
 							if ($callback) {
 								$added_filters[] = $callback;
 							}
+							break;
 						}
 
 						case 'post_date':
@@ -2340,8 +2355,15 @@ class HelperFunctions
 					$key = ContentManagerHelper::get_child_post_meta_key_using_field_id($post_parent, $field_name);
 					$data_type = $filter_item['type'] ?? 'text';
 
-					if (isset($args['meta_query']) && !is_array($args['meta_query'])) {
+					if (!isset($args['meta_query'])) {
 						$args['meta_query'] = array();
+					} elseif (!is_array($args['meta_query'])) {
+						$args['meta_query'] = array();
+					}
+					
+					// Ensure meta_query has proper structure when combining search + filters
+					if ($has_search && !isset($args['meta_query']['relation'])) {
+						$args['meta_query']['relation'] = 'AND';
 					}
 
 					switch ($data_type) {
@@ -2427,6 +2449,14 @@ class HelperFunctions
 			}
 		}
 
+		if (count($IDs) > 0) {
+			$args['post__in'] = $IDs;
+			unset($args['post_parent']);
+			$args['post_type'] = 'any';
+			$inherit = false;
+			$post_parent = false;
+		}
+
 		if (count($tax_query) > 1) {
 			$args['tax_query'] = $tax_query;
 		}
@@ -2488,6 +2518,12 @@ class HelperFunctions
 				}
 
 			}
+		}
+
+		// Disable suppress_filters when post_table text filters (post_title, post_content, post_excerpt)
+		// are present, since they rely on posts_where hooks to modify the SQL query.
+		if (!empty($added_filters)) {
+			$args['suppress_filters'] = false;
 		}
 
 		// Run the WP_Query
@@ -3386,6 +3422,9 @@ class HelperFunctions
 	 * Get current WordPress session ID.
 	 * This method generates a unique session ID if none exists.
 	 *
+	 * @deprecated
+	 * @see \Kirki\App\Supports\Session::get_session_id()
+	 *
 	 * @return string Session ID.
 	 */
 	public static function get_session_id()
@@ -3413,6 +3452,9 @@ class HelperFunctions
 	/**
 	 * Get session data by key using WordPress transients.
 	 *
+	 * @deprecated
+	 * @see \Kirki\App\Supports\Session::get()
+	 *
 	 * @param string $key The key of the session data to retrieve.
 	 * @return mixed|null The session data if found, null otherwise.
 	 */
@@ -3433,6 +3475,9 @@ class HelperFunctions
 
 	/**
 	 * Add or update session data using WordPress transients.
+	 *
+	 * @deprecated
+	 * @see \Kirki\App\Supports\Session::put()
 	 *
 	 * @param string $key The key of the session data.
 	 * @param mixed $value The value of the session data.
@@ -3455,6 +3500,9 @@ class HelperFunctions
 
 	/**
 	 * Delete session data by key using WordPress transients.
+	 *
+	 * @deprecated
+	 * @see \Kirki\App\Supports\Session::forget()
 	 *
 	 * @param string $key The key of the session data to delete.
 	 * @return void

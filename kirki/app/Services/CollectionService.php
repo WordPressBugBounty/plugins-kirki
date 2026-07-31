@@ -29,7 +29,7 @@ class CollectionService
      */
     public function paginated(ListFilterDTO $filters)
     {
-        return Collection::with(['fields', 'basic_fields'])
+        return Collection::with(['fields', 'basic_fields', 'preset_type'])
             ->with_count('items')
             ->paginate($filters->limit, $filters->page);
     }
@@ -42,7 +42,7 @@ class CollectionService
      */
     public function get_single(int $id)
     {
-        $collection_item = Collection::with(['fields', 'basic_fields'])
+        $collection_item = Collection::with(['fields', 'basic_fields', 'preset_type'])
             ->with_count('items')
             ->find($id);
 
@@ -69,6 +69,10 @@ class CollectionService
         $collection = Collection::update_or_create_post($data);
 
         $this->save_fields($collection->ID, $data['fields'] ?? [], $data['basic_fields'] ?? []);
+
+        if (!empty($data['preset_type'])) {
+            PostMeta::update_meta_value($collection->ID, with_prefix('cm_preset_type'), $data['preset_type']);
+        }
 
         return $this->get_single($collection->ID);
     }

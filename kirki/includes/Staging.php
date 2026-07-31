@@ -242,6 +242,10 @@ class Staging {
 		);
 	}
 
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Managers\PageManager::restore_stage_version()
+	 */
 	public static function restore_stage_version() {
 
 		$post_id        = HelperFunctions::sanitize_text( isset( $_POST['post_id'] ) ? $_POST['post_id'] : null );
@@ -282,6 +286,10 @@ class Staging {
 		wp_send_json( array_merge( array( 'versions' => self::get_all_staged_versions( $post_id, true, true ) ), array( 'new_version' => $new_version ) ) );
 	}
 
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Managers\PageManager::rename_stage_version()
+	 */
 	public static function rename_stage_version() {
 		$post_id    = HelperFunctions::sanitize_text( isset( $_POST['post_id'] ) ? $_POST['post_id'] : null );
 		$version_id = HelperFunctions::sanitize_text( isset( $_POST['version_id'] ) ? $_POST['version_id'] : null );
@@ -305,6 +313,10 @@ class Staging {
 		wp_send_json( $staged_versions );
 	}
 
+	/**
+	 * @deprecated
+	 * @see Kirki\App\Managers\PageManager::remove_stage_version()
+	 */
 	public static function delete_stage_version() {
 		$post_id    = HelperFunctions::sanitize_text( isset( $_POST['post_id'] ) ? $_POST['post_id'] : null );
 		$version_id = HelperFunctions::sanitize_text( isset( $_POST['version_id'] ) ? $_POST['version_id'] : null );
@@ -403,7 +415,7 @@ class Staging {
 
 	/**
 	 * @deprecated
-	 * @see Kirki\App\Managers\PageManager::create_first_stage_version()
+	 * @see Kirki\App\Managers\PageManager::create_first_stage_version_if_empty()
 	 */
 	private static function create_first_stage_version( $post_id ) {
 		$new_version = self::add_stage_version( $post_id, 1 );

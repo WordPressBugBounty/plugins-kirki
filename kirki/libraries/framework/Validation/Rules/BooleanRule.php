@@ -1,56 +1,90 @@
 <?php
 
 /**
- * Validates that the given value is a boolean.
+ * Boolean rule class.
  *
  * @package    Framework
- * @subpackage Validation\Rules
+ * @subpackage Validation
  * @since      1.0.0
  */
 namespace Kirki\Framework\Validation\Rules;
 
+use Kirki\Framework\Validation\ValidationRule;
 \defined('ABSPATH') || exit;
-use function Kirki\Framework\message;
-class BooleanRule extends BaseRule
+/**
+ * Validates that the given value is a boolean.
+ *
+ * Accepts true/false, 0/1, '0'/'1', 'true'/'false' by default.
+ * When the strict constraint is applied, only real booleans pass.
+ */
+class BooleanRule extends ValidationRule
 {
     /**
-     * Check for strict data type
+     * The rule name.
      *
-     * @var bool
+     * @var string
      *
      * @since 1.0.0
      */
-    protected $check_strict_data_type = \true;
+    protected string $rule = 'boolean';
     /**
-     * Determine if the value is a boolean.
+     * The supported constraints.
+     *
+     * @var array
+     *
+     * @since 1.0.0
+     */
+    protected array $constraints = ['strict'];
+    /**
+     * The accepted boolean representations.
+     *
+     * @var array
+     *
+     * @since 1.0.0
+     */
+    protected array $accepted_values = [\true, \false, 0, 1, '0', '1', 'true', 'false'];
+    /**
+     * Create a new boolean rule instance.
+     *
+     * @param mixed $args The rule arguments.
+     *
+     * @return void
+     *
+     * @since 1.0.0
+     */
+    public function __construct($args = null)
+    {
+        parent::__construct($args);
+        if ($args === 'strict') {
+            $this->set('strict', \true);
+        }
+    }
+    /**
+     * Validate the rule.
      *
      * @return bool
      *
      * @since 1.0.0
      */
-    public function validate_rule()
+    public function validate() : bool
     {
-        $value = $this->value;
-        // Normalize string values that represent booleans
-        if (\is_string($value)) {
-            $value = \strtolower($value);
-            return \in_array($value, ['true', 'false', '1', '0'], \true);
+        if ($this->get('strict') === \true) {
+            return \is_bool($this->value) ? \true : $this->fails($this->default_messages['default']);
         }
-        // Accept actual booleans and integer equivalents
-        if (\is_bool($value) || $value === 1 || $value === 0) {
-            return \true;
+        if (!\in_array($this->value, $this->accepted_values, \true)) {
+            return $this->fails($this->default_messages['default']);
         }
-        return \false;
+        return \true;
     }
     /**
-     * Get the error message for a non-boolean value.
+     * Get the error messages.
      *
-     * @return string
+     * @return array
      *
      * @since 1.0.0
      */
-    public function get_error_message()
+    public function messages()
     {
-        return message('validator.boolean', $this->last_key_segment());
+        return $this->process_messages($this->messages);
     }
 }

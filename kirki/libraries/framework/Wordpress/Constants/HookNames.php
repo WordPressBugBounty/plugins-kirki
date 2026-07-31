@@ -35,5 +35,6 @@ class HookNames
     public const WP_TRASH_POST = 'wp_trash_post';
     public const LOGIN_REDIRECT = 'login_redirect';
     public const TEMPLATE_INCLUDE = 'template_include';
+    public const TEMPLATE_REDIRECT = 'template_redirect';
     public const GET_BLOCK_TEMPLATES = 'get_block_templates';
 }

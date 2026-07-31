@@ -1,45 +1,46 @@
 <?php
 
 /**
- * Validates that a value is present and null.
+ * Nullable rule class.
  *
  * @package    Framework
- * @subpackage Validation\Rules
+ * @subpackage Validation
  * @since      1.0.0
  */
 namespace Kirki\Framework\Validation\Rules;
 
+use Kirki\Framework\Validation\ValidationRule;
 \defined('ABSPATH') || exit;
-class NullableRule extends BaseRule
+class NullableRule extends ValidationRule
 {
     /**
-     * Check for strict data type
+     * The rule name.
      *
-     * @var bool
+     * @var string
      *
      * @since 1.0.0
      */
-    protected $check_strict_data_type = \true;
+    protected string $rule = 'nullable';
     /**
-     * Determine if the value is present and can be null.
+     * Validate the rule.
      *
      * @return bool
      *
      * @since 1.0.0
      */
-    public function validate_rule()
+    public function validate() : bool
     {
-        return \is_null($this->value) || $this->value === '';
+        return \true;
     }
     /**
-     * Get the error message for a missing required field.
+     * Get the error message.
      *
      * @return string
      *
      * @since 1.0.0
      */
-    public function get_error_message()
+    public function messages()
     {
-        return '';
+        return [];
     }
 }

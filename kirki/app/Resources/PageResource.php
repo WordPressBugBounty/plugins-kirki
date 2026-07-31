@@ -45,7 +45,7 @@ class PageResource extends Resource
             'post_parent' => (int) $this->post_parent,
             'slug' => $this->post_name,
             'variableMode' => Page::get_variable_mode($this->resource),
-            'isFrontPage' => (int) Option::get(OptionKeys::PAGE_ON_FRONT, false) === (int) $this->ID,
+            'isFrontPage' => Page::is_front_page((int) $this->ID),
             'disabled_page_symbols' => $meta[PageMetaKeys::DISABLED_PAGE_SYMBOLS] ?? [],
             'staged_last_updated' => $this->get_staged_last_updated(),
             'preview_url' => $page_url->get_preview_url(),

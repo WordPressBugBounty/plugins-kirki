@@ -7,8 +7,17 @@ defined('ABSPATH') || exit;
 use Kirki\Framework\Http\Request;
 use Kirki\Framework\Sanitizer;
 
+use function Kirki\App\ensure_array;
+
 class DownloadGoogleFontRequest extends Request
 {
+    protected function prepare_for_validation()
+    {
+        $this->merge([
+            'font' => ensure_array($this->font),
+        ]);
+    }
+
     public function rules()
     {
         return [

@@ -23,6 +23,8 @@ class Collaboration {
 	 * This method will save all type and action related data inside data column.
 	 *
 	 * @return void wp_send_json
+	 * @deprecated
+	 * @see Kirki\App\Services\CollaborationService::save_actions()
 	 */
 	public static function save_actions() {
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized

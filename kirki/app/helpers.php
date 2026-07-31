@@ -7,7 +7,8 @@ use Kirki\Framework\Sanitizer;
 defined('ABSPATH') || exit;
 
 if (!function_exists('Kirki\App\get_timezone')) {
-    function get_timezone($is_utc = false) {
+    function get_timezone($is_utc = false)
+    {
         if ($is_utc) {
             return 'UTC';
         }
@@ -22,7 +23,8 @@ if (!function_exists('Kirki\App\get_upload_directory')) {
      * 
      * @return string
      */
-    function get_upload_directory() {
+    function get_upload_directory()
+    {
         return wp_upload_dir()['basedir'];
     }
 }
@@ -33,7 +35,8 @@ if (!function_exists('Kirki\App\get_upload_directory_url')) {
      * 
      * @return string
      */
-    function get_upload_directory_url() {
+    function get_upload_directory_url()
+    {
         return wp_upload_dir()['baseurl'];
     }
 }
@@ -44,7 +47,8 @@ if (!function_exists('Kirki\App\to_boolean')) {
      * @param mixed $value
      * @return bool
      */
-    function to_boolean($value) {
+    function to_boolean($value)
+    {
         if (is_bool($value)) {
             return $value;
         }
@@ -77,7 +81,8 @@ if (!function_exists('Kirki\App\is_truthy')) {
      * @param mixed $value
      * @return bool
      */
-    function is_truthy($value) {
+    function is_truthy($value)
+    {
         $value = to_boolean($value);
 
         return $value === true;
@@ -90,9 +95,10 @@ if (!function_exists('Kirki\App\is_falsy')) {
      * @param mixed $value
      * @return bool
      */
-    function is_falsy($value) {
+    function is_falsy($value)
+    {
         $value = to_boolean($value);
-        
+
         return $value === false;
     }
 }
@@ -103,7 +109,8 @@ if (!function_exists('Kirki\App\is_not_empty_array')) {
      * @param mixed $value
      * @return bool
      */
-    function is_not_empty_array($value) {
+    function is_not_empty_array($value)
+    {
         if (!is_array($value)) {
             return false;
         }
@@ -118,7 +125,8 @@ if (!function_exists('Kirki\App\get_editor_mode')) {
      * 
      * @return string
      */
-    function get_editor_mode() {
+    function get_editor_mode()
+    {
         return 'kirki';
     }
 }
@@ -129,7 +137,8 @@ if (!function_exists('Kirki\App\soft_flush_rewrite_rules')) {
      * 
      * @return void
      */
-    function soft_flush_rewrite_rules() {
+    function soft_flush_rewrite_rules()
+    {
         flush_rewrite_rules(false);
     }
 }
@@ -143,27 +152,52 @@ if (!function_exists('Kirki\App\get_request_header')) {
      * 
      * @return string|null
      */
-    function get_request_header(string $header_name) {
+    function get_request_header(string $header_name)
+    {
         if (function_exists('getallheaders')) {
             $headers = getallheaders();
 
             return Sanitizer::apply_rule($headers[$header_name] ?? null, Sanitizer::TEXT);
         }
-        
+
         // Fallback because `getallheaders()` is not guaranteed to exist in every PHP environment
         $normalized_name = strtolower(trim($header_name));
         $content_headers = ['content-type', 'content-length', 'content-md5'];
 
-        $header_key = in_array($normalized_name, $content_headers, true) 
-            ? str_replace('-', '_', strtoupper($normalized_name)) 
+        $header_key = in_array($normalized_name, $content_headers, true)
+            ? str_replace('-', '_', strtoupper($normalized_name))
             : 'HTTP_' . str_replace('-', '_', strtoupper($normalized_name));
 
         $value = filter_input(INPUT_SERVER, $header_key, FILTER_UNSAFE_RAW);
-        
+
         if (is_null($value) || $value === '' || $value === false) {
             return null;
         }
 
         return Sanitizer::apply_rule($value, Sanitizer::TEXT);
+    }
+}
+
+if (!function_exists('Kirki\App\ensure_array')) {
+    /**
+     * Ensure that the value is an array.
+     * 
+     * @param mixed $value
+     * 
+     * @return array
+     */
+    function ensure_array($value)
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+
+            return is_array($decoded) ? $decoded : $value;
+        }
+
+        return $value;
     }
 }

@@ -4,7 +4,6 @@ namespace Kirki\App\Models;
 
 defined('ABSPATH') || exit;
 
-use Exception;
 use Kirki\App\Traits\HasWordPressPostBehavior;
 use Kirki\App\Traits\SearchablePost;
 use Kirki\Framework\Database\Query\Model;

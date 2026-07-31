@@ -111,6 +111,9 @@ class DataHelper {
 		if ( isset( $element['properties']['interactions'] ) ) {
 			$this->update_interactions( $element['properties']['interactions'], $prefix, $styles );
 		}
+		if ( isset( $element['properties']['interactionLibrary'] ) ) {
+			$element['properties']['interactionLibrary'] = $this->update_interaction_library( $element['properties']['interactionLibrary'], $prefix, $data );
+		}
 
 		$this->temp_data[ $element['id'] ] = $element;
 	}
@@ -157,6 +160,33 @@ class DataHelper {
 				}
 			}
 		}
+	}
+
+
+	private function update_interaction_library( $interactionLibrary, $prefix, $data ) {
+		
+		foreach ( $interactionLibrary as $library_item_index => $library_item ) {
+
+			if ( ! isset( $library_item['data'] ) || ! is_array( $library_item['data'] ) ) {
+				continue;
+			}
+
+			foreach ( $library_item['data'] as $viewport => $viewport_data ) {
+				if ( ! isset( $viewport_data['animation-target']['targets'] ) || ! is_array( $viewport_data['animation-target']['targets'] ) ) {
+					continue;
+				}
+
+				foreach ( $viewport_data['animation-target']['targets'] as $target_index => $target ) {
+					if ( empty( $target['targetId'] ) || ! isset( $data[ $target['targetId'] ] ) ) {
+						continue;
+					}
+
+					$interactionLibrary[ $library_item_index ]['data'][ $viewport ]['animation-target']['targets'][ $target_index ]['targetId'] = $this->get_unique_new_id( $target['targetId'] );
+				}
+			}
+		}
+
+		return $interactionLibrary;
 	}
 
 	/**

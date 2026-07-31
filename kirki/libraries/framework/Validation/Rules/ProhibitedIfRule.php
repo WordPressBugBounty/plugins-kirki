@@ -1,62 +1,94 @@
 <?php
 
 /**
- * Validates that a value is present and not null.
+ * Prohibited rule class.
  *
  * @package    Framework
- * @subpackage Validation\Rules
+ * @subpackage Validation
  * @since      1.0.0
  */
 namespace Kirki\Framework\Validation\Rules;
 
+use Closure;
+use Kirki\Framework\Supports\Arr;
+use Kirki\Framework\Validation\ValidationRule;
+use InvalidArgumentException;
+use function Kirki\Framework\deep_get;
 \defined('ABSPATH') || exit;
-use function Kirki\Framework\message;
-class ProhibitedIfRule extends BaseRule
+/**
+ * Validates that the given field is absent or empty.
+ */
+class ProhibitedIfRule extends ValidationRule
 {
     /**
-     * Determine if the value is present.
+     * The rule name.
+     *
+     * @var string
+     *
+     * @since 1.0.0
+     */
+    protected string $rule = 'prohibited_if';
+    /**
+     * Whether the rule is an implicit rule.
+     *
+     * @var bool
+     *
+     * @since 1.0.0
+     */
+    public bool $is_implicit = \true;
+    /**
+     * Validate the rule.
      *
      * @return bool
      *
      * @since 1.0.0
      */
-    public function validate_rule()
+    public function validate() : bool
     {
-        $field_and_value = \explode(',', $this->rule_value, 2);
-        $field = $field_and_value[0];
-        $value = $field_and_value[1];
-        if ($value === 'false' || $value === 'FALSE') {
-            $value = \false;
-        } elseif ($value === 'true' || $value === 'TRUE') {
-            $value = \true;
-        } elseif ($value === 'null' || $value === 'NULL') {
-            $value = null;
+        $callback = $this->get_callback();
+        if (!$callback()) {
+            return \true;
         }
-        if (\array_key_exists($field, $this->data) && $this->data[$field] == $value) {
-            return \is_null($this->value) || $this->value === '';
+        if (static::is_nullish($this->value)) {
+            return \true;
         }
-        return \true;
+        return $this->fails($this->default_messages['default']);
     }
     /**
-     * Get the error message for the prohibited field.
+     * Get the callback.
      *
-     * @return string
+     * @return Closure
      *
      * @since 1.0.0
      */
-    public function get_error_message()
+    protected function get_callback()
     {
-        return message('validator.prohibited_if', $this->last_key_segment());
+        $arguments = Arr::wrap($this->args);
+        $other = array_first($arguments);
+        $value = \array_slice($arguments, 1);
+        if (!$other instanceof Closure) {
+            $other = function () use($other, $value) {
+                if (empty($value)) {
+                    throw new InvalidArgumentException('The second argument must be a non-empty string.');
+                }
+                $data = deep_get($this->data, (string) $other);
+                if (\count($value) > 1) {
+                    return \in_array($data, $value);
+                }
+                return $data == array_first($value);
+            };
+        }
+        return $other;
     }
     /**
-     * Ignore rule check.
+     * Get the error messages.
      *
-     * @return void
+     * @return array
      *
      * @since 1.0.0
      */
-    protected function ignore_rule_check()
+    public function messages()
     {
-        return \false;
+        return $this->process_messages($this->messages);
     }
 }

@@ -17,6 +17,7 @@ use Kirki\Framework\Supports\Traits\Macroable;
 use Traversable;
 use function Kirki\Framework\Polyfill\array_first;
 use function Kirki\Framework\Polyfill\array_last;
+use function Kirki\Framework\Polyfill\str_ends_with;
 use function Kirki\Framework\Polyfill\str_starts_with;
 class Str
 {
@@ -378,6 +379,31 @@ class Str
         $needles = Arr::wrap($needles);
         foreach ($needles as $needle) {
             if (!empty((string) $needle) && str_starts_with($haystack, $needle)) {
+                return \true;
+            }
+        }
+        return \false;
+    }
+    /**
+     * Determine if a given string ends with a given substring.
+     *
+     * @param string $haystack The string to search in.
+     * @param string|iterable<string> $needles The substring to search for.
+     *
+     * @return bool Whether the string ends with the substring.
+     *
+     * @since 1.0.0
+     */
+    public static function ends_with($haystack, $needles)
+    {
+        if (\is_null($haystack)) {
+            return \false;
+        }
+        if (!\is_iterable($needles)) {
+            $needles = (array) $needles;
+        }
+        foreach ($needles as $needle) {
+            if ((string) $needle !== '' && str_ends_with($haystack, $needle)) {
                 return \true;
             }
         }

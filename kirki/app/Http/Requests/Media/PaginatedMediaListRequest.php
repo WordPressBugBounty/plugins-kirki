@@ -12,12 +12,12 @@ class PaginatedMediaListRequest extends Request
     public function rules()
     {
         return [
-            'search' => 'string',
-            'category' => 'string',
-            'page' => 'integer|min:1',
-            'limit' => 'integer',
-            'sort_by' => 'string',
-            'sort_order' => 'string',
+            'search' => 'nullable|string',
+            'category' => 'nullable|string',
+            'page' => 'nullable|integer|min:1',
+            'limit' => 'nullable|integer',
+            'sort_by' => 'nullable|string',
+            'sort_order' => 'nullable|string',
         ];
     }
 

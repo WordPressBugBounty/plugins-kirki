@@ -18,13 +18,16 @@ use Kirki\Framework\Database\Migrations\Migrator;
 use Kirki\Framework\Database\Schema\SchemaManager;
 use Kirki\Framework\Discovery\ListenerDiscovery;
 use Kirki\Framework\Discovery\PolicyDiscovery;
+use Kirki\Framework\Contracts\SomoyInterface;
 use Kirki\Framework\Managers\EventManager;
 use Kirki\Framework\Managers\LogManager;
 use Kirki\Framework\Managers\PolicyManager;
 use Kirki\Framework\ServiceProvider;
-use Kirki\Framework\Managers\DateManager;
 use Kirki\Framework\Http\Response;
 use Kirki\Framework\Supports\MessagesBag;
+use Kirki\Framework\Supports\Somoy;
+use Kirki\Framework\View\TemplateEngine;
+use Kirki\Framework\View\ViewContext;
 class CoreServiceProvider extends ServiceProvider
 {
     /**
@@ -42,6 +45,8 @@ class CoreServiceProvider extends ServiceProvider
         $this->register_migrations();
         $this->register_messages();
         $this->app->singleton(Response::class);
+        $this->app->singleton(TemplateEngine::class);
+        $this->app->singleton(ViewContext::class);
         if (\class_exists(\Faker\Factory::class)) {
             $this->app->singleton(\Faker\Factory::class, function () {
                 return \Faker\Factory::create();
@@ -87,7 +92,9 @@ class CoreServiceProvider extends ServiceProvider
         $this->app->singleton(LogManager::class);
         $this->app->singleton(EventManager::class);
         $this->app->singleton(PolicyManager::class);
-        $this->app->singleton(DateManager::class);
+        $this->app->bind(SomoyInterface::class, function () {
+            return new Somoy();
+        });
         $this->app->singleton(CommandManager::class);
     }
     /**

@@ -65,6 +65,16 @@ interface Request
      */
     public function validated();
     /**
+     * Validate the request data.
+     *
+     * @param array $rules The rules to validate.
+     *
+     * @return array
+     *
+     * @since 1.0.0
+     */
+    public function validate(array $rules);
+    /**
      * Get the sanitized data from the request.
      *
      * @return array

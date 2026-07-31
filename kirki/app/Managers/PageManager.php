@@ -5,6 +5,7 @@ namespace Kirki\App\Managers;
 defined('ABSPATH') || exit;
 
 use Kirki\App\Constants\KirkiDateTimeFormat;
+use Kirki\App\Constants\OptionKeys;
 use Kirki\App\Constants\PageMetaKeys;
 use Kirki\App\Constants\PostTypes;
 use Kirki\App\Models\Page as PageModel;
@@ -12,12 +13,13 @@ use Kirki\App\Models\Post as PostModel;
 use Kirki\App\Models\PostMeta;
 use Kirki\App\Supports\Facades\GlobalData;
 use Kirki\Framework\Collections\Collection;
+use Kirki\Framework\Supports\Facades\Option;
 use Kirki\Framework\Constants\DateTimeFormats;
-use Kirki\Framework\Supports\Arr;
 use Kirki\Framework\Supports\Facades\Date;
 
 use function Kirki\App\get_editor_mode;
 use function Kirki\App\get_timezone;
+use function Kirki\App\is_falsy;
 use function Kirki\App\is_truthy;
 use function Kirki\Framework\collection;
 use function Kirki\Framework\user;
@@ -170,9 +172,10 @@ class PageManager
 	 * Update last edited datetime of stage version
 	 * 
 	 * @param int $page_id
+	 * @param bool $has_legacy_global_style default false
 	 * @return array|false
 	 */
-	public function set_last_edited_datetime_of_stage_version(int $page_id)
+	public function set_last_edited_datetime_of_stage_version(int $page_id, bool $has_legacy_global_style = false)
 	{
 		$staged_versions = $this->get_all_staged_versions($page_id);
 
@@ -182,10 +185,10 @@ class PageManager
 			return false;
 		}
 
-		$this->staged_versions = $staged_versions->map(function ($item, $index) use ($total_versions) {
+		$this->staged_versions = $staged_versions->map(function ($item, $index) use ($total_versions, $has_legacy_global_style) {
 			if ($index === $total_versions - 1) {
 				$item['last_updated'] = Date::now(get_timezone(true))->format(DateTimeFormats::DB_DATETIME);
-				$item['no_legacy_global_style'] = true;
+				$item['no_legacy_global_style'] = !$has_legacy_global_style;
 			}
 
 			return $item;
@@ -259,7 +262,7 @@ class PageManager
 				return $this->staged_versions = collection();
 			}
 
-			$staged_versions = $this->create_first_stage_version($page_id);
+			$staged_versions = $this->create_first_stage_version_if_empty($page_id);
 		} else {
 			$staged_versions = collection($staged_versions);
 		}
@@ -289,9 +292,12 @@ class PageManager
 	 * @param int $page_id
 	 * @return Collection
 	 */
-	private function create_first_stage_version(int $page_id)
+	private function create_first_stage_version_if_empty(int $page_id)
 	{
-		$new_version = $this->add_stage_version($page_id, 1);
+		// When stage version is empty, it means there is legacy global style blocks
+		$has_legacy_global_style = true;
+
+		$new_version = $this->add_stage_version($page_id, 1, [], false, $has_legacy_global_style);
 
 		$style_blocks_old_data = PostMeta::get_meta_value($page_id, PageMetaKeys::STYLE_BLOCKS, []);
 		$this->save_style_blocks($page_id, $style_blocks_old_data, $new_version);
@@ -307,8 +313,8 @@ class PageManager
 
 		$kirki_block_data = PostMeta::get_meta_value($page_id, PageMetaKeys::BLOCKS, []);
 		$this->save_blocks($page_id, $kirki_block_data, $new_version);
-
-		return $this->publish_stage_version($page_id);
+		
+		return $this->publish_stage_version($page_id, $has_legacy_global_style);
 	}
 
 	/**
@@ -318,15 +324,20 @@ class PageManager
 	 * @param int $version_number
 	 * @param array $prev_versions
 	 * @param array|false $being_restored
+	 * @param bool $has_legacy_global_style default false
 	 * @return int
 	 */
-	private function add_stage_version(int $page_id, int $version_number, array $prev_versions = [], $being_restored = false)
+	private function add_stage_version(int $page_id, int $version_number, array $prev_versions = [], $being_restored = false, $has_legacy_global_style = false)
 	{
 		$version_name = $being_restored
 			? sprintf(__('[Restored] %s', 'kirki'), $being_restored['name'])
 			: wp_date(KirkiDateTimeFormat::HUMAN_READABLE_DAY_OF_MONTH_WITH_TIME); // @todo: improve later
 
 		$datetime = wp_date(KirkiDateTimeFormat::DB_DATETIME); // @todo: improve later
+
+		if (!empty($being_restored)) {
+			$has_legacy_global_style = !($being_restored['has_legacy_global_style'] ?? false);
+		}
 
 		$new_version = [
 			'version' => $version_number,
@@ -336,7 +347,7 @@ class PageManager
 			'last_updated' => $datetime,
 			'name' => $version_name,
 			'publish' => false,
-			'no_legacy_global_style' => true,
+			'no_legacy_global_style' => !$has_legacy_global_style,
 		];
 
 		$prev_versions[] = $new_version;
@@ -352,19 +363,20 @@ class PageManager
 	 * Publish stage version
 	 * 
 	 * @param int $page_id
+	 * @param bool $has_legacy_global_style default false
 	 * @return Collection
 	 */
-	public function publish_stage_version(int $page_id)
+	public function publish_stage_version(int $page_id, bool $has_legacy_global_style = false)
 	{
 		$stage_must = false;
 		$version_id = $this->get_most_recent_stage_version($page_id, $stage_must);
 
 		$this->staged_versions = $this->get_all_staged_versions($page_id)
-			->map(function ($item) use ($version_id) {
+			->map(function ($item) use ($version_id, $has_legacy_global_style) {
 				$is_published = isset($item['version']) && intval($item['version']) === intval($version_id);
 
 				$item['publish'] = $is_published;
-				$item['no_legacy_global_style'] = true;
+				$item['no_legacy_global_style'] = !$has_legacy_global_style;
 
 				return $item;
 			});
@@ -376,6 +388,112 @@ class PageManager
 		);
 
 		return $this->staged_versions;
+	}
+
+	/**
+	 * Rename stage version
+	 * 
+	 * @param int $page_id
+	 * @param int $version_id
+	 * @param string $new_name
+	 * @return Collection
+	 */
+	public function rename_stage_version(int $page_id, int $version_id, string $new_name)
+	{
+		$staged_versions = $this->get_all_staged_versions($page_id, false);
+		
+		$this->staged_versions = $staged_versions->map(function ($item) use ($version_id, $new_name) {
+				if (is_array($item) && isset($item['version']) && intval($item['version']) === $version_id) {
+					$item['name'] = $new_name;
+				}
+
+				return $item;
+			}
+		);
+
+		PostMeta::update_meta_value($page_id, PageMetaKeys::STAGED_VERSIONS, $this->staged_versions->to_array());
+
+		return $this->staged_versions;
+	}
+
+	/**
+	 * Remove stage version
+	 * 
+	 * @param int $page_id
+	 * @param int $version_id
+	 * @return Collection
+	 */
+	public function remove_stage_version(int $page_id, int $version_id)
+	{
+		$stage_only = true;
+		$meta_keys = [];
+
+		foreach([
+			PageMetaKeys::STYLE_BLOCKS,
+			PageMetaKeys::GLOBAL_STYLE_BLOCK_DEPRECATED,
+			PageMetaKeys::USED_GLOBAL_STYLE_BLOCK_IDS,
+			PageMetaKeys::USED_STYLE_BLOCK_IDS,
+			PageMetaKeys::USED_FONT_LIST,
+			PageMetaKeys::BLOCKS
+		] as $key) {
+			$meta_keys[] = $this->get_staged_meta_name($key, $page_id, $version_id, $stage_only);
+		}
+
+		PostMeta::query()
+			->where('post_id', $page_id)
+			->where_in('meta_key', $meta_keys)
+			->delete();
+
+		$staged_versions = $this->get_all_staged_versions($page_id, false);
+
+		$this->staged_versions = $staged_versions->filter(function ($item) use ($version_id) {
+			// Filter out the version which is matched and not published
+			return !(
+				is_array($item) 
+				&& isset($item['publish'], $item['version']) 
+				&& is_falsy($item['publish']) 
+				&& intval($item['version']) === $version_id
+			);
+		})->values();
+		
+		PostMeta::update_meta_value($page_id, PageMetaKeys::STAGED_VERSIONS, $this->staged_versions->to_array());
+
+		return $this->staged_versions;
+	}
+
+	protected function restore_page_meta(string $meta_key,int $page_id, int $old_version_id, int $new_version_id)
+	{
+		$old_meta_key = $this->get_staged_meta_name($meta_key, $page_id, $old_version_id);
+		$old_data = PostMeta::get_meta_value($page_id, $old_meta_key);
+		$new_meta_key = $this->get_staged_meta_name($meta_key, $page_id, $new_version_id);
+		PostMeta::update_meta_value($page_id, $new_meta_key, $old_data);
+	}
+
+	/**
+	 * Restore stage version
+	 * 
+	 * @param int $page_id
+	 * @param int $old_version_id
+	 * @return int return new version id
+	 */
+	public function restore_stage_version(int $page_id, int $old_version_id)
+	{
+		$new_version_id = $this->get_most_recent_stage_version($page_id, true, true, $old_version_id);
+
+		$meta_keys = [
+			PageMetaKeys::STYLE_BLOCKS,
+			PageMetaKeys::GLOBAL_STYLE_BLOCK_DEPRECATED,
+			PageMetaKeys::USED_GLOBAL_STYLE_BLOCK_IDS,
+			PageMetaKeys::USED_STYLE_BLOCK_IDS,
+			PageMetaKeys::USED_FONT_LIST,
+			PageMetaKeys::BLOCKS
+		];
+
+		foreach($meta_keys as $meta_key) {
+			$this->restore_page_meta($meta_key, $page_id, $old_version_id, $new_version_id);
+		}
+
+		return $new_version_id;
 	}
 
 	/**
@@ -564,78 +682,101 @@ class PageManager
 	 */
 	private function resolve_duplicate_current_style_block_names($current_style_blocks, $global_style_blocks)
 	{
-		$reserved_names = $this->extract_style_block_name($global_style_blocks);
+		$global_class_names = $this->extract_class_names($global_style_blocks);
+		$current_class_names = $this->extract_class_names($current_style_blocks);
 
-		$rename_map = [];
+		$duplicate_classes = array_intersect_key($current_class_names, $global_class_names);
 
-		foreach ($current_style_blocks as $block_index => $block) {
-			if (!isset($block['name'])) {
-				continue;
-			}
-
-			if (is_string($block['name'])) {
-				$name = $this->normalize_style_block_name($block['name']);
-
-				if (!isset($rename_map[$name])) {
-					$rename_map[$name] = $this->generate_unique_style_block_name($name, $reserved_names);
-				}
-
-				$current_style_blocks[$block_index]['name'] = $rename_map[$name];
-
-				continue;
-			}
-
-			if (!is_array($block['name'])) {
-				continue;
-			}
-
-			foreach ($block['name'] as $name_index => $name) {
-				if (!is_string($name)) {
-					continue;
-				}
-
-				$name = $this->normalize_style_block_name($name);
-
-				if (!isset($rename_map[$name])) {
-					$rename_map[$name] = $this->generate_unique_style_block_name($name, $reserved_names);
-				}
-
-				$current_style_blocks[$block_index]['name'][$name_index] = $rename_map[$name];
-			}
+		if (empty($duplicate_classes)) {
+			return $current_style_blocks;
 		}
+
+		$class_map = $this->make_duplicate_classes_to_unique(
+			$duplicate_classes,
+			$global_class_names,
+			$current_class_names
+		);
+
+		foreach ($current_style_blocks as &$style_block) {
+			if (!isset($style_block['name'])) {
+				continue;
+			}
+
+			if (is_string($style_block['name'])) {
+				$class_name = $this->normalize_style_block_name($style_block['name']);
+
+				if (isset($class_map[$class_name])) {
+					$style_block['name'] = $class_map[$class_name];
+				}
+
+				continue;
+			}
+
+			if (!is_array($style_block['name'])) {
+				continue;
+			}
+
+			foreach ($style_block['name'] as &$name) {
+				$class_name = $this->normalize_style_block_name($name);
+
+				if (isset($class_map[$class_name])) {
+					$name = $class_map[$class_name];
+				}
+			}
+
+			unset($name);
+		}
+
+		unset($style_block);
 
 		return $current_style_blocks;
 	}
 
+	private function extract_class_names(array $style_blocks)
+	{
+		$class_names = [];
+
+		foreach ($style_blocks as $style_block) {
+			if (!isset($style_block['name']) || !is_string($style_block['name'])) {
+				continue;
+			}
+
+			$class_names[$this->normalize_style_block_name($style_block['name'])] = true;
+		}
+
+		return $class_names;
+	}
+
+
 	/**
 	 * Check or generate new class names
 	 * 
-	 * @todo: need to refactor
+	 * @param array $duplicate_classes
+	 * @param array $global_class_names
+	 * @param array $current_class_names
 	 * 
-	 * @param string $name
-	 * @param array $reserved_names
-	 * 
-	 * @return string
+	 * @return array
 	 */
-	private function generate_unique_style_block_name(string $name, array &$reserved_names)
+	private function make_duplicate_classes_to_unique(array $duplicate_classes, array $global_class_names, array $current_class_names)
 	{
-		if (!isset($reserved_names[$name])) {
-			$reserved_names[$name] = true;
-			return $name;
+		foreach ($duplicate_classes as $class_name => $_) {
+			$counter = 1;
+
+			do {
+				$new_class_name = $counter === 1
+					? $class_name . '-copy'
+					: $class_name . '-copy_' . $counter;
+
+				$counter++;
+			} while (
+				isset($global_class_names[$new_class_name]) ||
+				isset($current_class_names[$new_class_name])
+			);
+
+			$duplicate_classes[$class_name] = $new_class_name;
 		}
 
-		$base_name = "{$name}-copy";
-		$unique_name = $base_name;
-		$counter = 2;
-
-		while (isset($reserved_names[$unique_name])) {
-			$unique_name = "{$base_name}-{$counter}";
-			$counter++;
-		}
-
-		$reserved_names[$unique_name] = true;
-
-		return $unique_name;
+		return $duplicate_classes;
 	}
 
 	/**
@@ -662,77 +803,62 @@ class PageManager
 	 */
 	public function merge_style_blocks($old_blocks, $new_blocks)
 	{
-		$reserved = $this->extract_style_block_name($old_blocks);
+		$names_in_old_blocks = $this->extract_class_names($old_blocks);
+    	$names_in_new_blocks = $this->extract_class_names($new_blocks);
 
-		$rename_map = [];
-
-		foreach ($new_blocks as &$block) {
-			if (empty($block['name']) || !is_string($block['name'])) {
+		foreach ($new_blocks as $new_block_key => &$new_block) {
+			if (empty($new_block['name']) || !is_string($new_block['name'])) {
 				continue;
 			}
 
-			$normalized = $this->normalize_style_block_name($block['name']);
+			$original_name = $new_block['name'];
+        	$normalized_name = strtolower($original_name);
 
-			$unique = $this->generate_unique_style_block_name(
-				$normalized,
-				$reserved
-			);
+			// If same ID exists in $old_blocks, remove it first (old behavior)
+			if (isset($old_blocks[$new_block_key])) {
+				unset($old_blocks[$new_block_key]);
 
-			if ($unique !== $normalized) {
-				$rename_map[$block['name']] = $unique;
-				$block['name'] = $unique;
+				if (isset($names_in_old_blocks[$normalized_name])) {
+					unset($names_in_old_blocks[$normalized_name]);
+				}
 			}
-		}
 
-		unset($block);
-
-		if (empty($rename_map)) {
-			return array_merge($old_blocks, $new_blocks);
-		}
-
-		
-		foreach ($new_blocks as &$block) {
-			if (!is_array($block['name'])) {
+			if (!isset($names_in_old_blocks[$normalized_name])) {
 				continue;
 			}
 
-			foreach ($block['name'] as &$name) {
-				if (!isset($rename_map[$name])) {
+			// If name already exists in $old_blocks, make it unique
+			$suffix = 1;
+
+			while (
+				isset($names_in_old_blocks[$normalized_name . '_' . $suffix]) 
+				|| isset($names_in_new_blocks[$normalized_name . '_' . $suffix])
+			) {
+				$suffix++;
+			}
+
+			$new_name = $original_name . '_' . $suffix;
+
+			foreach ($new_blocks as &$block) {
+				if (!isset($block['name']) || !is_array($block['name'])) {
 					continue;
 				}
 
-				$name = $rename_map[$name];
+				$block['name'] = array_map(fn($item) => $item === $original_name ? $new_name : $item, $block['name']);
 			}
 
-			unset($name);
+			unset($block);
+
+			$new_block['name'] = $new_name;
+
+			unset($names_in_new_blocks[$normalized_name]);
+			$names_in_new_blocks[strtolower($new_name)] = true;
 		}
 
-		unset($block);
+		unset($new_block);
 
+		// Use array_merge to keep old semantics
 		return array_merge($old_blocks, $new_blocks);
-	}
-
-	private function extract_style_block_name(array $style_blocks)
-	{
-		$names = [];
-
-		foreach ($style_blocks as $block) {
-			if (!isset($block['name'])) {
-				continue;
-			}
-
-			$block_names = Arr::wrap($block['name']);
-
-			foreach ($block_names as $name) {
-				if (!is_string($name)) {
-					continue;
-				}
-
-				$names[$this->normalize_style_block_name($name)] = true;
-			}
-		}
-
-		return $names;
 	}
 
 	/**
@@ -793,5 +919,26 @@ class PageManager
 		}
 
 		return null;
+	}
+
+	/**
+	 * Get front page ID
+	 * 
+	 * @return int
+	 */
+	public function get_front_page_id()
+	{
+		return (int) Option::get(OptionKeys::PAGE_ON_FRONT, 0);
+	}
+
+	/**
+	 * Is front page
+	 * 
+	 * @param int $page_id
+	 * 
+	 * @return bool
+	 */
+	public function is_front_page(int $page_id) {
+		return $this->get_front_page_id() === $page_id;
 	}
 }

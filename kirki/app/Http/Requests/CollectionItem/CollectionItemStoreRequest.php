@@ -7,6 +7,8 @@ use Kirki\Framework\Http\Request;
 use Kirki\Framework\Sanitizer;
 use Kirki\Framework\Supports\Arr;
 
+use function Kirki\App\ensure_array;
+
 class CollectionItemStoreRequest extends Request
 {
     /**
@@ -27,6 +29,10 @@ class CollectionItemStoreRequest extends Request
         if (empty($data['post_status'])) {
             $this->merge(['post_status' => PostStatus::DRAFT]);
         }
+
+        $this->merge([
+            'fields' => ensure_array($this->fields),
+        ]);
     }
 
     /**

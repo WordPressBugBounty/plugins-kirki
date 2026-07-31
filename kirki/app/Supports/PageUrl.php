@@ -123,7 +123,7 @@ class PageUrl {
                 'data' => $data
             ] = CollectionItem::get_items_from_condition($conditions);
 
-            if (is_not_empty_array($data)) {
+            if (empty($data)) {
                 return $this->get_page_permalink();
             }
 

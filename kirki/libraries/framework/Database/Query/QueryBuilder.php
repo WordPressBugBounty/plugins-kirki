@@ -2596,7 +2596,7 @@ class QueryBuilder
             return $this->clone_without($this->havings ? [] : ['columns'])->clone_without_bindings($this->havings ? [] : ['select'])->set_aggregate($function, $columns)->get();
         });
         if (!$results->empty()) {
-            return \array_change_key_case($results->to_array())[0]['aggregate'];
+            return \array_change_key_case((array) $results->to_array())[0]['aggregate'];
         }
     }
     /**

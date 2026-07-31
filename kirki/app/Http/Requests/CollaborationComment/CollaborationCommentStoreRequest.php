@@ -6,8 +6,18 @@ use Kirki\App\Constants\CollaborationComment\CommentSegmentTypes;
 use Kirki\Framework\Http\Request;
 use Kirki\Framework\Sanitizer;
 
+use function Kirki\App\ensure_array;
+
 class CollaborationCommentStoreRequest extends Request
 {
+    protected function prepare_for_validation()
+    {
+        $this->merge([
+            'comment' => ensure_array($this->comment),
+            'meta_data' => ensure_array($this->meta_data),
+        ]);
+    }
+
     /**
      * Validation rules.
      */

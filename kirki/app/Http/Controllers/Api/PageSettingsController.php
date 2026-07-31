@@ -27,7 +27,7 @@ class PageSettingsController
 
     public function update_page_settings(PageSettingsRequest $request, int $page_id)
     {
-        $page = PageModel::find($page_id);
+        $page = PageModel::exclude_trash()->find($page_id);
 
         if (empty($page)) {
             throw new Exception(esc_html__('Page not found.', 'kirki'), Response::NOT_FOUND);

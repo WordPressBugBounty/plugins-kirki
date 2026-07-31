@@ -1,54 +1,100 @@
 <?php
 
 /**
- * Rule to ensure that a value is unique in a specified database table and column.
+ * Unique rule class.
  *
  * @package    Framework
- * @subpackage Validation\Rules
+ * @subpackage Validation
  * @since      1.0.0
  */
 namespace Kirki\Framework\Validation\Rules;
 
-\defined('ABSPATH') || exit;
-use Kirki\Framework\Supports\Facades\DB;
 use Exception;
-use function Kirki\Framework\message;
-class UniqueRule extends BaseRule
+use Kirki\Framework\Supports\Arr;
+use Kirki\Framework\Supports\Facades\DB;
+use Kirki\Framework\Validation\ValidationRule;
+use function Kirki\Framework\Polyfill\array_last;
+\defined('ABSPATH') || exit;
+/**
+ * Validates that the given value does not already exist in a database table column.
+ */
+class UniqueRule extends ValidationRule
 {
     /**
-     * Check if the value unique in the specified database table and column.
+     * The rule name.
+     *
+     * @var string
+     *
+     * @since 1.0.0
+     */
+    protected string $rule = 'unique';
+    /**
+     * The constraints.
+     *
+     * @var array
+     *
+     * @since 1.0.0
+     */
+    protected array $constraints = [];
+    /**
+     * Validate the rule.
      *
      * @return bool
      *
-     * @throws \Exception
-     *
      * @since 1.0.0
      */
-    public function validate_rule()
+    public function validate() : bool
     {
-        if (\stripos($this->rule_value, ',') === \false) {
-            throw new Exception("Missing parameters for unique rule.");
+        if ($this->record_exists()) {
+            return $this->fails($this->default_messages['default']);
         }
-        $parts = \explode(',', $this->rule_value, 3);
-        $table_name = $parts[0];
-        $column_name = $parts[1] ?? '';
-        $id = $parts[2] ?? null;
-        if (!empty($id)) {
-            $result = DB::table($table_name)->where($column_name, $this->value)->where('id', '!=', $id)->first();
-        } else {
-            $result = DB::table($table_name)->where($column_name, $this->value)->first();
-        }
-        return empty($result);
+        return \true;
     }
     /**
-     * Get the error message if the row exist in DB table.
+     * Check whether a matching record already exists in the table.
      *
-     * @return string
+     * @return bool
      *
      * @since 1.0.0
      */
-    public function get_error_message()
+    protected function record_exists()
     {
-        return message('validator.unique', $this->last_key_segment());
+        [$table, $column, $ignore_id] = $this->table_column_and_ignore_id();
+        $query = DB::table($table)->where($column, $this->value);
+        if ($ignore_id !== null) {
+            $query->where('id', '!=', $ignore_id);
+        }
+        try {
+            $query->sole();
+            return \true;
+        } catch (Exception $error) {
+            return \false;
+        }
+    }
+    /**
+     * Resolve the prefixed table name, column, and ignored id from the rule arguments.
+     *
+     * @return array
+     *
+     * @since 1.0.0
+     */
+    protected function table_column_and_ignore_id()
+    {
+        $arguments = Arr::wrap($this->args);
+        $table = $arguments[0];
+        $column = !empty($arguments[1]) ? $arguments[1] : array_last(\explode('.', $this->name));
+        $ignore_id = $arguments[2] ?? null;
+        return [$table, $column, $ignore_id];
+    }
+    /**
+     * Get the error messages.
+     *
+     * @return array
+     *
+     * @since 1.0.0
+     */
+    public function messages()
+    {
+        return $this->process_messages($this->messages);
     }
 }

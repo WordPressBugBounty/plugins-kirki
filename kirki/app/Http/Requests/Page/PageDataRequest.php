@@ -9,46 +9,55 @@ use Kirki\Framework\Http\Request;
 use Kirki\Framework\Http\Response;
 use Kirki\Framework\Sanitizer;
 
+use function Kirki\App\ensure_array;
+
 class PageDataRequest extends Request
 {
+    protected function prepare_for_validation()
+    {
+        $this->merge([
+            'data' => ensure_array($this->data),
+        ]);
+    }
+
     public function rules()
     {
         $rules = [
             'session_id' => 'required|string',
-            'is_staging' => 'boolean',
+            'is_staging' => 'nullable|boolean',
             'data' => 'required|array',
             'data.blocks' => 'prohibited',
             'data.styles' => 'prohibited',
             'data.usedStyles' => 'prohibited',
             'data.usedStyleIdsRandom' => 'prohibited',
             'data.usedFonts' => 'prohibited',
-            
+
         ];
 
-        switch($this->page_content_type) {
+        switch ($this->page_content_type) {
             case 'blocks':
                 $rules = array_merge($rules, [
-                    'data.blocks' => 'array',
+                    'data.blocks' => 'nullable|array',
                 ]);
                 break;
             case 'styles':
                 $rules = array_merge($rules, [
-                    'data.styles' => 'array',
+                    'data.styles' => 'nullable|array',
                 ]);
                 break;
             case 'used-styles':
                 $rules = array_merge($rules, [
-                    'data.usedStyles' => 'array',
+                    'data.usedStyles' => 'nullable|array',
                 ]);
                 break;
             case 'used-style-ids-random':
                 $rules = array_merge($rules, [
-                    'data.usedStyleIdsRandom' => 'array',
+                    'data.usedStyleIdsRandom' => 'nullable|array',
                 ]);
                 break;
             case 'used-fonts':
                 $rules = array_merge($rules, [
-                    'data.usedFonts' => 'array',
+                    'data.usedFonts' => 'nullable|array',
                 ]);
                 break;
             default:
@@ -61,12 +70,12 @@ class PageDataRequest extends Request
     public function filters()
     {
         return [
-            'data' => Sanitizer::ARRAY,
-            'data.blocks' => Sanitizer::ARRAY,
-            'data.styles' => Sanitizer::ARRAY,
-            'data.usedStyles' => Sanitizer::ARRAY,
-            'data.usedStyleIdsRandom' => Sanitizer::ARRAY,
-            'data.usedFonts' => Sanitizer::ARRAY,
+            'data' => Sanitizer::ARRAY ,
+            'data.blocks' => Sanitizer::ARRAY ,
+            'data.styles' => Sanitizer::ARRAY ,
+            'data.usedStyles' => Sanitizer::ARRAY ,
+            'data.usedStyleIdsRandom' => Sanitizer::ARRAY ,
+            'data.usedFonts' => Sanitizer::ARRAY ,
             'session_id' => Sanitizer::TEXT,
             'is_staging' => Sanitizer::BOOL,
         ];

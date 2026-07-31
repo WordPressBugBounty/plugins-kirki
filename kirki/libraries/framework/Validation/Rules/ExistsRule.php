@@ -1,47 +1,86 @@
 <?php
 
 /**
- * Rule to ensure a a post exist with id and post type.
+ * Exists rule class.
  *
  * @package    Framework
- * @subpackage Validation\Rules
+ * @subpackage Validation
  * @since      1.0.0
  */
 namespace Kirki\Framework\Validation\Rules;
 
-\defined('ABSPATH') || exit;
+use Kirki\Framework\Supports\Arr;
 use Kirki\Framework\Supports\Facades\DB;
-use Exception;
-use function Kirki\Framework\message;
-class ExistsRule extends BaseRule
+use Kirki\Framework\Validation\ValidationRule;
+use function Kirki\Framework\Polyfill\array_last;
+\defined('ABSPATH') || exit;
+/**
+ * Validates that the given value exists in a database table column.
+ */
+class ExistsRule extends ValidationRule
 {
     /**
-     * Check if the value exists in the specified database table and column.
+     * The rule name.
+     *
+     * @var string
+     *
+     * @since 1.0.0
+     */
+    protected string $rule = 'exists';
+    /**
+     * Validate the rule.
      *
      * @return bool
      *
-     * @throws \Exception
-     *
      * @since 1.0.0
      */
-    public function validate_rule()
+    public function validate() : bool
     {
-        if (\stripos($this->rule_value, ',') === \false) {
-            throw new Exception("Missing parameters for exists rule.");
+        if (!$this->record_exists()) {
+            return $this->fails($this->default_messages['default']);
         }
-        [$table_name, $column_name] = \explode(",", $this->rule_value, 2);
-        $result = DB::table($table_name)->where($column_name, $this->value)->first();
-        return !empty($result);
+        return \true;
     }
     /**
-     * Get the error message if the row does not exist in DB table.
+     * Check whether a matching record exists in the table.
      *
-     * @return string
+     * @return bool
      *
      * @since 1.0.0
      */
-    public function get_error_message()
+    protected function record_exists()
     {
-        return message('validator.exists');
+        [$table, $column] = $this->table_and_column();
+        $values = Arr::wrap($this->value);
+        if (empty($values)) {
+            return \false;
+        }
+        $total = DB::table($table)->where_in($column, $values)->count();
+        return $total === \count($values);
+    }
+    /**
+     * Resolve the prefixed table name and the column from the rule arguments.
+     *
+     * @return array
+     *
+     * @since 1.0.0
+     */
+    protected function table_and_column()
+    {
+        $arguments = Arr::wrap($this->args);
+        $table = $arguments[0];
+        $column = $arguments[1] ?? array_last(\explode('.', $this->name));
+        return [$table, $column];
+    }
+    /**
+     * Get the error messages.
+     *
+     * @return array
+     *
+     * @since 1.0.0
+     */
+    public function messages()
+    {
+        return $this->process_messages($this->messages);
     }
 }

@@ -6,6 +6,8 @@ use Kirki\App\Constants\Collection\CustomFieldTypes;
 use Kirki\Framework\Http\Request;
 use Kirki\Framework\Sanitizer;
 
+use function Kirki\App\ensure_array;
+
 class CollectionStoreRequest extends Request
 {
     /**
@@ -13,15 +15,14 @@ class CollectionStoreRequest extends Request
      */
     protected function prepare_for_validation()
     {
-        $data = $this->get('data');
+        $data = ensure_array($this->get('data') ?? []);
 
-        if (is_string($data)) {
-            $data = json_decode($data, true);
-        }
+        $this->merge($data);
 
-        if (is_array($data)) {
-            $this->merge($data);
-        }
+        $this->merge([
+            'fields' => ensure_array($this->fields),
+            'basic_fields' => ensure_array($this->basic_fields),
+        ]);
     }
 
     /**
@@ -33,6 +34,7 @@ class CollectionStoreRequest extends Request
             'ID' => 'nullable',
             'post_title' => 'required|string',
             'post_name' => 'nullable|string',
+            'preset_type' => 'nullable|string',
 
             'fields' => 'nullable|array',
             'fields.*.id' => 'required|string',
@@ -41,6 +43,7 @@ class CollectionStoreRequest extends Request
             'fields.*.title' => 'required|string',
             'fields.*.help_text' => 'nullable|string',
             'fields.*.required' => 'required|boolean',
+            'fields.*.templateKey' => 'nullable|string',
 
             'basic_fields' => 'nullable|array',
         ];
@@ -55,6 +58,7 @@ class CollectionStoreRequest extends Request
             'ID' => Sanitizer::INT,
             'post_title' => Sanitizer::TEXT,
             'post_name' => Sanitizer::TEXT,
+            'preset_type' => Sanitizer::TEXT,
 
             'fields' => Sanitizer::ARRAY ,
             'fields.*.id' => Sanitizer::TEXT,
@@ -63,6 +67,7 @@ class CollectionStoreRequest extends Request
             'fields.*.title' => Sanitizer::TEXT,
             'fields.*.help_text' => Sanitizer::TEXT,
             'fields.*.required' => Sanitizer::BOOL,
+            'fields.*.templateKey' => Sanitizer::TEXT,
 
             'basic_fields' => Sanitizer::ARRAY ,
         ];

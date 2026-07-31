@@ -270,7 +270,7 @@ class Connection
     {
         return $this->run($query, $bindings, function ($query, $bindings) {
             $sql = $this->prepare_query($query, $bindings);
-            return $this->db->get_results($sql);
+            return $this->db->get_results($sql, ARRAY_A);
         });
     }
     /**

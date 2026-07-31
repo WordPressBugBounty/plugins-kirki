@@ -100,13 +100,13 @@ class CollectionController
     {
         $is_valid = ContentManager::validate_slug(
             $request->int('post_id', 0),
-            $request->string('post_type'),
-            $request->string('post_name')
+            $request->string('post_type', ''),
+            $request->string('post_name', '')
         );
 
         return response()->json([
             'data' => $is_valid,
-            'message' => __('Slug validated successfully.', 'kirki'),
+            'message' => $is_valid ? __('Slug validated successfully..', 'kirki') : __('Slug is not available.', 'kirki'),
         ]);
     }
 }

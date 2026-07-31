@@ -2,6 +2,8 @@
 
 namespace Kirki\App\Http\Requests\Page;
 
+use function Kirki\App\ensure_array;
+
 defined('ABSPATH') || exit;
 
 use Kirki\Framework\Http\Request;
@@ -11,13 +13,20 @@ use function Kirki\App\is_falsy;
 
 class GlobalStyleRequest extends Request
 {
+    protected function prepare_for_validation()
+    {
+        $this->merge([
+            'styles' => ensure_array($this->styles),
+        ]);
+    }
+
     public function rules()
     {
         return [
             'session_id' => 'required|string',
-            'styles' => 'array',
-            'styles.*' => 'array',
-            'styles.*.isGlobalStyle' => ['required', fn ($value) => is_falsy($value) ? __('The isGlobalStyle field is required.', 'kirki') : true],
+            'styles' => 'nullable|array',
+            'styles.*' => 'nullable|array',
+            'styles.*.isGlobalStyle' => ['required', fn($value) => is_falsy($value) ? __('The isGlobalStyle field is required.', 'kirki') : true],
         ];
     }
 
@@ -25,7 +34,7 @@ class GlobalStyleRequest extends Request
     {
         return [
             'session_id' => Sanitizer::TEXT,
-            'styles' => Sanitizer::ARRAY,
+            'styles' => Sanitizer::ARRAY ,
         ];
     }
 }

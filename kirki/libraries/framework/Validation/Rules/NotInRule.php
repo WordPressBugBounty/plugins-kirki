@@ -1,43 +1,52 @@
 <?php
 
 /**
- * Rule to ensure a value does not exists within a predefined set.
+ * Not in rule class.
  *
  * @package    Framework
- * @subpackage Validation\Rules
+ * @subpackage Validation
  * @since      1.0.0
  */
 namespace Kirki\Framework\Validation\Rules;
 
+use Kirki\Framework\Validation\ValidationRule;
 \defined('ABSPATH') || exit;
-use function Kirki\Framework\message;
-class NotInRule extends BaseRule
+/**
+ * Validates that the given value is not in the list of disallowed values.
+ */
+class NotInRule extends ValidationRule
 {
     /**
-     * Check if the value is in the allowed list.
+     * The rule name.
+     *
+     * @var string
+     *
+     * @since 1.0.0
+     */
+    protected string $rule = 'not_in';
+    /**
+     * Validate the rule.
      *
      * @return bool
      *
      * @since 1.0.0
      */
-    public function validate_rule()
+    public function validate() : bool
     {
-        $not_in = $this->rule_value;
-        if (\is_string($not_in)) {
-            $not_in = \str_replace(' ', '', $not_in);
-            $not_in = \explode(',', $not_in);
+        if (\in_array($this->value, (array) $this->args)) {
+            return $this->fails($this->default_messages['default']);
         }
-        return !\in_array($this->value, $not_in);
+        return \true;
     }
     /**
-     * Get the error message if the value is in the not allowed list.
+     * Get the error messages.
      *
-     * @return string
+     * @return array
      *
      * @since 1.0.0
      */
-    public function get_error_message()
+    public function messages()
     {
-        return message('validator.not_in', $this->last_key_segment(), $this->rule_value);
+        return $this->process_messages($this->messages);
     }
 }

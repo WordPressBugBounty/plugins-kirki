@@ -10,8 +10,19 @@ use Kirki\App\Services\UtilityPageService;
 use Kirki\Framework\Http\Request;
 use Kirki\Framework\Sanitizer;
 
+use function Kirki\App\ensure_array;
+
 class PageRequest extends Request
 {
+    protected function prepare_for_validation()
+    {
+        $this->merge([
+            'blocks' => ensure_array($this->blocks),
+            'conditions' => ensure_array($this->conditions),
+            'custom_template' => ensure_array($this->custom_template),
+        ]);
+    }
+
     public function rules()
     {
         return [
@@ -43,6 +54,8 @@ class PageRequest extends Request
             ],
             'custom_template' => 'nullable|array',
             'custom_template.url' => 'nullable|url',
+            'content_manager_collection_id' => 'nullable|integer',
+            'content_manager_page_kind' => 'nullable|string|in:index,details',
         ];
     }
 
@@ -57,6 +70,8 @@ class PageRequest extends Request
             'utility_page_type' => Sanitizer::TEXT,
             'custom_template' => Sanitizer::ARRAY,
             'custom_template.url' => Sanitizer::URL,
+            'content_manager_collection_id' => Sanitizer::INT,
+            'content_manager_page_kind' => Sanitizer::TEXT,
         ];
     }
 }

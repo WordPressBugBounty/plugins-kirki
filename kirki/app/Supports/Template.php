@@ -126,7 +126,25 @@ class Template
 		if (!is_truthy($kirki_json_data)) {
 			return false;
 		}
-		
+
+		return static::save_template_data($page_id, $kirki_json_data)
+			? $kirki_json_data
+			: false;
+	}
+
+	/**
+	 * Persist an already-normalized Kirki template.
+	 *
+	 * This is the common final stage for downloaded templates and local
+	 * application templates whose placeholders have already been bound.
+	 *
+	 * @param int   $page_id         Target page/template ID.
+	 * @param array $kirki_json_data Normalized Kirki editor data.
+	 * @return bool
+	 */
+	public static function save_template_data(int $page_id, array $kirki_json_data)
+	{
+
 		$kirki_json_data['blocks']['root'] = [
 			'accept'   => '*',
 			'children' => ['body'],

@@ -15,6 +15,9 @@ class UpsertCollectionDTO extends DTO
     /** @var string */
     public $post_name;
 
+    /** @var string|null */
+    public $preset_type;
+
     /** @var array */
     public $fields;
 

@@ -6,8 +6,17 @@ use Kirki\App\Constants\Collection\ActionTypes;
 use Kirki\Framework\Http\Request;
 use Kirki\Framework\Sanitizer;
 
+use function Kirki\App\ensure_array;
+
 class CollectionItemBulkActionRequest extends Request
 {
+    protected function prepare_for_validation()
+    {
+        $this->merge([
+            'post_ids' => ensure_array($this->post_ids),
+        ]);
+    }
+
     /**
      * Validation rules.
      */

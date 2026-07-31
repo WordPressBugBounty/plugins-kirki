@@ -95,7 +95,7 @@ class DynamicContent {
 			}
 
 			case 'user': {
-				$user_id = get_current_user_id();
+				$user_id = ! empty( $post_id ) ? $post_id : get_current_user_id();
 				if ( isset( $content_info['collectionItem'], $content_info['collectionItem']['ID'] ) ) {
 					$user_id = $content_info['collectionItem']['ID'];
 				}
@@ -883,72 +883,96 @@ class DynamicContent {
 		if ( $collection_data ) {
 			$collection_data = json_decode( $collection_data, true );
 		}
-		$type                 = $collection_data['type'];
-		$collection_type      = $collection_data['collectionType'];
+		$type                 = $collection_data['type'] ?? '';
+		$collection_type      = $collection_data['collectionType'] ?? '';
 		$element_content_type = $collection_data['elementContentType'] ?? '';
 
-		$clean_data                                        = array();
-		$clean_data['type'][ $element_content_type ]       = $data['type'][ $element_content_type ];
-		$clean_data['typeValues'][ $element_content_type ] = $data['typeValues'][ $element_content_type ];
-		$clean_data['typeValuesAttr'][ $element_content_type ] = $data['typeValuesAttr'][ $element_content_type ];
-		$data = $clean_data;
+		if ( ! empty( $element_content_type ) && isset( $data['type'][ $element_content_type ] ) ) {
+			$clean_data                                            = array();
+			$clean_data['type'][ $element_content_type ]           = $data['type'][ $element_content_type ];
+			$clean_data['typeValues'][ $element_content_type ]     = $data['typeValues'][ $element_content_type ] ?? array();
+			$clean_data['typeValuesAttr'][ $element_content_type ] = $data['typeValuesAttr'][ $element_content_type ] ?? array();
+			$data                                                  = $clean_data;
+		}
 
-		if ( $collection_type === 'posts' && str_contains( $type, KIRKI_CONTENT_MANAGER_PREFIX ) ) {
-			$post_parent = str_replace( KIRKI_CONTENT_MANAGER_PREFIX . '_', '', $collection_data['type'] );
+		if ( $collection_type === 'posts' && ! empty( $type ) && str_contains( $type, KIRKI_CONTENT_MANAGER_PREFIX ) ) {
+			$post_parent = str_replace( KIRKI_CONTENT_MANAGER_PREFIX . '_', '', $type );
 			$post        = ContentManagerHelper::get_post_type( $post_parent, true );
 
-			if ( ! empty( array_filter( $post['fields'], fn( $obj) => $obj['type'] === 'reference' ) ) ) {
-				$data['typeValues'][ $element_content_type ] = array_merge(
-					$data['typeValues'][ $element_content_type ],
-					array(
+			if ( $post ) {
+				$default_post_fields = $data['typeValuesAttr'][ $element_content_type ]['post'] ?? array();
+				$post_fields         = $post['fields'] ?? array();
+
+				if ( ! empty( $post_fields ) && is_array( $post_fields ) && ! empty( array_filter( $post_fields, fn( $obj ) => isset( $obj['type'] ) && $obj['type'] === 'reference' ) ) ) {
+					$current_type_values                         = $data['typeValues'][ $element_content_type ] ?? array();
+					$data['typeValues'][ $element_content_type ] = array_merge(
+						is_array( $current_type_values ) ? $current_type_values : array(),
 						array(
-							'value' => 'reference',
-							'title' => 'Reference',
+							array(
+								'value' => 'reference',
+								'title' => 'Reference',
+							),
+						)
+					);
+
+					$data['availableRefNames'] = array_reduce(
+						array_filter( $post_fields, fn( $obj ) => isset( $obj['type'] ) && $obj['type'] === 'reference' ),
+						function ( $carry, $obj ) {
+							$carry[] = array(
+								'value'   => $obj['id'] ?? '',
+								'title'   => $obj['title'] ?? '',
+								'post_id' => $obj['ref_collection'] ?? '',
+							);
+							return $carry;
+						},
+						array()
+					);
+
+					$data['typeValuesAttr'][ $element_content_type ]['reference'] = array_reduce(
+						array_filter( $post_fields, fn( $obj ) => isset( $obj['type'] ) && $obj['type'] === 'reference' ),
+						function ( $carry, $obj ) use ( $default_post_fields, $element_content_type ) {
+							$ref_fields          = $obj['fields'][0]['fields'] ?? array();
+							$carry[ $obj['id'] ] = array_merge(
+								$default_post_fields,
+								self::convertKirkiCMSFieldsToSelectOptions( $element_content_type, $ref_fields )
+							);
+							return $carry;
+						},
+						array()
+					);
+				}
+
+				if ( ! empty( $data['typeValues'][ $element_content_type ] ) && is_array( $data['typeValues'][ $element_content_type ] ) ) {
+					$data['typeValues'][ $element_content_type ] = array_map(
+						fn( $obj ) => ( isset( $obj['value'] ) && $obj['value'] === 'post' ) ? array(
+							'value' => $obj['value'],
+							'title' => $post['post_title'] ?? 'Post',
+						) : array(
+							'value' => $obj['value'] ?? '',
+							'title' => $obj['title'] ?? '',
 						),
-					)
-				);
+						$data['typeValues'][ $element_content_type ]
+					);
+				}
 
-				$data['availableRefNames'] = array_reduce(
-					array_filter( $post['fields'], fn( $obj) => $obj['type'] === 'reference' ),
-					function ( $carry, $obj ) {
-						$carry[] = array(
-							'value'   => $obj['id'],
-							'title'   => $obj['title'],
-							'post_id' => $obj['ref_collection'],
-						);
-						return $carry;
-					},
-					array()
-				);
+				$data['cmPostTypeTitle'] = $post['post_title'] ?? '';
 
-				$data['typeValuesAttr'][ $element_content_type ]['reference'] = array_reduce(
-					array_filter( $post['fields'], fn( $obj) => $obj['type'] === 'reference' ),
-					function ( $carry, $obj ) use ( $data, $element_content_type ) {
-						$carry[ $obj['id'] ] = array_merge(
-							$data['typeValuesAttr'][ $element_content_type ]['post'],
-							self::convertKirkiCMSFieldsToSelectOptions( $element_content_type, $obj['fields'][0]['fields'] )
-						);
-						return $carry;
-					},
-					array()
-				);
+				$cm_fields = self::convertKirkiCMSFieldsToSelectOptions( $element_content_type, $post_fields );
+
+				if ( isset( $post['basic_fields']['post_title']['title'] ) ) {
+					array_unshift(
+						$cm_fields,
+						array(
+							'title' => $post['basic_fields']['post_title']['title'],
+							'value' => 'post_title',
+							'type'  => 'text',
+						)
+					);
+				}
+
+				$data['typeValuesAttr'][ $element_content_type ]['post']         = $cm_fields;
+				$data['typeValuesAttr'][ $element_content_type ]['default_post'] = $default_post_fields;
 			}
-
-			$data['typeValues'][ $element_content_type ] = array_map(
-				fn( $obj) => $obj['value'] === 'post' ? array(
-					'value' => $obj['value'],
-					'title' => $post['post_title'],
-				) : array(
-					'value' => $obj['value'],
-					'title' => $obj['title'],
-				),
-				$data['typeValues'][ $element_content_type ]
-			);
-
-			$data['typeValuesAttr'][ $element_content_type ]['post'] = array_merge(
-				$data['typeValuesAttr'][ $element_content_type ]['post'],
-				self::convertKirkiCMSFieldsToSelectOptions( $element_content_type, $post['fields'] )
-			);
 		}
 
 		$data = apply_filters( 'kirki_dynamic_content_fields', $data, $collection_data );

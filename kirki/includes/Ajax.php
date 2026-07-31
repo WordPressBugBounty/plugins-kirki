@@ -284,6 +284,8 @@ class Ajax
 
 			/**
 			 * WALKTHROUGH
+			 * @deprecated
+			 * @see PUT /walkthrough-shown-state
 			 */
 			if ('set-walkthrough-shown-state' === $endpoint) {
 				Walkthrough::set_walkthrough_state();
@@ -291,6 +293,8 @@ class Ajax
 
 			/**
 			 * Collaboration data save
+			 * @deprecated
+			 * @see POST /collaboration-actions
 			 */
 			if ('save-collaboration-actions' === $endpoint) {
 				Collaboration::save_actions();
@@ -359,13 +363,21 @@ class Ajax
 				TemplateExportImport::check_existing_template_data();
 			}
 
-			if ($endpoint === 'rename-staging-version' && HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
-				Staging::rename_stage_version();
-			}
+			/**
+			 * @deprecated
+			 * @see PUT /pages/{page_id}/rename-staging-version
+			 */
+			// if ( $endpoint === 'rename-staging-version' && HelperFunctions::has_access( KIRKI_ACCESS_LEVELS['FULL_ACCESS'] ) ) {
+			// 	Staging::rename_stage_version();
+			// }
 
-			if ($endpoint === 'delete-staging-version' && HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
-				Staging::delete_stage_version();
-			}
+			/**
+			 * @deprecated
+			 * @see DELETE /pages/{page_id}/remove-staging-version
+			 */
+			// if ( $endpoint === 'delete-staging-version' && HelperFunctions::has_access( KIRKI_ACCESS_LEVELS['FULL_ACCESS'] ) ) {
+			// 	Staging::delete_stage_version();
+			// }
 
 			/**
 			 * @deprecated
@@ -375,9 +387,13 @@ class Ajax
 			// 	Staging::publish_stage_version();
 			// }
 
-			if ($endpoint === 'restore-staging-version' && HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
-				Staging::restore_stage_version();
-			}
+			/**
+			 * @deprecated
+			 * @see POST /pages/{page_id}/restore-staging-version
+			 */
+			// if ( $endpoint === 'restore-staging-version' && HelperFunctions::has_access( KIRKI_ACCESS_LEVELS['FULL_ACCESS'] ) ) {
+			// 	Staging::restore_stage_version();
+			// }
 
 			if ($endpoint === 'get-dynamic-content-batch') {
 				DynamicContent::get_dynamic_element_data_batch();
@@ -419,47 +435,67 @@ class Ajax
 		// 	Page::get_page_blocks_and_styles();
 		// }
 
-		if ($endpoint === 'get-wp-single-post') {
-			if (!HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
-				wp_send_json_error('Not authorized', 401);
-			}
-			$post_id = (int) HelperFunctions::sanitize_text(isset($_GET['post_id']) ? $_GET['post_id'] : null);
-			$post = get_post($post_id);
+		/**
+		 * @deprecated
+		 * @see GET /wp-posts/{post_id}
+		 */
+		// if ($endpoint === 'get-wp-single-post') {
+		// 	if (!HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
+		// 		wp_send_json_error('Not authorized', 401);
+		// 	}
+		// 	$post_id = (int) HelperFunctions::sanitize_text(isset($_GET['post_id']) ? $_GET['post_id'] : null);
+		// 	$post = get_post($post_id);
 
-			if (!$post) {
-				wp_send_json_error('Post not found');
-			}
+		// 	if (!$post) {
+		// 		wp_send_json_error('Post not found');
+		// 	}
 
-			wp_send_json_success($post);
-		}
+		// 	wp_send_json_success($post);
+		// }
 
+		/**
+		 * @deprecated
+		 * @see GET /pages
+		 */
 		if ($endpoint === 'get-pages-list') {
 			Page::fetch_list_api();
 		}
 
+		/**
+		 * @deprecated
+		 * @see GET /page-panel-pages
+		 */
 		if ($endpoint === 'get-pages-for-pages-panel') {
 			Page::get_pages_for_pages_panel();
 		}
-		if ($endpoint === 'get-data-list-for-template-edit-search-flyout') {
-			Page::get_data_list_for_template_edit_search_flyout();
-		}
+		/**
+		 * @deprecated
+		 * @see GET /data-list-for-template-edit-search-flyout
+		 */
+		// if ($endpoint === 'get-data-list-for-template-edit-search-flyout') {
+		// 	Page::get_data_list_for_template_edit_search_flyout();
+		// }
 		if ($endpoint === 'get-posts-list') {
 			Page::fetch_post_list_data_post_type_wise();
 		}
 
-		if ($endpoint === 'get-current-page-data') {
-			Page::get_current_page_data();
-		}
+		/**
+		 * @deprecated
+		 * @see GET /current-page/{page_id}
+		 */
+		// if ($endpoint === 'get-current-page-data') {
+		// 	Page::get_current_page_data();
+		// }
 		if ($endpoint === 'get-unused-class-info-from-db') {
 			Page::get_unused_class_info_from_db();
 		}
-		if ($endpoint === 'validate-wp-post-slug') {
-			Page::validate_wp_post_slug();
-		}
-
-		if ($endpoint === 'get-page-html') {
-			Page::get_page_html();
-		}
+		/**
+		 * @deprecated
+		 * @see GET /validate-wp-post-slug
+		 */
+		// if ($endpoint === 'validate-wp-post-slug') {
+		// 	Page::validate_wp_post_slug();
+		// }
 
 		/**
 		 * USER DATA APIS
@@ -617,10 +653,12 @@ class Ajax
 
 		/**
 		 * WALKTHROUGH
+		 * @deprecated
+		 * @see GET /walkthrough-shown-state
 		 */
-		if ('get-walkthrough-shown-state' === $endpoint) {
-			Walkthrough::get_walkthrough_state();
-		}
+		// if ('get-walkthrough-shown-state' === $endpoint) {
+		// 	Walkthrough::get_walkthrough_state();
+		// }
 
 		/**
 		 * COLLECTION
@@ -728,12 +766,14 @@ class Ajax
 
 		/**
 		 * Staging GET APIs
+		 * @deprecated
+		 * @see GET /pages/{pageId}/staged-versions
 		 */
 
-		if ('get-all-staged-versions' === $endpoint) {
-			$post_id = (int) HelperFunctions::sanitize_text(isset($_GET['post_id']) ? $_GET['post_id'] : null);
-			Staging::get_all_staged_versions($post_id, false, true);
-		}
+		// if ('get-all-staged-versions' === $endpoint) {
+		// 	$post_id = (int) HelperFunctions::sanitize_text(isset($_GET['post_id']) ? $_GET['post_id'] : null);
+		// 	Staging::get_all_staged_versions($post_id, false, true);
+		// }
 	}
 
 	/**

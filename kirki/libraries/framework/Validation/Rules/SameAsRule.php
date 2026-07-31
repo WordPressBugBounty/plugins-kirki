@@ -1,39 +1,54 @@
 <?php
 
 /**
- * Validates that a value is same as another specified field.
+ * Same as rule class.
  *
  * @package    Framework
- * @subpackage Validation\Rules
+ * @subpackage Validation
  * @since      1.0.0
  */
 namespace Kirki\Framework\Validation\Rules;
 
+use Kirki\Framework\Validation\ValidationRule;
+use function Kirki\Framework\deep_get;
 \defined('ABSPATH') || exit;
-use function Kirki\Framework\message;
-class SameAsRule extends BaseRule
+/**
+ * Validates that the given value strictly matches the value of another field.
+ */
+class SameAsRule extends ValidationRule
 {
     /**
-     * Determine if the value is matched.
+     * The rule name.
+     *
+     * @var string
+     *
+     * @since 1.0.0
+     */
+    protected string $rule = 'same_as';
+    /**
+     * Validate the rule.
      *
      * @return bool
      *
      * @since 1.0.0
      */
-    public function validate_rule()
+    public function validate() : bool
     {
-        $required_value = $this->data[$this->rule_value] ?? null;
-        return !\is_null($this->value) && $this->value === $required_value;
+        $other_value = deep_get($this->data, (string) $this->args);
+        if ($this->value !== $other_value) {
+            return $this->fails($this->default_messages['default']);
+        }
+        return \true;
     }
     /**
-     * Get the error message for a missing field.
+     * Get the error messages.
      *
-     * @return string
+     * @return array
      *
      * @since 1.0.0
      */
-    public function get_error_message()
+    public function messages()
     {
-        return message('validator.same_as', $this->last_key_segment(), $this->rule_value);
+        return $this->process_messages($this->messages);
     }
 }

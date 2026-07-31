@@ -53,6 +53,9 @@ class RegisterRestApi extends BaseHook
     {
         $routes = Route::get_routes();
         foreach ($routes as $route) {
+            if ($route->is_site_route()) {
+                continue;
+            }
             $route->register();
         }
     }

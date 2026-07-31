@@ -14,6 +14,7 @@ namespace Kirki\Framework\Wordpress;
 \defined('ABSPATH') || exit;
 use Kirki\Framework\ServiceProvider;
 use Kirki\Framework\Wordpress\Hooks\Actions\RegisterRestApi;
+use Kirki\Framework\Wordpress\Hooks\Actions\RegisterSiteRoutes;
 class HookServiceProvider extends ServiceProvider
 {
     /**
@@ -23,7 +24,7 @@ class HookServiceProvider extends ServiceProvider
      *
      * @since 1.0.0
      */
-    protected static $defaults = ['actions' => [RegisterRestApi::class], 'filters' => []];
+    protected static $defaults = ['actions' => [RegisterRestApi::class, RegisterSiteRoutes::class], 'filters' => []];
     /**
      * Register the hooks to the application.
      *
@@ -56,6 +57,9 @@ class HookServiceProvider extends ServiceProvider
         }
         if (!\in_array(RegisterRestApi::class, $hooks['actions'], \true)) {
             \array_unshift($hooks['actions'], RegisterRestApi::class);
+        }
+        if (!\in_array(RegisterSiteRoutes::class, $hooks['actions'], \true)) {
+            $hooks['actions'][] = RegisterSiteRoutes::class;
         }
         return ['actions' => $hooks['actions'] ?? [], 'filters' => $hooks['filters'] ?? []];
     }

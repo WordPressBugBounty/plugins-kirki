@@ -12,7 +12,7 @@
 namespace Kirki\Framework\Database\Schema\Definitions;
 
 \defined('ABSPATH') || exit;
-use Kirki\Framework\Supports\Flex;
+use Kirki\Framework\Supports\Fluent;
 /**
  * Define the definition of the database schema columns.
  *
@@ -29,7 +29,7 @@ use Kirki\Framework\Supports\Flex;
  * @method $this unique()
  * @method $this use_current()
  */
-class Definition extends Flex
+class Definition extends Fluent
 {
     // Column definition
 }

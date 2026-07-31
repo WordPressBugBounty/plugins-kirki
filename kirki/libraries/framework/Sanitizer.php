@@ -356,7 +356,7 @@ class Sanitizer
                 if (!Date::is_valid_date($value)) {
                     return null;
                 }
-                $value = Date::start_of_day(Date::parse($value));
+                $value = Date::parse($value)->start_of_day();
                 break;
             case static::DATETIME:
                 if (!Date::is_valid_date($value)) {

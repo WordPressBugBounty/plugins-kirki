@@ -14,4 +14,5 @@ class OptionKeys
     const GLOBAL_DATA_POST_TYPE_ID = 'KIRKI_GLOBAL_DATA_POST_TYPE_ID';
     const DROIP_GLOBAL_DATA_POST_TYPE_ID = 'DROIP_GLOBAL_DATA_POST_TYPE_ID'; // @todo: will be removed if not needed
     const PAGE_ON_FRONT = 'page_on_front';
+    const WP_ADMIN_COMMON_DATA = 'kirki_wp_admin_common_data';
 }

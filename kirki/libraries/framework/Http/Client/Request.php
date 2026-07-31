@@ -13,7 +13,6 @@ namespace Kirki\Framework\Http\Client;
 
 \defined('ABSPATH') || exit;
 use BadMethodCallException;
-use Kirki\Framework\Collections\Collection;
 use Kirki\Framework\Supports\Arr;
 use Kirki\Framework\Supports\Str;
 use Kirki\Framework\Supports\Traits\Macroable;

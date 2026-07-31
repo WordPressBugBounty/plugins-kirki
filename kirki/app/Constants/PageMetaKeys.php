@@ -59,6 +59,10 @@ class PageMetaKeys
 
     const UTILITY_PAGE_TYPE = 'kirki_utility_page_type';
 
+    const CONTENT_MANAGER_COLLECTION_ID = 'kirki_content_manager_collection_id';
+
+    const CONTENT_MANAGER_PAGE_KIND = 'kirki_content_manager_page_kind';
+
     const PAGE_TEMPLATE = '_wp_page_template';
 
     /**
@@ -80,6 +84,8 @@ class PageMetaKeys
             static::TEMPLATE_CONDITIONS,
             static::TEMPLATE_COLLECTION_TYPE,
             static::UTILITY_PAGE_TYPE,
+            static::CONTENT_MANAGER_COLLECTION_ID,
+            static::CONTENT_MANAGER_PAGE_KIND,
             static::BLOCKS,
             static::STYLE_BLOCKS,
             static::USED_FONT_LIST,

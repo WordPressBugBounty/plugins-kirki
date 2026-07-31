@@ -2,6 +2,8 @@
 
 namespace Kirki\App\Services;
 
+defined('ABSPATH') || exit;
+
 use Kirki\App\Constants\CollaborationConnectionType;
 use Kirki\App\Constants\CollaborationParent;
 use Kirki\App\DTO\Collaboration\CreateCollaborationDTO;
@@ -11,8 +13,6 @@ use Kirki\Framework\Collections\Collection;
 
 use Kirki\Framework\Constants\DateTimeFormats;
 use function Kirki\Framework\user;
-
-defined('ABSPATH') || exit;
 
 class CollaborationService
 {
@@ -40,6 +40,40 @@ class CollaborationService
 			'data' => wp_json_encode($dto->data),
 			'status' => $dto->status,
 		]);
+	}
+
+	/**
+	 * Save collaboration batch data.
+	 * 
+	 * @param Collection<CreateCollaborationDTO> $collection
+	 * @param bool $cleanup
+	 * 
+	 * @return bool
+	 */
+	public function save_actions(Collection $collection, bool $cleanup = true)
+	{
+		$all_connected_rows = $this->get_all_connected_rows($cleanup);
+
+		if ($all_connected_rows->count() <= 1) {
+			return false;
+		}
+
+		$data = $collection->map(function (CreateCollaborationDTO $dto) {
+			return [
+				'user_id' => user()->get_id(),
+				'session_id' => $dto->session_id,
+				'parent' => $dto->parent ?? '',
+				'parent_id' => $dto->parent_id,
+				'data' => wp_json_encode($dto->data),
+				'status' => $dto->status,
+			];
+		})->to_array();
+
+		if (empty($data)) {
+			return false;
+		}
+
+		return Collaboration::insert($data);
 	}
 
 	/**

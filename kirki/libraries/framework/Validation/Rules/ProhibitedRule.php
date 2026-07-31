@@ -1,49 +1,60 @@
 <?php
 
 /**
- * Validates that a value is present and not null.
+ * Prohibited rule class.
  *
  * @package    Framework
- * @subpackage Validation\Rules
+ * @subpackage Validation
  * @since      1.0.0
  */
 namespace Kirki\Framework\Validation\Rules;
 
+use Kirki\Framework\Validation\ValidationRule;
 \defined('ABSPATH') || exit;
-use function Kirki\Framework\message;
-class ProhibitedRule extends BaseRule
+/**
+ * Validates that the given field is absent or empty.
+ */
+class ProhibitedRule extends ValidationRule
 {
     /**
-     * Determine if the value is present.
+     * The rule name.
+     *
+     * @var string
+     *
+     * @since 1.0.0
+     */
+    protected string $rule = 'prohibited';
+    /**
+     * Whether the rule is an implicit rule.
+     *
+     * @var bool
+     *
+     * @since 1.0.0
+     */
+    public bool $is_implicit = \true;
+    /**
+     * Validate the rule.
      *
      * @return bool
      *
      * @since 1.0.0
      */
-    public function validate_rule()
+    public function validate() : bool
     {
-        return !isset($this->value);
+        if (static::is_nullish($this->value)) {
+            return \true;
+        }
+        return $this->fails($this->default_messages['default']);
     }
     /**
-     * Get the error message for the prohibited field.
+     * Get the error messages.
      *
-     * @return string
+     * @return array
      *
      * @since 1.0.0
      */
-    public function get_error_message()
+    public function messages()
     {
-        return message('validator.prohibited', \str_replace(['_', '.'], ' ', $this->key));
-    }
-    /**
-     * Ignore rule check.
-     *
-     * @return bool
-     *
-     * @since 1.0.0
-     */
-    protected function ignore_rule_check()
-    {
-        return \false;
+        return $this->process_messages($this->messages);
     }
 }

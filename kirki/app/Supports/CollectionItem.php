@@ -82,6 +82,7 @@ class CollectionItem
 
                     $arg = [
                         'taxonomy' => $taxonomy,
+                        'hide_empty' => false,
                         'number' => $limit,
                         'orderby' => 'ID',
                         'order' => 'DESC',
@@ -107,7 +108,7 @@ class CollectionItem
                     }
                     break;
                 case CollectionTypes::USER:
-                    $role === '*' ? '' : $role;
+                    $role = $role === '*' ? '' : $role;
                     $users = UserModel::query()
                         ->role($role)
                         ->search($search)

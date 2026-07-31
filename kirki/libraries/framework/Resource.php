@@ -129,6 +129,17 @@ abstract class Resource implements Arrayable, Jsonable, JsonSerializable
         return Arr::json_encode($this->to_array(), $options);
     }
     /**
+     * Convert the resource to an array.
+     *
+     * @return array The array representation of the resource
+     *
+     * @since 1.0.0
+     */
+    public function jsonSerialize() : array
+    {
+        return $this->to_array();
+    }
+    /**
      * Check if a property exists on the underlying resource.
      *
      * This magic method allows you to check if a property exists on the underlying resource
@@ -144,17 +155,6 @@ abstract class Resource implements Arrayable, Jsonable, JsonSerializable
     public function __isset($name)
     {
         return isset($this->resource->{$name});
-    }
-    /**
-     * Convert the resource to a JSON string.
-     *
-     * @return array The JSON-encoded resource representation
-     *
-     * @since 1.0.0
-     */
-    public function jsonSerialize() : array
-    {
-        return $this->to_array();
     }
     /**
      * Dynamically pass properties of the underlying resource to the caller.

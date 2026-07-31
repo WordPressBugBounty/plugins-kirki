@@ -15,12 +15,12 @@ namespace Kirki\Framework\Console\Commands;
 use Kirki\Framework\Console\CommandBase;
 use Kirki\Framework\Console\Synopsis;
 use Kirki\Framework\Database\Seeder;
-use Kirki\Framework\Database\Seeders\DatabaseSeeder;
 use Kirki\Framework\Supports\Facades\DB;
 use Kirki\Framework\Supports\Facades\Log;
 use Kirki\Framework\Supports\Facades\Schema;
 use Kirki\Framework\Supports\Str;
 use Exception;
+use Kirki\Framework\Database\Contracts\DatabaseSeederContract;
 use Throwable;
 use function Kirki\Framework\app;
 use function Kirki\Framework\database_path;
@@ -106,8 +106,9 @@ class SeedCommand extends CommandBase
     protected function seeder_classes($class)
     {
         $classes = Str::split(',', $class);
-        foreach ($classes as $class) {
-            $classname = $this->classname($class);
+        $seeders = [];
+        foreach ($classes as $cls) {
+            $classname = $this->classname($cls);
             if ($this->exists($classname)) {
                 $seeders[] = $classname;
             }
@@ -167,13 +168,13 @@ class SeedCommand extends CommandBase
         DB::begin_transaction();
         try {
             Schema::disabled_checking_foreign_key_constraints();
-            if (!\class_exists(DatabaseSeeder::class)) {
+            try {
+                $database_seeder = app()->make(DatabaseSeederContract::class);
+                $database_seeder->run();
+                $database_seeder();
+            } catch (Exception $exception) {
                 $instance = app()->make(Seeder::class);
                 $instance->call($seeders);
-                $instance();
-            } else {
-                $instance = app()->make(DatabaseSeeder::class);
-                $instance->run();
                 $instance();
             }
         } catch (Exception $exception) {

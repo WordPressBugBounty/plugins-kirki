@@ -3,7 +3,7 @@ Contributors: themeum
 Tags: page builder, website builder, drag and drop, form builder, freeform canvas
 Requires at least: 5.9
 Tested up to: 7.0
-Stable tag: 6.1.1
+Stable tag: 6.2.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -190,6 +190,26 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 ---
 
 == Changelog ==
+
+= 6.2.0 =
+* New: Introduced the Interaction Library.
+* New: Introduced predefined design presets for new dynamic template pages.
+* New: Added current state design support for Tabs and Slider elements.
+* Update: Redesigned Connect to Field and Connect to CMS.
+* Update: Improved the Add New Page experience.
+* Update: Added a sticky, scrollable Layers panel.
+* Update: Added contextual icons to the Layers panel for visibility conditions, interactions, and more.
+* Update: Improved WordPress post slug validation.
+* Update: Improved Symbols save and delete operations.
+* Update: Added an image alt text popover to the Image element.
+* Update: Refined the Typography Font Options popover.
+* Update: Added support for combining search queries with collection filters using AND conditions.
+* Fix: Changed canvas multi-select from Cmd + Click to Shift + Click.
+* Fix: Fixed the preview URL on the Collection Details page.
+* Fix: Resolved a deprecated warning in the form submission class.
+* Fix: Resolved legacy style block merging issues.
+* Fix: Fixed the page rename issue.
+* Fix: Fixed the SVG element class generation issue.
 
 = 6.1.1 =
 * Fix: Resolved php 7.4 compatibility issue.

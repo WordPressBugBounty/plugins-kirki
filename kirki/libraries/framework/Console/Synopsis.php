@@ -12,7 +12,7 @@
 namespace Kirki\Framework\Console;
 
 \defined('ABSPATH') || exit;
-use Kirki\Framework\Supports\Flex;
+use Kirki\Framework\Supports\Fluent;
 /**
  * Synopsis class to describe WP-CLI command arguments, options, and positional parameters.
  * 
@@ -24,7 +24,7 @@ use Kirki\Framework\Supports\Flex;
  * @method $this type('positional'|'assoc'|'flag' $type)
  * @method $this default($value)
  */
-class Synopsis extends Flex
+class Synopsis extends Fluent
 {
     /**
      * Handle dynamic method calls

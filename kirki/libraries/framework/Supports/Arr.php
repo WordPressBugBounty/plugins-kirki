@@ -232,6 +232,36 @@ class Arr
         return $array;
     }
     /**
+     * Set a value in an array using a dot notation key.
+     *
+     * @param array $array The array to set the value in.
+     * @param string|array $key The key to set the value in.
+     * @param mixed $value The value to set.
+     * 
+     * @return array
+     * 
+     * @since 1.0.0
+     */
+    public static function set(&$array, $key, $value)
+    {
+        if (\is_null($key)) {
+            return $array = $value;
+        }
+        $keys = \explode('.', $key);
+        foreach ($keys as $index => $key) {
+            if (\count($keys) === 1) {
+                break;
+            }
+            unset($keys[$index]);
+            if (!isset($array[$key]) || !\is_array($array[$key])) {
+                $array[$key] = [];
+            }
+            $array =& $array[$key];
+        }
+        $array[\array_shift($keys)] = $value;
+        return $array;
+    }
+    /**
      * Pluck the array by a key
      *
      * @param iterable $array The array to pluck from
@@ -305,7 +335,7 @@ class Arr
      */
     public static function accessible($value)
     {
-        return \is_array($value) || $value instanceof Arrayable;
+        return \is_array($value) || $value instanceof ArrayAccess;
     }
     /**
      * Check if the array has a key.

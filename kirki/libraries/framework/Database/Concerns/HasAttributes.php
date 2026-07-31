@@ -802,20 +802,20 @@ trait HasAttributes
      *
      * @param mixed $value The value to convert
      *
-     * @return \DateTime The date value
+     * @return \Framework\Contracts\SomoyInterface The date value
      *
      * @since 1.0.0
      */
     protected function as_date($value)
     {
-        return Date::start_of_day($this->as_date_time($value));
+        return $this->as_date_time($value)->start_of_day();
     }
     /**
      * As date time.
      *
      * @param mixed $value The value.
      *
-     * @return \DateTime The date time value
+     * @return \Framework\Contracts\SomoyInterface The date time value
      *
      * @since 1.0.0
      */
@@ -829,11 +829,14 @@ trait HasAttributes
             return Date::create_from_timestamp($value);
         }
         if ($this->is_standard_date_format($value)) {
-            return Date::start_of_day(Date::create_from_format('Y-m-d', $value));
+            return Date::create_from_format('Y-m-d', $value)->start_of_day();
         }
         $format = $this->get_date_format();
-        $date = Date::create_from_format($format, $value);
-        return $date ?: Date::parse($value);
+        try {
+            return Date::create_from_format($format, $value);
+        } catch (\Kirki\Framework\Exceptions\InvalidDateFormatException $exception) {
+            return Date::parse($value);
+        }
     }
     /**
      * Check if a value is in the standard date format.
@@ -1153,7 +1156,10 @@ trait HasAttributes
      */
     protected function serialize_date(DateTimeInterface $date)
     {
-        return Date::to_sql_datetime_string($date);
+        if ($date instanceof \Kirki\Framework\Contracts\SomoyInterface) {
+            return $date->to_sql_datetime_string();
+        }
+        return Date::instance($date)->to_sql_datetime_string();
     }
     /**
      * Convert the model's relations to an array.

@@ -15,13 +15,16 @@ use Kirki\Framework\Contracts\Request as RequestContract;
 use Kirki\Framework\Contracts\Support\Arrayable;
 use Kirki\Framework\Sanitizer;
 use Kirki\Framework\Exceptions\AuthorizationException;
+use Kirki\Framework\Exceptions\ValidationException;
 use Kirki\Framework\Http\Concerns\InteractsWithFiles;
 use Kirki\Framework\Supports\Arr;
 use Kirki\Framework\Validation\Validator;
 use WP_REST_Request;
 use Kirki\Framework\Supports\Str;
+use InvalidArgumentException;
 use function Kirki\Framework\message;
 use function Kirki\Framework\user;
+use function Kirki\Framework\value;
 /**
  * The Request class for handling HTTP requests.
  *
@@ -101,6 +104,14 @@ class Request implements RequestContract, Arrayable
      * @since 1.0.0
      */
     protected bool $validation_resolved = \false;
+    /**
+     * The route parameters.
+     *
+     * @var array
+     *
+     * @since 1.0.0
+     */
+    protected array $route_params = [];
     /**
      * Registered sanitizer method suffixes for typed request accessors.
      *
@@ -196,7 +207,161 @@ class Request implements RequestContract, Arrayable
         $this->method = $request->get_method();
         $this->route = $request->get_route();
         $this->headers = $request->get_headers();
+        $this->route_params = $request->get_url_params();
         return $this;
+    }
+    /**
+     * Capture the current HTTP request from PHP superglobals.
+     *
+     * @return self
+     *
+     * @since 1.0.0
+     */
+    public static function capture()
+    {
+        // phpcs:ignore Framework.NamingConventions.SnakeCaseVariable.NotSnakeCase
+        return (new static())->make_from_http($_GET, $_POST, $_FILES, $_SERVER);
+    }
+    /**
+     * Make a request instance from raw HTTP input arrays.
+     *
+     * @param array $query Query string parameters.
+     * @param array $body Request body parameters.
+     * @param array $files Uploaded files.
+     * @param array $server Server parameters.
+     * @param array $route_params Matched route parameters.
+     *
+     * @return self
+     *
+     * @since 1.0.0
+     */
+    public function make_from_http(array $query = [], array $body = [], array $files = [], array $server = [], array $route_params = [])
+    {
+        $query = $this->unslash_array($query);
+        $body = $this->unslash_array($body);
+        $this->attributes = \array_merge($query, $body, $route_params);
+        $this->method = \strtoupper($server['REQUEST_METHOD'] ?? 'GET');
+        $this->route = $this->resolve_request_path($server);
+        $this->headers = $this->extract_headers($server);
+        $this->route_params = $route_params;
+        $this->files = [];
+        if (!empty($files)) {
+            $this->load_files_from_array($files);
+        }
+        return $this;
+    }
+    /**
+     * Set the matched route parameters and merge them into attributes.
+     *
+     * @param array $params The route parameters.
+     *
+     * @return self
+     *
+     * @since 1.0.0
+     */
+    public function set_route_params(array $params)
+    {
+        $this->route_params = $params;
+        $this->attributes = \array_merge($this->attributes, $params);
+        return $this;
+    }
+    /**
+     * Get all route parameters.
+     *
+     * @return array
+     *
+     * @since 1.0.0
+     */
+    public function route_params()
+    {
+        return $this->route_params;
+    }
+    /**
+     * Unslash an array of input values.
+     *
+     * @param array $values The values to unslash.
+     *
+     * @return array
+     *
+     * @since 1.0.0
+     */
+    protected function unslash_array(array $values)
+    {
+        if (!\function_exists('wp_unslash')) {
+            return $values;
+        }
+        return \array_map(function ($value) {
+            if (\is_array($value)) {
+                return $this->unslash_array($value);
+            }
+            return \is_string($value) ? wp_unslash($value) : $value;
+        }, $values);
+    }
+    /**
+     * Resolve the request path from server parameters.
+     *
+     * @param array $server Server parameters.
+     *
+     * @return string
+     *
+     * @since 1.0.0
+     */
+    protected function resolve_request_path(array $server)
+    {
+        $request_uri = isset($server['REQUEST_URI']) ? (string) $server['REQUEST_URI'] : '';
+        $path = (string) \parse_url($request_uri, \PHP_URL_PATH);
+        if (\function_exists('home_url')) {
+            $home_path = (string) \parse_url(home_url(), \PHP_URL_PATH);
+            if ($home_path !== '' && $home_path !== '/' && \strpos($path, $home_path) === 0) {
+                $path = \substr($path, \strlen($home_path));
+            }
+        }
+        return \trim($path, '/');
+    }
+    /**
+     * Extract HTTP headers from server parameters.
+     *
+     * @param array $server Server parameters.
+     *
+     * @return array
+     *
+     * @since 1.0.0
+     */
+    protected function extract_headers(array $server)
+    {
+        $headers = [];
+        foreach ($server as $key => $value) {
+            if (\strpos($key, 'HTTP_') === 0) {
+                $name = \str_replace(' ', '-', \ucwords(\strtolower(\str_replace('_', ' ', \substr($key, 5)))));
+                $headers[$name] = [$value];
+                continue;
+            }
+            if (\in_array($key, ['CONTENT_TYPE', 'CONTENT_LENGTH'], \true)) {
+                $name = \str_replace(' ', '-', \ucwords(\strtolower(\str_replace('_', ' ', $key))));
+                $headers[$name] = [$value];
+            }
+        }
+        return $headers;
+    }
+    /**
+     * Load uploaded files from a provided files array.
+     *
+     * @param array $files The files array.
+     *
+     * @return void
+     *
+     * @since 1.0.0
+     */
+    protected function load_files_from_array(array $files)
+    {
+        $converted = \array_map(function ($file) {
+            if (isset($file['name']) && \is_array($file['name'])) {
+                return $this->convert_uploaded_files($file);
+            }
+            return \Kirki\Framework\Filesystem\UploadedFile::create_from_base($file);
+        }, $files);
+        $keys = \array_keys($files);
+        $this->files = \array_combine($keys, \array_values($converted)) ?: [];
     }
     /**
      * Get the validation rules for the request.
@@ -216,15 +381,15 @@ class Request implements RequestContract, Arrayable
      * @param array $rules The rules.
      *
      * @return array
+     * 
+     * @throws ValidationException if fails to validate.
      *
      * @since 1.0.0
      */
     protected function run_validation(array $data, array $rules)
     {
         $validator = Validator::make($data, $rules, $this->messages());
-        if ($validator->validate()) {
-            return $validator->validated();
-        }
+        return $validator->validated();
     }
     /**
      * Define the sanitization filters for the request.
@@ -354,13 +519,40 @@ class Request implements RequestContract, Arrayable
     /**
      * Get all input attributes.
      *
+     * @param array|null $keys The keys to get.
+     *
      * @return array
      *
      * @since 1.0.0
      */
-    public function all()
+    public function all($keys = null)
     {
-        return $this->attributes;
+        $input = \array_merge($this->attributes, $this->all_files());
+        if (!$keys) {
+            return $input;
+        }
+        $results = [];
+        foreach (\is_array($keys) ? $keys : \func_get_args() as $key) {
+            Arr::set($results, $key, Arr::get($input, $key));
+        }
+        return $results;
+    }
+    /**
+     * Get the route parameters.
+     *
+     * @param string $key The key of the route parameter.
+     * @param mixed $default The default value.
+     *
+     * @return array|mixed
+     *
+     * @since 1.0.0
+     */
+    public function route($key, $default = null)
+    {
+        if (empty($key)) {
+            throw new InvalidArgumentException('The route key is required.');
+        }
+        return Arr::get($this->route_params, $key, $default);
     }
     /**
      * Get the sanitized data.
@@ -372,6 +564,21 @@ class Request implements RequestContract, Arrayable
     public function sanitized()
     {
         return $this->sanitized;
+    }
+    /**
+     * Validate the request data.
+     *
+     * @param array $rules The rules to validate.
+     *
+     * @return array
+     *
+     * @throws ValidationException if fails to validate.
+     *
+     * @since 1.0.0
+     */
+    public function validate(array $rules)
+    {
+        return $this->run_validation($this->attributes(), $rules);
     }
     /**
      * Get the validated data.
@@ -442,11 +649,11 @@ class Request implements RequestContract, Arrayable
     protected function resolve_validation_and_sanitization()
     {
         $this->prepare_for_validation();
+        $validated = $this->run_validation($this->attributes(), $this->rules());
+        $this->validated = $validated;
         $sanitized = $this->run_sanitization($this->attributes(), $this->filters());
         $this->sanitized = $sanitized;
         $this->merge($sanitized);
-        $validated = $this->run_validation($this->attributes(), $this->rules());
-        $this->validated = $validated;
         $this->passed_validation();
     }
     /**
@@ -575,9 +782,12 @@ class Request implements RequestContract, Arrayable
      */
     public function get(string $key, $default = null, $type = null)
     {
-        $value = isset($this->attributes[$key]) ? $this->attributes[$key] : $default;
+        $value = $this->attributes[$key] ?? null;
+        if ($value === null) {
+            return value($default);
+        }
         $value = Sanitizer::apply_rule($value, $type);
-        return $value;
+        return $value ?? value($default);
     }
     /**
      * Get a value from the request with optional default and type casting.

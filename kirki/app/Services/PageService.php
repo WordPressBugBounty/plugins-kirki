@@ -11,6 +11,7 @@ use Kirki\App\Constants\PostTypes;
 use Kirki\App\DTO\Page\EditorPagePayloadDTO;
 use Kirki\App\DTO\Page\EditPageDTO;
 use Kirki\App\DTO\Page\EditPopupDTO;
+use Kirki\App\DTO\Page\PageFilterDTO;
 use Kirki\App\DTO\Page\PagePayloadDTO;
 use Kirki\App\DTO\Page\TogglePageSymbolDTO;
 use Kirki\App\Models\Page as PageModel;
@@ -19,6 +20,8 @@ use Kirki\App\Supports\Canvas;
 use Kirki\App\Supports\Facades\GlobalData;
 use Kirki\App\Supports\Facades\Page;
 use Kirki\App\Supports\Template;
+use Kirki\Framework\Database\Query\Paginator;
+use Kirki\Framework\Database\Query\QueryBuilder;
 use Kirki\Framework\Http\Response;
 
 use function Kirki\App\soft_flush_rewrite_rules;
@@ -86,6 +89,19 @@ class PageService
 			&& !empty(($payload->custom_template['url']))
 		) {
 			Template::assign_custom_page_template($page->ID, $payload->custom_template['url']);
+		}
+
+		if (!empty($payload->content_manager_collection_id) && !empty($payload->content_manager_page_kind)) {
+			try {
+				(new ContentManagerTemplateService())->initialize(
+					$page->ID,
+					(int) $payload->content_manager_collection_id,
+					$payload->content_manager_page_kind
+				);
+			} catch (\Throwable $error) {
+				PageModel::delete_post($page->ID, true);
+				throw $error;
+			}
 		}
 
 		return $page;
@@ -304,5 +320,32 @@ class PageService
         }
 
 		return $is_deleted;
+	}
+
+	/**
+	 * Get all pages
+	 * 
+	 * @param PageFilterDTO $filter_dto
+	 * 
+	 * @return Paginator
+	 */
+	public function paginated(PageFilterDTO $filter_dto)
+	{
+		$front_page_id = $filter_dto->current_page === 1 ? Page::get_front_page_id() : 0;
+
+		$paginated = PageModel::query()
+			->with([
+				'meta' => function (QueryBuilder $query) {
+                $query->where_in('meta_key', PageMetaKeys::get_single_post_keys());
+            }])
+			->filter_post_type($filter_dto->post_types)
+			->filter_status($filter_dto->post_statuses)
+			->where_not_in('ID', $filter_dto->exclude_page_ids)
+			->search($filter_dto->query)
+			->order_by_raw('CASE WHEN `ID` = %d THEN 0 ELSE 1 END', [$front_page_id])
+			->order_by('ID', 'DESC')
+			->paginate($filter_dto->limit, $filter_dto->current_page);
+	
+		return $paginated;
 	}
 }
