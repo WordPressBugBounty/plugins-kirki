@@ -12,11 +12,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
+use Kirki\Ajax\Symbol;
 use Kirki\Ajax\Users;
 use Kirki\Frontend\Preview\Preview;
 use Kirki\HelperFunctions;
 use WP_REST_Server;
-
+use Kirki\App\Models\Page as PageModel;
+use Kirki\App\Resources\PageContentResource;
+use Kirki\App\Supports\Facades\Page;
+use Kirki\Frontend\Preview\DataHelper;
 
 /**
  * CollectionController
@@ -87,6 +91,31 @@ class CollectionController extends FrontendRESTController {
 		);
 	}
 
+	private function prepare_kirki_data_for_collection($kirki_data){
+		$data_n_styles = [];
+		$post_id = (int) $kirki_data['post_id'];
+		$collection_data_id = $kirki_data['collection_data_id'];
+		$post = get_post($post_id);
+		if($post){
+			if($post->post_type === 'kirki_symbol'){
+				$symbol = Symbol::get_single_symbol( $post_id, true, false, array() );
+
+				if ( $symbol ) {
+					$symbol_data = $symbol['symbolData'];
+					if ( $symbol_data && isset( $symbol_data['data'] ) ) {
+						$all_blocks = get_post_meta($post_id, 'kirki', true);
+						$all_styles = Page::get_page_styleblocks($post_id, false);
+						DataHelper::get_data_and_styles_from_root( $collection_data_id, $data_n_styles, $symbol_data['data'], $symbol_data['styleBlocks'] );
+					}
+				}
+			}else {
+				$all_blocks = get_post_meta($post_id, 'kirki', true);
+				$all_styles = Page::get_page_styleblocks($post_id, false);
+				DataHelper::get_data_and_styles_from_root( $collection_data_id, $data_n_styles, $all_blocks['blocks'], $all_styles );
+			}
+		}
+		return $data_n_styles;
+	}
 	/**
 	 * Creates a collection page
 	 *
@@ -97,7 +126,7 @@ class CollectionController extends FrontendRESTController {
 	public function get_collection( $request ) {
 		$page                     = absint( $request->get_param( 'page' ) );
 		$page                     = empty( $page ) ? 1 : $page;
-		$collection_id            = HelperFunctions::sanitize_text( $request->get_param( 'collection_id' ) );
+		// $collection_id            = HelperFunctions::sanitize_text( $request->get_param( 'collection_id' ) );
 		$collection_param_filters = json_decode( $request->get_param( 'filters' ), true );
 		$kirki_data               = json_decode( $request->get_param( 'kirki_data' ), true );
 		$context                  = json_decode( $request->get_param( 'context' ), true );
@@ -107,8 +136,11 @@ class CollectionController extends FrontendRESTController {
 		$kirki_data               = is_array( $kirki_data ) ? $kirki_data : array();
 		$context                  = is_array( $context ) ? $context : array();
 
-		$blocks = $kirki_data['blocks'] ?? array();
-		$styles = $kirki_data['styles'] ?? array();
+		$collection_id            = $kirki_data['collection_data_id'] ?? false;
+		$data_n_styles               = $this->prepare_kirki_data_for_collection($kirki_data);
+
+		$blocks = $data_n_styles['blocks'] ?? array();
+		$styles = $data_n_styles['styles'] ?? array();
 
 		$options = array();
 		if ( $context ) {
@@ -165,12 +197,16 @@ class CollectionController extends FrontendRESTController {
 		$page = absint( $request->get_param( 'page' ) );
 		$page = empty( $page ) ? 1 : $page;
 
-		$collection_id = HelperFunctions::sanitize_text( $request->get_param( 'collection_id' ) );
+		// $collection_id = HelperFunctions::sanitize_text( $request->get_param( 'collection_id' ) );
 		$post_id       = HelperFunctions::sanitize_text( $request->get_param( 'post_id' ) );
 		$kirki_data    = json_decode( $request->get_param( 'kirki_data' ), true );
+		$kirki_data    = is_array( $kirki_data ) ? $kirki_data : array();
 
-		$blocks = $kirki_data['blocks'];
-		$styles = $kirki_data['styles'];
+		$collection_id            = $kirki_data['collection_data_id'] ?? false;
+		$data_n_styles = $this->prepare_kirki_data_for_collection($kirki_data);
+
+		$blocks = $data_n_styles['blocks'] ?? array();
+		$styles = $data_n_styles['styles'] ?? array();
 
 		$params = array(
 			'blocks'       => $blocks,
@@ -198,13 +234,17 @@ class CollectionController extends FrontendRESTController {
 	public function get_users( $request ) {
 		$page          = absint( $request->get_param( 'page' ) );
 		$page          = empty( $page ) ? 1 : $page;
-		$collection_id = HelperFunctions::sanitize_text( $request->get_param( 'collection_id' ) );
+		// $collection_id = HelperFunctions::sanitize_text( $request->get_param( 'collection_id' ) );
 		$post_id       = HelperFunctions::sanitize_text( $request->get_param( 'post_id' ) );
 		$kirki_data    = json_decode( $request->get_param( 'kirki_data' ), true );
 		$query         = HelperFunctions::sanitize_text( $request->get_param( 'q' ) );
+		$kirki_data    = is_array( $kirki_data ) ? $kirki_data : array();
+		
+		$collection_id            = $kirki_data['collection_data_id'] ?? false;
+		$data_n_styles = $this->prepare_kirki_data_for_collection($kirki_data);
 
-		$blocks = $kirki_data['blocks'];
-		$styles = $kirki_data['styles'];
+		$blocks = $data_n_styles['blocks'] ?? array();
+		$styles = $data_n_styles['styles'] ?? array();
 
 		$params = array(
 			'blocks'       => $blocks,
@@ -225,18 +265,25 @@ class CollectionController extends FrontendRESTController {
 
 	/**
 	 * Gets terms of a collection
+	 *
+	 * @param \WP_REST_Request $request all user request parameter.
+	 *
+	 * @return \WP_Error|WP_REST_Response
 	 */
-
 	public function get_terms( $request ) {
 		$page = absint( $request->get_param( 'page' ) );
 		$page = empty( $page ) ? 1 : $page;
 
-		$collection_id = HelperFunctions::sanitize_text( $request->get_param( 'collection_id' ) );
+		// $collection_id = HelperFunctions::sanitize_text( $request->get_param( 'collection_id' ) );
 		$post_id       = HelperFunctions::sanitize_text( $request->get_param( 'post_id' ) );
 		$kirki_data    = json_decode( $request->get_param( 'kirki_data' ), true );
+		$kirki_data    = is_array( $kirki_data ) ? $kirki_data : array();
 
-		$blocks = $kirki_data['blocks'];
-		$styles = $kirki_data['styles'];
+		$collection_id            = $kirki_data['collection_data_id'] ?? false;
+		$data_n_styles = $this->prepare_kirki_data_for_collection($kirki_data);
+
+		$blocks = $data_n_styles['blocks'] ?? array();
+		$styles = $data_n_styles['styles'] ?? array();
 
 		$params = array(
 			'blocks'       => $blocks,

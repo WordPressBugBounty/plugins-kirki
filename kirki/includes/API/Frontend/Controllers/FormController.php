@@ -553,7 +553,7 @@ class FormController extends FrontendRESTController
 	}
 
 	/**
-	 * Parse and validate form metadata
+	 * Parse and verify form metadata
 	 *
 	 * @param string $form_meta_data_base64 Base64 encoded form metadata.
 	 * @return array Array with form_id and post_id.
@@ -563,9 +563,29 @@ class FormController extends FrontendRESTController
 		//phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode
 		$form_meta_data = explode('|', base64_decode(base64_decode($form_meta_data_base64)));
 
+		if (count($form_meta_data) < 3) {
+			return array(
+				'form_id' => null,
+				'post_id' => null,
+			);
+		}
+
+		$form_id   = $form_meta_data[0];
+		$post_id   = $form_meta_data[1];
+		$signature = $form_meta_data[2];
+
+		$expected = wp_hash($form_id . '|' . $post_id);
+
+		if (!hash_equals($expected, (string) $signature)) {
+			return array(
+				'form_id' => null,
+				'post_id' => null,
+			);
+		}
+
 		return array(
-			'form_id' => isset($form_meta_data[0]) ? $form_meta_data[0] : null,
-			'post_id' => isset($form_meta_data[1]) ? $form_meta_data[1] : null,
+			'form_id' => $form_id ?: null,
+			'post_id' => $post_id ?: null,
 		);
 	}
 
@@ -685,13 +705,13 @@ class FormController extends FrontendRESTController
 		}
 
 		if (isset($email_action['replyTo'])) {
-			$replyTo = do_shortcode($email_action['replyTo']);
+			$replyTo = sanitize_email($this->render_email_action_text($email_action['replyTo'], $form_data));
 		}
 		if (isset($email_action['name'])) {
-			$name = do_shortcode($email_action['name']);
+			$name = $this->render_email_action_text($email_action['name'], $form_data);
 		}
 		if (isset($email_action['subject'])) {
-			$subject = do_shortcode($email_action['subject']);
+			$subject = $this->render_email_action_text($email_action['subject'], $form_data);
 		}
 
 		if (strlen($replyTo) > 0 && strlen($name) > 0) {
@@ -699,8 +719,73 @@ class FormController extends FrontendRESTController
 		}
 
 		if (isset($email_action['emailList']) && !empty($email_action['emailList'])) {
-			$this->send_email_notification(do_shortcode($email_action['emailList']), $subject, $body, $header);
+			$to = $this->sanitize_email_list($this->render_email_action_text($email_action['emailList'], $form_data));
+
+			if ($to) {
+				$this->send_email_notification($to, $subject, $body, $header);
+			}
 		}
+	}
+
+	/**
+	 * Render a templated email action field using an explicit whitelist array.
+	 *
+	 * @param string $value     The configured field value.
+	 * @param array  $form_data The submitted form data.
+	 * @return string
+	 */
+	private function render_email_action_text($value, $form_data)
+	{
+		if (empty($value) || !is_string($value)) {
+			return (string) $value;
+		}
+
+		// Whitelist array of acceptable email action shortcodes and their resolved values.
+		$whitelist = array(
+			'admin_email' => (string) get_option('admin_email'),
+		);
+
+		if (is_array($form_data)) {
+			foreach ($form_data as $field_name => $field_value) {
+				if (is_array($field_value)) {
+					$whitelist[$field_name] = implode(', ', $field_value);
+				} else {
+					$whitelist[$field_name] = (string) $field_value;
+				}
+			}
+		}
+
+		// Render only the whitelisted shortcodes from the array
+		foreach ($whitelist as $tag => $replacement) {
+			$value = str_replace('[' . $tag . ']', $replacement, $value);
+		}
+
+		return $value;
+	}
+
+	/**
+	 * Sanitize a comma-separated list of email addresses.
+	 *
+	 * @param string $value The configured email list value.
+	 * @return string A comma-separated string of valid addresses, or '' when empty.
+	 */
+	private function sanitize_email_list($value)
+	{
+		if (empty($value) || !is_string($value)) {
+			return '';
+		}
+
+		$valid = array();
+
+		foreach (explode(',', $value) as $address) {
+			$address = sanitize_email(trim($address));
+
+			if ($address) {
+				$valid[] = $address;
+			}
+		}
+
+		return implode(', ', $valid);
 	}
 
 	/**
@@ -764,6 +849,10 @@ class FormController extends FrontendRESTController
 	 */
 	private function send_webhook_get($url, $form_data)
 	{
+		if (!HelperFunctions::is_safe_url($url)) {
+			return false;
+		}
+
 		$query_string = http_build_query($form_data);
 
 		if (substr($url, -1) !== '/') {
@@ -785,6 +874,10 @@ class FormController extends FrontendRESTController
 	 */
 	private function send_webhook_post($url, $form_data)
 	{
+		if (!HelperFunctions::is_safe_url($url)) {
+			return false;
+		}
+
 		$options = array(
 			'method' => 'POST',
 			'httpversion' => '2.0',
@@ -798,6 +891,7 @@ class FormController extends FrontendRESTController
 
 		return !is_wp_error($response);
 	}
+
 
 	/**
 	 * Process mailclient actions

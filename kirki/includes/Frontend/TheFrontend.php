@@ -134,7 +134,6 @@ class TheFrontend {
 			$content = $this->kirki_type_html_data['content'];
 		}
 		// Decode HTML entities. Example: [gravityform id=&quot;1&quot;] → [gravityform id="1"]
-		$content = html_entity_decode( $content, ENT_NOQUOTES | ENT_HTML5, 'UTF-8' );
 
 		// Run shortcode manually
 		$content = do_shortcode( $content );

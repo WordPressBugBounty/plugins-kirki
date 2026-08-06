@@ -172,7 +172,10 @@ class PluginShortcode {
 					if ( is_singular() ) {
 						global $post;
 						$meta_value = get_post_meta( $post->ID, $data, true );
-						return $meta_value;
+					if ( is_string( $meta_value ) ) {
+						// Post meta is arbitrary, low-privilege-authored data: always escape.
+						return \Kirki\HelperFunctions::escape_post_meta_value( $meta_value );
+					}
 					}
 					return '';
 				}

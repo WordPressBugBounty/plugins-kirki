@@ -12,9 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use Kirki\Ajax\Symbol;
-use Kirki\Ajax\Users;
 use Kirki\HelperFunctions;
-use Kirki\Ajax\WordpressData;
 
 /**
  * ExceptionalElements Class
@@ -116,7 +114,7 @@ class ExceptionalElements {
 
 				$children = $this->construct_items_collection_markup( $dynamic_content, $this_data, $options );
 
-				return $this->construct_collection_markup( $children, $this_data, $attributes, $element_name );
+				return $this->construct_collection_markup( $children, $this_data, $attributes, $element_name, $options );
 			}
 			case 'loading': {
 				return $this->collection_loading_element( $this_data, $attributes, $options );
@@ -530,8 +528,9 @@ class ExceptionalElements {
 		$post_id    = HelperFunctions::get_post_id_if_possible_from_url();
 		$form_id    = $this_data['id'];
 		$post_data  = $form_id . '|' . $post_id;
+		$form_data  = $post_data . '|' . wp_hash( $post_data );
 		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
-		$form_id_base64 = base64_encode( base64_encode( $post_data ) );
+		$form_id_base64 = base64_encode( base64_encode( $form_data ) );
 
 		$form_nonce_field = wp_nonce_field( 'wp_rest', '_wpnonce', true, false );
 
@@ -770,21 +769,16 @@ class ExceptionalElements {
 	 * @param array $attributes single element all attributes.
 	 * @return string HTML markup.
 	 */
-	private function construct_collection_markup( $children, $this_data, $attributes, $element_name = 'collection' ) {
+	private function construct_collection_markup( $children, $this_data, $attributes, $element_name = 'collection', $options=[] ) {
 		$tag = isset( $this_data['properties']['tag'] ) ? $this_data['properties']['tag'] : 'div';
 
-		$data_n_styles = array(
-			'blocks' => array(),
-			'styles' => array(),
-		);
-
-		DataHelper::get_data_and_styles_from_root( $this_data['id'], $data_n_styles, $this->data, $this->style_blocks );
+		$collection_info = $this->get_collection_info($options, $this_data);
 
 		if ( is_array( $children ) ) {
 			return $this->get_template(
 				'collection',
 				array(
-					'data'       => $data_n_styles,
+					'data'       => $collection_info,
 					'attributes' => $attributes,
 					'children'   => $children,
 					'tag'        => $tag,
@@ -793,6 +787,20 @@ class ExceptionalElements {
 		} else {
 			return '';
 		}
+	}
+
+	public function get_collection_info($options, $this_data) {
+		$collection_info = array(
+			'post_id' => isset($options['post']) ? $options['post']->ID : false,
+			'collection_data_id' => isset($this_data['original_id']) ? $this_data['original_id'] :$this_data['id']
+		);
+		if(isset($options['kirki_template_id']) && $options['kirki_template_id']) {
+			$collection_info['post_id'] = $options['kirki_template_id'];
+		}
+		if(isset($options['inside_symbol']) && $options['inside_symbol'] === true){
+			$collection_info['post_id'] = $options['symbol_id'];
+		}
+		return $collection_info;
 	}
 
 	/**
@@ -1248,6 +1256,9 @@ class ExceptionalElements {
 		if ( ! $symbol_data || ! isset( $symbol_data['data'] ) ) {
 			return '';
 		}
+		$options['symbol_id'] = $symbol_id;
+		$options['inside_symbol'] = true;
+
 		$s           = HelperFunctions::rec_update_data_id_then_return_new_html( $symbol_data['data'], $symbol_data['styleBlocks'], $symbol_data['root'], $options );
 		$fonts_links = '';
 		if ( isset( $symbol_data['customFonts'] ) ) {

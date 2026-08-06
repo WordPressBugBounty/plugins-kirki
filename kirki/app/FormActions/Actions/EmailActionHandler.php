@@ -23,6 +23,10 @@ class EmailActionHandler implements FormActionHandler
     /**
      * Register shortcodes referenced by the email action's fields.
      *
+     * Every field is rendered through {@see render_email_action_text()}, which
+     * strips any shortcode that does not map to a submitted form field, so no
+     * arbitrary site shortcode can execute here.
+     *
      * @param array $action
      * @param array $form_data
      * @return void
@@ -86,15 +90,15 @@ class EmailActionHandler implements FormActionHandler
         }
 
         if (isset($email_action['replyTo'])) {
-            $reply_to = do_shortcode($email_action['replyTo']);
+            $reply_to = sanitize_email($this->render_email_action_text($email_action['replyTo'], $form_data));
         }
 
         if (isset($email_action['name'])) {
-            $name = do_shortcode($email_action['name']);
+            $name = $this->render_email_action_text($email_action['name'], $form_data);
         }
 
         if (isset($email_action['subject'])) {
-            $subject = do_shortcode($email_action['subject']);
+            $subject = $this->render_email_action_text($email_action['subject'], $form_data);
         }
 
         if (strlen($reply_to) > 0 && strlen($name) > 0) {
@@ -102,10 +106,75 @@ class EmailActionHandler implements FormActionHandler
         }
 
         if (isset($email_action['emailList']) && !empty($email_action['emailList'])) {
-            return $this->send_email_notification(do_shortcode($email_action['emailList']), $subject, $body, $header);
+            $to = $this->sanitize_email_list($this->render_email_action_text($email_action['emailList'], $form_data));
+
+            if ($to) {
+                return $this->send_email_notification($to, $subject, $body, $header);
+            }
         }
 
         return false;
+    }
+
+    /**
+     * Render a templated email action field using an explicit whitelist array.
+     *
+     * @param string $value     The configured field value.
+     * @param array  $form_data The submitted form data.
+     * @return string
+     */
+    protected function render_email_action_text($value, $form_data)
+    {
+        if (empty($value) || !is_string($value)) {
+            return (string) $value;
+        }
+
+        // Whitelist array of acceptable email action shortcodes and their resolved values.
+        $whitelist = [
+            'admin_email' => (string) get_option('admin_email'),
+        ];
+
+        if (is_array($form_data)) {
+            foreach ($form_data as $field_name => $field_value) {
+                if (is_array($field_value)) {
+                    $whitelist[$field_name] = implode(', ', $field_value);
+                } else {
+                    $whitelist[$field_name] = (string) $field_value;
+                }
+            }
+        }
+
+        // Render only the whitelisted shortcodes from the array
+        foreach ($whitelist as $tag => $replacement) {
+            $value = str_replace('[' . $tag . ']', $replacement, $value);
+        }
+
+        return $value;
+    }
+
+    /**
+     * Sanitize a comma-separated list of email addresses.
+     *
+     * @param string $value The configured email list value.
+     * @return string A comma-separated string of valid addresses, or '' when empty.
+     */
+    protected function sanitize_email_list($value)
+    {
+        if (empty($value) || !is_string($value)) {
+            return '';
+        }
+
+        $valid = [];
+
+        foreach (explode(',', $value) as $address) {
+            $address = sanitize_email(trim($address));
+
+            if ($address) {
+                $valid[] = $address;
+            }
+        }
+
+        return implode(', ', $valid);
     }
 
     /**

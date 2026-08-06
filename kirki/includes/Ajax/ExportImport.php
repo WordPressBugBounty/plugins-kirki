@@ -46,10 +46,28 @@ class ExportImport
 		}
 
 		// filter asset_urls using base_url if base_url not included remove item
+		$upload_base_path = wp_parse_url($base_url, PHP_URL_PATH);
+		$upload_host = wp_parse_url($base_url, PHP_URL_HOST);
+
 		$asset_urls = array_filter(
 			$asset_urls,
-			function ($asset_item) use ($base_url) {
-				return strpos($asset_item['url'], $base_url) !== false;
+			function ($asset_item) use ($upload_base_path, $upload_host) {
+				$parsed = wp_parse_url($asset_item['url']);
+
+				if (empty($parsed['host']) || $parsed['host'] !== $upload_host) {
+					return false;
+				}
+
+				if (!isset($parsed['scheme']) || !in_array(strtolower($parsed['scheme']), array('http', 'https'), true)) {
+					return false;
+				}
+
+				$path = wp_normalize_path(rawurldecode(isset($parsed['path']) ? $parsed['path'] : ''));
+
+				// Must start with the uploads base path and contain no traversal.
+				return $upload_base_path
+					&& strpos($path, $upload_base_path) === 0
+					&& strpos($path, '..') === false;
 			}
 		);
 
@@ -175,16 +193,50 @@ class ExportImport
 			}
 
 			// Step 3: Add file to the zip file
+			$uploads_real = realpath($upload_dir['basedir']);
+			$uploads_base_path = wp_normalize_path(wp_parse_url($upload_dir['baseurl'], PHP_URL_PATH));
+			$allowed_exts = array('jpg', 'jpeg', 'png', 'webp', 'gif', 'avif', 'mp4', 'mov', 'webm', 'mp3', 'json', 'lottie');
+
 			foreach ($asset_urls as $key => $asset_item) {
 				$url = $asset_item['url'];
-				$file_name = basename($url);
+				$parsed = wp_parse_url($url);
 
-				$subdir_with_filename = explode('/uploads', $url)[1];  // /2021/05/1.jpg
-				$file_path = $upload_dir['basedir'] . $subdir_with_filename; // /var/www/html/wp-content/uploads/2021/05/1.jpg
-
-				if (file_exists($file_path)) {
-					$zip->addFile($file_path, $file_name);
+				if (empty($parsed['scheme']) || !in_array(strtolower($parsed['scheme']), array('http', 'https'), true)) {
+					continue;
 				}
+
+				if (empty($parsed['host']) || $parsed['host'] !== wp_parse_url($upload_dir['baseurl'], PHP_URL_HOST)) {
+					continue;
+				}
+
+				$path = wp_normalize_path(rawurldecode(isset($parsed['path']) ? $parsed['path'] : ''));
+				if (!$uploads_base_path || strpos($path, $uploads_base_path) !== 0) {
+					continue; // not under /uploads
+				}
+
+				$relative = ltrim(substr($path, strlen($uploads_base_path)), '/');
+				if ('' === $relative || false !== strpos($relative, '..')) {
+					continue; // empty or traversal
+				}
+
+				$file_path = $uploads_real . DIRECTORY_SEPARATOR . $relative;
+				$real_path = realpath($file_path);
+
+				// Resolved file must exist, be a regular file, and stay inside uploads.
+				if (false === $real_path || !is_file($real_path)) {
+					continue;
+				}
+
+				if ($uploads_real && strpos($real_path, $uploads_real . DIRECTORY_SEPARATOR) !== 0) {
+					continue;
+				}
+
+				$ext = strtolower(pathinfo($real_path, PATHINFO_EXTENSION));
+				if (!in_array($ext, $allowed_exts, true)) {
+					continue; // only media/config files may be exported
+				}
+
+				$zip->addFile($real_path, basename($real_path));
 			}
 
 			if (false === $zip->addFile($kirki_json_file, 'kirki-data.json')) {

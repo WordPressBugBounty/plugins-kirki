@@ -251,7 +251,7 @@ class TemplateRedirection
 		$kirki_data = HelperFunctions::is_kirki_type_data($template['id'], $staging_version);
 
 		if ($kirki_data) {
-
+			$options['kirki_template_id'] = $template['id'];
 			$params = array(
 				'blocks' => $kirki_data['blocks'],
 				'style_blocks' => $kirki_data['styles'],

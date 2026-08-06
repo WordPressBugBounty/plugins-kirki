@@ -1034,7 +1034,8 @@ class HelperFunctions
 
 					// For now, only string is supported!
 					if (is_string($meta)) {
-						$content = $meta;
+						// Post meta is arbitrary, low-privilege-authored data: always escape.
+						$content = self::escape_post_meta_value($meta);
 					}
 				}
 
@@ -1374,7 +1375,51 @@ class HelperFunctions
 
 		$s .= $html;
 		$s .= $preview->getScriptTag($should_take_app_script);
+
+		$s = self::decode_entities_without_creating_markup($s);
 		return $s;
+	}
+
+	/**
+	 * Decode HTML entities in already-rendered page markup without ever turning
+	 * escaped text back into live tags.
+	 *
+	 * The rendered document mixes trusted markup (elements the builder emitted,
+	 * including admin authored custom code) with escaped text nodes. A blanket
+	 * html_entity_decode() over that mix undoes the escaping applied while
+	 * rendering, so `&lt;script&gt;` stored in any text value — a visitor's
+	 * comment, for instance — becomes an executable `<script>` tag.
+	 *
+	 * Angle-bracket entities are therefore held back while everything else is
+	 * decoded as before, then restored verbatim. Entities such as `&amp;`,
+	 * `&nbsp;` and named HTML5 entities keep decoding exactly as they used to;
+	 * markup emitted by the renderer is unaffected because it contains literal
+	 * `<`/`>`, not entities.
+	 *
+	 * @param string $content Rendered page markup.
+	 * @return string
+	 */
+	private static function decode_entities_without_creating_markup( $content ) {
+		if ( ! is_string( $content ) || '' === $content ) {
+			return $content;
+		}
+
+		$held = array();
+
+		// `&lt;` `&gt;` and their numeric/hex forms, in any zero-padded spelling.
+		$content = preg_replace_callback(
+			'/&(?:lt|gt|#0*(?:60|62)|#[xX]0*3[ceCE]);/',
+			function ( $matches ) use ( &$held ) {
+				$key          = "\x02kirki-entity-" . count( $held ) . "\x03";
+				$held[ $key ] = $matches[0];
+				return $key;
+			},
+			$content
+		);
+
+		$content = html_entity_decode( $content, ENT_NOQUOTES | ENT_HTML5, 'UTF-8' );
+
+		return strtr( $content, $held );
 	}
 
 	private static function collect_search_related_collection_ids($data)
@@ -3527,6 +3572,26 @@ class HelperFunctions
 		}
 	}
 
+	/**
+	 * Escape a post meta value for safe output.
+	 *
+	 * The front-end content pipeline (TheFrontend::replace_content) applies a
+	 * single html_entity_decode() pass after core has processed shortcodes,
+	 * which would undo a plain esc_html(). Re-encoding the ampersands (with
+	 * double_encode enabled) yields a single-escaped value in the final output
+	 * while still neutralizing markup authored by low-privileged users.
+	 *
+	 * @param mixed $value The raw post meta value.
+	 * @return string Escaped value.
+	 */
+	public static function escape_post_meta_value($value)
+	{
+		if (!is_scalar($value)) {
+			return '';
+		}
+
+		return htmlspecialchars(esc_html((string) $value), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8', true);
+	}
 
 	/**
 	 * Is Pro user checking function.
@@ -4700,5 +4765,39 @@ class HelperFunctions
 			return $mode;
 		}
 		return $mode;
+	}
+
+	/**
+	 * Whether the target url is a safe, externally reachable http(s) URL.
+	 *
+	 * Rejects loopback, private, link-local and cloud-metadata addresses so a
+	 * planted form config cannot be used to probe the server's own network.
+	 *
+	 * @param string $url The URL.
+	 * @return bool
+	 */
+	public static function is_safe_url($url) {
+		$scheme = wp_parse_url($url, PHP_URL_SCHEME);
+		$host = wp_parse_url($url, PHP_URL_HOST);
+
+		if (!is_string($scheme) || !in_array(strtolower($scheme), array('http', 'https'), true)) {
+			return false;
+		}
+
+		if (!is_string($host) || '' === $host) {
+			return false;
+		}
+
+		if (filter_var($host, FILTER_VALIDATE_IP)) {
+			return (bool) filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+		}
+
+		$ip = gethostbyname($host);
+
+		if (!filter_var($ip, FILTER_VALIDATE_IP) || $ip === $host) {
+			return false;
+		}
+
+		return (bool) filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
 	}
 }

@@ -40,17 +40,40 @@ abstract class FrontendRESTController extends WP_REST_Controller {
 	 * @return bool|\WP_Error
 	 */
 	public function get_item_permissions_check( $request ) {
-		// --- Check 1: context-based permission (post or comment context) ---
+		// --- Check 1: context-based permission ---
 		$raw_context = $request->get_param( 'context' );
 
 		if ( $raw_context ) {
 			$context = json_decode( $raw_context, true );
-			$post_id = $this->extract_post_id_from_context( $context );
 
-			if ( $post_id && ! $this->can_user_read_post( $post_id ) ) {
+			$context_type = $context['type'];
+
+			// For user contexts, require list_users capability.
+			if ( 'user' === $context_type ) {
+				$target_user_id = absint( $context['id'] ?? 0 );
+				// Allow access only if the requester is querying their own record OR list_users capability
+				if ( $target_user_id !== get_current_user_id() && ! current_user_can( 'list_users' ) ) {
+					return new WP_Error(
+						'rest_forbidden',
+						'You do not have permission to read this user.',
+						array( 'status' => 403 )
+					);
+				}
+			} elseif ( 'term' === $context_type ) {
+				// Term contexts are publicly accessible (terms are public by default).
+			} elseif ( 'post' === $context_type || 'comment' === $context_type ) {
+				$post_id = $this->extract_post_id_from_context( $context );
+				if ( $post_id && ! $this->can_user_read_post( $post_id ) ) {
+					return new WP_Error(
+						'rest_forbidden',
+						'You do not have permission to read this post.',
+						array( 'status' => 403 )
+					);
+				}
+			} else {
 				return new WP_Error(
 					'rest_forbidden',
-					'You do not have permission to read this post.',
+					'Unsupported context type.',
 					array( 'status' => 403 )
 				);
 			}
@@ -72,9 +95,10 @@ abstract class FrontendRESTController extends WP_REST_Controller {
 
 	/**
 	 * Extracts the relevant post ID from a decoded context array.
-	 * - For 'post' context:    uses context['id']
-	 * - For 'comment' context: uses context['post_id'] (the parent post)
-	 * - For all others:        no post ID to check
+	 * Only handles 'post' and 'comment' types; all other types return null
+	 * because they do not reference a post that requires a read-access check.
+	 * NOTE: Callers MUST perform their own capability checks for non-post
+	 * context types (user, term, etc.) before reaching this method.
 	 *
 	 * @param mixed $context Decoded JSON context.
 	 * @return int|null Sanitized post ID, or null if not applicable.

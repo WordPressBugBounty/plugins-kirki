@@ -285,6 +285,52 @@ class Utils {
 		return $args;
 	}
 
+	/**
+	 * Dynamic content types whose values are plain text by nature and must never
+	 * be rendered as live markup.
+	 *
+	 * Comment fields are the important case: their content is supplied by
+	 * (potentially unauthenticated) visitors, so anything stored there is
+	 * untrusted. Rich types — `post` (post_content), `reference`, `gallery`,
+	 * `menu` — are deliberately excluded, because those are authored by users
+	 * with editing capabilities and are expected to emit HTML.
+	 *
+	 * @return string[]
+	 */
+	public static function get_plain_text_dynamic_content_types() {
+		return apply_filters( 'kirki_plain_text_dynamic_content_types', array( 'comment' ) );
+	}
+
+	/**
+	 * Escape a resolved dynamic value when its type is plain text by nature.
+	 *
+	 * The value is decoded first and then escaped, so markup that was stored in
+	 * entity-encoded form (`&lt;script&gt;`) is normalised to a single, escaped
+	 * representation and displays as the literal text the visitor typed instead
+	 * of turning back into a live tag further down the render pipeline.
+	 *
+	 * @param mixed $content         The resolved dynamic value.
+	 * @param array $dynamic_content The dynamic content definition.
+	 * @return mixed The escaped value, or the value untouched when it is not plain text.
+	 */
+	public static function esc_dynamic_text_value( $content, $dynamic_content ) {
+		if ( ! is_string( $content ) || '' === $content ) {
+			return $content;
+		}
+
+		$type = isset( $dynamic_content['type'] ) ? $dynamic_content['type'] : '';
+
+		if ( ! in_array( $type, self::get_plain_text_dynamic_content_types(), true ) ) {
+			return $content;
+		}
+
+		return htmlspecialchars(
+			html_entity_decode( $content, ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
+			ENT_QUOTES,
+			'UTF-8'
+		);
+	}
+
 	public static function getDynamicRichTextValue( $dynamic_content, $options ) {
 		$html = '';
 		if ( ! $dynamic_content ) {
@@ -308,7 +354,7 @@ class Utils {
 		}
 		$content = apply_filters( 'kirki_dynamic_content', false, $contentInfo );
 		if ( $content ) {
-			return $content;
+			return self::esc_dynamic_text_value( $content, $dynamic_content );
 		}
 
 		// fix warning

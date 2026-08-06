@@ -13,6 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use Kirki\API\ContentManager\ContentManagerHelper;
+use Kirki\Frontend\Preview\Utils;
 use Kirki\HelperFunctions;
 
 use function PHPSTORM_META\map;
@@ -49,7 +50,12 @@ class DynamicContent {
 	private static function resolve_dynamic_element_data( $content_info ) {
 		$content = apply_filters( 'kirki_dynamic_content', false, $content_info );
 		if ( $content !== false ) {
-			return $content;
+			// Keep the editor preview in step with the frontend: plain-text
+			// dynamic values (comment fields) are escaped, never live markup.
+			return Utils::esc_dynamic_text_value(
+				$content,
+				isset( $content_info['dynamicContent'] ) ? $content_info['dynamicContent'] : array()
+			);
 		}
 
 		$dynamic_content = isset( $content_info['dynamicContent'] ) ? $content_info['dynamicContent'] : array();

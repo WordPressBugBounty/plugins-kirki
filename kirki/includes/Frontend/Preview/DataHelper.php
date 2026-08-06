@@ -67,6 +67,10 @@ class DataHelper {
 		$prefix        = $symbol_id ? 'kirki-s' . $symbol_id : null;
 		$new_id        = $this->get_unique_new_id( $root );
 		$element       = $data[ $root ];
+
+		if($element['name'] === 'collection' || $element['name'] === 'slider'){
+			$element['original_id'] = $element['id'];
+		}
 		$element['id'] = $new_id;
 
 		if ( isset( $element['styleIds'] ) && ! empty( $element['styleIds'] ) ) {

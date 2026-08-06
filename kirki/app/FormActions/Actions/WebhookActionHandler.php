@@ -2,6 +2,8 @@
 
 namespace Kirki\App\FormActions\Actions;
 
+use Kirki\HelperFunctions;
+
 defined('ABSPATH') || exit;
 
 use Kirki\App\Constants\Form\FormWebhookMethods;
@@ -44,6 +46,10 @@ class WebhookActionHandler implements FormActionHandler
      */
     protected function send_get($url, $form_data)
     {
+        if (!HelperFunctions::is_safe_url($url)) {
+            return false;
+        }
+
         $query_string = http_build_query($form_data);
         $url = rtrim($url, '/');
         $url .= '/';
@@ -62,6 +68,10 @@ class WebhookActionHandler implements FormActionHandler
      */
     protected function send_post($url, $form_data)
     {
+        if (!HelperFunctions::is_safe_url($url)) {
+            return false;
+        }
+
         $response = Http::as_form()->post($url, $form_data);
 
         return $response->status() !== 0;

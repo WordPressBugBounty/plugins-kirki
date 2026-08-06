@@ -151,7 +151,10 @@ class CompLibFormHandler extends WP_REST_Controller {
     $form_data     = $request->get_body_params();
     $transient_name = $this->validate_nonce( 'kirki-comment' );  // note: typo fix from $transiet_name
 
-    $comment        = isset( $form_data['comment'] ) ? sanitize_text_field( $form_data['comment'] ) : '';
+    // FIX 3: decode entities *before* sanitising. sanitize_text_field() strips
+    // tags but leaves entity-encoded markup (`&lt;script&gt;`) intact, which is
+    // how markup used to survive the write and reach the renderer.
+    $comment        = isset( $form_data['comment'] ) ? sanitize_text_field( html_entity_decode( (string) $form_data['comment'], ENT_QUOTES | ENT_HTML5, 'UTF-8' ) ) : '';
     $post_id        = isset( $form_data['post_id'] ) ? absint( $form_data['post_id'] ) : 0;
     $comment_parent = isset( $form_data['comment_parent'] ) ? absint( $form_data['comment_parent'] ) : 0;
     $user_id        = get_current_user_id();
@@ -163,7 +166,7 @@ class CompLibFormHandler extends WP_REST_Controller {
 			$email = $user->get( 'user_email' );
     } else {
 			// Anonymous commenter: require name + valid email supplied in the form.
-			$name  = isset( $form_data['name'] )  ? sanitize_text_field( $form_data['name'] )  : '';
+			$name  = isset( $form_data['name'] )  ? sanitize_text_field( html_entity_decode( (string) $form_data['name'], ENT_QUOTES | ENT_HTML5, 'UTF-8' ) )  : '';
 			$email = isset( $form_data['email'] ) ? sanitize_email( $form_data['email'] )       : '';
 
 			if ( empty( $name ) || empty( $email ) || ! is_email( $email ) ) {
@@ -210,18 +213,27 @@ class CompLibFormHandler extends WP_REST_Controller {
 				);
 			}
 
-			$date = gmdate( 'Y-m-d H:i:s' );
+			$date = current_time( 'mysql' );
 
-			global $wpdb;
-			$wpdb->update(
-				$wpdb->comments,
+			// FIX 3 (cont.): go through wp_update_comment() instead of a raw
+			// $wpdb->update(), so the same kses/comment filters that guard
+			// wp_new_comment() also guard edits.
+			$updated = wp_update_comment(
 				array(
+					'comment_ID'       => $existing_comment_id,
 					'comment_content'  => $comment,
 					'comment_date'     => $date,
 					'comment_date_gmt' => get_gmt_from_date( $date ),
 				),
-				array( 'comment_ID' => $existing_comment_id )
+				true
 			);
+
+			if ( is_wp_error( $updated ) ) {
+				return new WP_REST_Response(
+					array( 'message' => $updated->get_error_message() ),
+					400
+				);
+			}
 
 			apply_filters(
 				'kirki_comment_added-' . $collection_type,

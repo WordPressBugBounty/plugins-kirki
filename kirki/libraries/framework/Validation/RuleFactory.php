@@ -137,7 +137,7 @@ class RuleFactory
             if (!$instance->has_constraint($name)) {
                 continue;
             }
-            if (!empty($arguments)) {
+            if ($arguments !== null) {
                 $instance->{$name}($arguments);
             } else {
                 $instance->{$name}();
@@ -252,7 +252,7 @@ class RuleFactory
             return null;
         }
         $arguments = array_last(\explode(':', $rule, 2));
-        if (empty($arguments)) {
+        if ($arguments === null || $arguments === '') {
             return null;
         }
         if (str_contains($arguments, ',')) {

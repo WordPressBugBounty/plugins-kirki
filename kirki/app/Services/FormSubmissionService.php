@@ -109,7 +109,10 @@ class FormSubmissionService
 	}
 
 	/**
-	 * Parse and decode the base64 form metadata token.
+	 * Parse and verify the base64 form metadata token.
+	 *
+	 * The token is signed with `wp_hash()` at render time, so an attacker
+	 * cannot mint tokens for arbitrary form/post combinations.
 	 *
 	 * @param mixed $form_meta_data_base64 Base64 encoded form metadata.
 	 * @return array{form_id: string|null, post_id: string|null}
@@ -120,11 +123,26 @@ class FormSubmissionService
 			return ['form_id' => null, 'post_id' => null];
 		}
 
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode
 		$form_meta_data = explode('|', base64_decode(base64_decode($form_meta_data_base64)));
 
+		if (count($form_meta_data) < 3) {
+			return ['form_id' => null, 'post_id' => null];
+		}
+
+		$form_id   = $form_meta_data[0];
+		$post_id   = $form_meta_data[1];
+		$signature = $form_meta_data[2];
+
+		$expected = wp_hash($form_id . '|' . $post_id);
+
+		if (!hash_equals($expected, (string) $signature)) {
+			return ['form_id' => null, 'post_id' => null];
+		}
+
 		return [
-			'form_id' => $form_meta_data[0] ?: null,
-			'post_id' => $form_meta_data[1] ?: null,
+			'form_id' => $form_id ?: null,
+			'post_id' => $post_id ?: null,
 		];
 	}
 

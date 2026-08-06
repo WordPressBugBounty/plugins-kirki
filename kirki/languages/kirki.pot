@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Kirki 6.2.0\n"
+"Project-Id-Version: Kirki 6.2.1\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/kirki\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-07-31T10:43:00+00:00\n"
+"POT-Creation-Date: 2026-08-06T06:44:11+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: kirki\n"
@@ -1326,7 +1326,6 @@ msgstr ""
 
 #: customizer/packages/fields/typography/src/Field/Typography.php:366
 #: customizer/packages/fields/typography/src/Field/Typography.php:386
-#: assets/js/kirki-editor.min.js:2
 msgid "None"
 msgstr ""
 
@@ -3701,10 +3700,6 @@ msgid "On Click"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "State"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Connect to CMS"
 msgstr ""
 
@@ -3777,6 +3772,22 @@ msgid "Object Position"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+msgid "Flex child"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Basis"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Grow"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Shrink"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "Radius"
 msgstr ""
 
@@ -3829,10 +3840,6 @@ msgid "Relation"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Related"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Use this collection as filter"
 msgstr ""
 
@@ -3846,6 +3853,10 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Pagination"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "State"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2

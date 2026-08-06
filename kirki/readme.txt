@@ -3,7 +3,7 @@ Contributors: themeum
 Tags: page builder, website builder, drag and drop, form builder, freeform canvas
 Requires at least: 5.9
 Tested up to: 7.0
-Stable tag: 6.2.0
+Stable tag: 6.2.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -190,6 +190,18 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 ---
 
 == Changelog ==
+
+= 6.2.1 =
+* New: Added a Flex Child option to the Sizing panel for finer control over flex layouts.
+* Update: Automatically removes matching styles from an element when a text style is applied.
+* Update: Improved rich text selection handling with better root selection context management.
+* Update: Enhanced external text paste behavior, preserving formatting and eliminating trailing whitespace issues.
+* Update: Enhanced the Color Picker to support mixed color values.
+* Update: Videos now automatically pause when they move out of the viewport.
+* Update: Improved CSS generation for text styles and variables to ensure better specificity.
+* Fix: Addressed multiple security vulnerabilities, including XSS, arbitrary shortcode execution, path traversal, SSRF, and email relay issues.
+* Fix: Resolved text overflow and ellipsis issues in Input Number, Tabs, and Select controls.
+* Fix: Resolved dropdown target visibility issues when controlled by dropdown state settings.
 
 = 6.2.0 =
 * New: Introduced the Interaction Library.

@@ -16,6 +16,7 @@ class ElementGenerator {
 	private $options                       = array();
 	private $generate_child_element        = null;
 	private $get_data_and_styles_from_root = null;
+	private $get_collection_info           = array();
 	private $style_blocks                  = array();
 	private $properties                    = array();
 	public $component_lib_forms            = array();
@@ -34,6 +35,7 @@ class ElementGenerator {
 		$this->setting                       = $this->properties['settings'];
 		$this->component_lib_forms           = $props['component_lib_forms'];
 		$this->get_data_and_styles_from_root = $props['get_data_and_styles_from_root'];
+		$this->get_collection_info           = $props['get_collection_info'];
 		$this->style_blocks                  = $props['style_blocks'];
 		$this->add_element_config();
 	}
@@ -204,7 +206,10 @@ class ElementGenerator {
 						'styles' => array(),
 						'root'   => $this->element['parentId'],
 					);
-					call_user_func_array( $this->get_data_and_styles_from_root, array( $this->element['parentId'], &$data_n_styles, &$this->elements, &$this->style_blocks ) );
+
+					$data_n_styles = call_user_func_array( $this->get_collection_info, array( $this->options, $this->element ) );
+
+					// call_user_func_array( $this->get_data_and_styles_from_root, array( $this->element['parentId'], &$data_n_styles, &$this->elements, &$this->style_blocks ) );
 					$encoded_data = json_encode( $data_n_styles );
 					$kirki_data  .= "<textarea data-type='kirki_data' style='display: none'>" . esc_textarea( $encoded_data ) . '</textarea>';
 				}
