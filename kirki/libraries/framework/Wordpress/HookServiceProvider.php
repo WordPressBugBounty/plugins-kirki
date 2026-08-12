@@ -13,6 +13,7 @@ namespace Kirki\Framework\Wordpress;
 
 \defined('ABSPATH') || exit;
 use Kirki\Framework\ServiceProvider;
+use Kirki\Framework\Wordpress\Hooks\Actions\VersionUpdate;
 use Kirki\Framework\Wordpress\Hooks\Actions\RegisterRestApi;
 use Kirki\Framework\Wordpress\Hooks\Actions\RegisterSiteRoutes;
 class HookServiceProvider extends ServiceProvider
@@ -20,11 +21,11 @@ class HookServiceProvider extends ServiceProvider
     /**
      * The defaults.
      *
-     * @var string
+     * @var array<string, array<string>>
      *
      * @since 1.0.0
      */
-    protected static $defaults = ['actions' => [RegisterRestApi::class, RegisterSiteRoutes::class], 'filters' => []];
+    protected static $defaults = ['actions' => [RegisterRestApi::class, RegisterSiteRoutes::class, VersionUpdate::class], 'filters' => []];
     /**
      * Register the hooks to the application.
      *
@@ -55,11 +56,14 @@ class HookServiceProvider extends ServiceProvider
         if (empty($hooks)) {
             return static::$defaults;
         }
-        if (!\in_array(RegisterRestApi::class, $hooks['actions'], \true)) {
-            \array_unshift($hooks['actions'], RegisterRestApi::class);
+        $default_action_hooks = [];
+        foreach (static::$defaults['actions'] as $action) {
+            if (!\in_array($action, $hooks['actions'], \true)) {
+                $default_action_hooks[] = $action;
+            }
         }
-        if (!\in_array(RegisterSiteRoutes::class, $hooks['actions'], \true)) {
-            $hooks['actions'][] = RegisterSiteRoutes::class;
+        if (!empty($default_action_hooks)) {
+            $hooks['actions'] = \array_merge($default_action_hooks, $hooks['actions']);
         }
         return ['actions' => $hooks['actions'] ?? [], 'filters' => $hooks['filters'] ?? []];
     }

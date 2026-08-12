@@ -272,11 +272,12 @@ class CollectionItemService
                 }
 
             } else {
+                $val = $fields[$field['id']] ?? '';
                 $normal_field_values[] = [
                     'meta_id' => $normal_field_map[$meta_key]->meta_id ?? null,
                     'post_id' => $post_id,
                     'meta_key' => $meta_key,
-                    'meta_value' => maybe_serialize($fields[$field['id']]),
+                    'meta_value' => maybe_serialize($val !== null ? $val : ''),
                 ];
             }
         }

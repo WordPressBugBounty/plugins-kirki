@@ -208,9 +208,6 @@ class Preview extends ExceptionalElements {
 		'link-block',
 		'form',
 		'button',
-		'file-upload-inner',
-		'file-upload-threshold-text',
-		'file-upload',
 		'popup-body',
 		'navigation',
 		'navigation-item',
@@ -1361,19 +1358,13 @@ class Preview extends ExceptionalElements {
 				$element['name'] === 'textarea' ||
 				$element['name'] === 'select' ||
 				$element['name'] === 'checkbox-element' ||
-				$element['name'] === 'radio-group' ||
-				$element['name'] === 'file-upload'
+				$element['name'] === 'radio-group'
 			) {
 				$parent_form_id = $options['form']['id'] ?? '';
 				$session_data   = HelperFunctions::get_session_data( $parent_form_id );
 
 				$type              = $element['properties']['attributes']['type'] ?? '';
 				$others_attributes = array();
-
-				if ( 'file-upload' === $element['name'] ) {
-					$type                               = 'file';
-					$others_attributes['max-file-size'] = $element['properties']['maxFileSize'] ?? 2;
-				}
 
 				if ( $session_data && isset( $element['properties']['attributes']['name'] ) ) {
 					if ( ! isset( $session_data['fields'] ) ) {
@@ -2018,10 +2009,21 @@ class Preview extends ExceptionalElements {
 
 		if ( $tag !== 'a' && $href ) {
 			$target = isset( $properties['attributes'], $properties['attributes']['target'] ) ? "target={$properties['attributes']['target']}" : '';
-			$rel    = isset( $properties['attributes'], $properties['attributes']['rel'] ) ? "rel={$properties['attributes']['rel']}" : '';
+			$rel = '';
+
+			// check if rel is array and convert to string
+			if (isset($properties['attributes'], $properties['attributes']['rel'])) {
+				$rel_value = $properties['attributes']['rel'];
+
+				if (is_array($rel_value)) {
+					$rel_value = implode(' ', $rel_value);
+				}
+
+				$rel = "rel='{$rel_value}'";
+			}
 
 			if ( isset( $properties['type'] ) ) {
-				$html = "<a href={$href} {$target} {$rel}>{$html}</a>";
+				$html = "<a href='{$href}' {$target} {$rel}>{$html}</a>";
 			}
 		}
 

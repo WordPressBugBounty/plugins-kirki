@@ -13,12 +13,8 @@ namespace Kirki\Framework\Managers;
 
 \defined('ABSPATH') || exit;
 use Kirki\Framework\Concerns\DependencyResolvable;
-use Kirki\Framework\Database\Query\Model;
 use Kirki\Framework\Exceptions\AuthorizationException;
-use Kirki\Framework\Supports\Arr;
 use InvalidArgumentException;
-use ReflectionMethod;
-use ReflectionNamedType;
 use function Kirki\Framework\app;
 use function Kirki\Framework\config_path;
 use function Kirki\Framework\message;

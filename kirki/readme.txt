@@ -3,7 +3,7 @@ Contributors: themeum
 Tags: page builder, website builder, drag and drop, form builder, freeform canvas
 Requires at least: 5.9
 Tested up to: 7.0
-Stable tag: 6.2.1
+Stable tag: 6.2.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -190,6 +190,16 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 ---
 
 == Changelog ==
+
+= 6.2.2 =
+* New: Added Element Multiselect for selecting and editing multiple elements at once.
+* New: Added vertical resizing for the custom interaction timeline editor.
+* Update: Advanced typography panel functionality updated for open type feature text.
+* Update: Text animations now play only when the element enters the viewport.
+* Update: Improved the Layer Panel and Canvas drag preview opacity for better visibility.
+* Update: Removed the File element from the Form Builder.
+* Fix: Resolved specificity issues in text style and variable CSS generation.
+* Fix: Fixed custom animation timeline previews so transform animations replay chronologically instead of collapsing by property.
 
 = 6.2.1 =
 * New: Added a Flex Child option to the Sizing panel for finer control over flex layouts.

@@ -36,7 +36,7 @@ class FormController
 	 */
 	public function store(Request $request)
 	{
-		$result = $this->service->handle($request->all(), $request->all_files());
+		$result = $this->service->handle($request->all());
 
 		return response()->json([
 			'data' => $result,

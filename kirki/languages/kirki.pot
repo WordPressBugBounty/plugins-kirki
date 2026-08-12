@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Kirki 6.2.1\n"
+"Project-Id-Version: Kirki 6.2.2\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/kirki\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-08-06T06:44:11+00:00\n"
+"POT-Creation-Date: 2026-08-12T07:54:10+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: kirki\n"
@@ -162,6 +162,7 @@ msgid "Select"
 msgstr ""
 
 #: customizer/example.php:82
+#: assets/js/kirki-editor.min.js:2
 msgid "Slider"
 msgstr ""
 
@@ -1227,6 +1228,7 @@ msgstr ""
 
 #: customizer/packages/fields/typography/src/Field/Typography.php:120
 #: customizer/packages/fields/typography/src/Field/Typography.php:139
+#: assets/js/kirki-editor.min.js:2
 msgid "Italic"
 msgstr ""
 
@@ -1346,6 +1348,7 @@ msgid "Text Decoration"
 msgstr ""
 
 #: customizer/packages/fields/typography/src/Field/Typography.php:387
+#: assets/js/kirki-editor.min.js:2
 msgid "Underline"
 msgstr ""
 
@@ -1745,6 +1748,238 @@ msgid "This meta description will appear on the search result page below the tit
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+msgid "Show/Hide UI"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Quick Find"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Add element"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Save"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Search layers"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Search components"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Preview"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Preview in new tab"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Comment"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Show ruler"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Zoom"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Zoom-in"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Zoom-out"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Zoom to 100%"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Duplicate"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Move"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Text"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Video"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Copy"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Paste"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Copy element styles"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Paste element styles"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Cut element"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Add class"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Rename class"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Resize proportionally"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Rename layer"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Undo"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Redo"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Delete"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Add link"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Wrap into Frame"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Unwrap from Frame"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Flex left"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Flex right"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Flex up"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Flex down"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Align left"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Align right"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Align top"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Align bottom"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Align center horizontally"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Align center vertically"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Padding/margin all inputs at once"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Bring layer forward"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Send layer backward"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Increase z-index value"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Decrease z-index value"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Select all"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Deselect"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Select children"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Select parent"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Select next sibling"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Select previous sibling"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Edit selection text"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Bold"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Convert to list (Number)"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Convert to list (Dot)"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "Keyboard Shortcuts"
 msgstr ""
 
@@ -1769,10 +2004,6 @@ msgid "Cancel"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Save"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Link Settings"
 msgstr ""
 
@@ -1786,14 +2017,6 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Variable copied"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Duplicate"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Delete"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -1921,11 +2144,19 @@ msgid "Search font"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+msgid "Alignment"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "Position"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Alignment"
+msgid "Basics"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "OpenType"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -1934,6 +2165,22 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Tag"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Unsaved Changes"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "The text style has unsaved changes. Do you want to save the changes?"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Exit without saving"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Yes, apply"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2025,7 +2272,87 @@ msgid "Stops"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "You can not delete component parent."
+msgid "Click on `Add` to replace mixed values"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Style"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Border"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Offset"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Backface visibility"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "3D transformation"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Self Perspective"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Children Perspective"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Transforms"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Click on `+` to replace mixed values"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Transform options"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Curve"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Duration"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Delay"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Bezier"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Bounce"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Transitions"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Text Shadow"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Blur"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Spread"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Radius"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2125,15 +2452,15 @@ msgid "Loading"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Playback"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Click"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Hover"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Playback"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2169,10 +2496,6 @@ msgid "Easing"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Duration"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Meta name"
 msgstr ""
 
@@ -2182,22 +2505,6 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Format"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Curve"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Delay"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Bezier"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Bounce"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2229,11 +2536,23 @@ msgid "All Users"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+msgid "Post Comments"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Comments"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "User"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Term"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Loading..."
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2253,19 +2572,7 @@ msgid "Detach from component"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Add link"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Paste Element Style"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Copy"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Paste"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2297,15 +2604,7 @@ msgid "Decrease z-index"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Wrap into Frame"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Unwrap elements"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Add class"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2386,6 +2685,90 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Interaction"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Search components..."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Div"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Heading"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "H1"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "H2"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "H3"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "H4"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "H5"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "H6"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Icon"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "SVG"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Button"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Stack"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Compound elements"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Form"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Input"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Navigation"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Tabs"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Lightbox"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Collection"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Components"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2504,10 +2887,6 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Pages"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Navigation"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2639,10 +3018,6 @@ msgid "Rename"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Preview"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Page Delete"
 msgstr ""
 
@@ -2667,10 +3042,6 @@ msgid "Add Template"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Collection"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Post Type"
 msgstr ""
 
@@ -2688,6 +3059,18 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Popup"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Categories"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Authors"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Tags"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2711,18 +3094,6 @@ msgid "Archive template already exists"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Categories"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Authors"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Tags"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "All"
 msgstr ""
 
@@ -2736,6 +3107,10 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Element title"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "You can not delete component parent."
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2776,10 +3151,6 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Failed to rename symbol."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Components"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2847,10 +3218,6 @@ msgid "Zoom to 50%"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Zoom to 100%"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Zoom to 200%"
 msgstr ""
 
@@ -2904,10 +3271,6 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Show element island"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Show ruler"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -3484,10 +3847,6 @@ msgid "Add media"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Video"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Max IP entries"
 msgstr ""
 
@@ -3592,10 +3951,6 @@ msgid "Checked by default"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Types"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Video url"
 msgstr ""
 
@@ -3605,10 +3960,6 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Search location..."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Style"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -3688,15 +4039,27 @@ msgid "Multiple select"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Open on"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "On Hover"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "On Click"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Open on"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "State"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Multi reference"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Gallery"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -3748,26 +4111,6 @@ msgid "Display"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Backface visibility"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "3D transformation"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Self Perspective"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Children Perspective"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Transform options"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Object Position"
 msgstr ""
 
@@ -3788,31 +4131,7 @@ msgid "Shrink"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Radius"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Opacity"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Border"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Blur"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Spread"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Text Shadow"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Offset"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -3856,10 +4175,6 @@ msgid "Pagination"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "State"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Starts from"
 msgstr ""
 
@@ -3869,6 +4184,10 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Add pagination"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Labels accessible elements"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -3921,10 +4240,6 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Loops & Repeats"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Move"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -4046,10 +4361,6 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Cursor"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Stack"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2

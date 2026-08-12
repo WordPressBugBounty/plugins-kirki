@@ -21,5 +21,9 @@ class FormFieldTypes
     const TEL = 'tel';
     const DATE = 'date';
     const DATETIME_LOCAL = 'datetime-local';
+
+    /**
+     * @deprecated File upload is no longer supported.
+     */
     const FILE = 'file';
 }

@@ -4,6 +4,11 @@
 	let timeID = null;
 	const editWithBtnHTML = `<a class="kirki-edit-with-btn">
 	<style>
+			:root {
+				--kirki-font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell,
+				'Helvetica Neue', 'Noto Sans', 'Liberation Sans', Arial, Helvetica, ui-sans-serif, system-ui, sans-serif,
+				'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+			}
 			.kirki-edit-with-btn{
 				display: inline-flex;
 				align-items: center;
@@ -21,6 +26,7 @@
 				white-space: nowrap;
 				text-decoration: none;
 				cursor: pointer;
+				font-family: var(--kirki-font-family);
 			}
 			.kirki-edit-with-btn:hover{
 				background: #1670E7;
@@ -54,6 +60,7 @@
 			cursor: pointer;
 			display: inline-flex;
 			align-items: center;
+			font-family: var(--kirki-font-family);
 		}
 		.kirki-back-dash-btn:hover{
 			background: #00000014;

@@ -87,9 +87,13 @@ class Utils {
 	private static function get_users_collection( $dynamic_content, $options ) {
 		$args = array();
 
-		if ( isset( $dynamic_content['sorting'], $dynamic_content['sorting']['type'], $dynamic_content['sorting']['value'] ) ) {
-			$args['sorting']['order']   = $dynamic_content['sorting']['type'];
-			$args['sorting']['orderby'] = $dynamic_content['sorting']['value'];
+		if ( isset( $dynamic_content['sorting'] ) && is_array( $dynamic_content['sorting'] ) ) {
+			$order   = $dynamic_content['sorting']['order'] ?? $dynamic_content['sorting']['type'] ?? 'DESC';
+			$orderby = $dynamic_content['sorting']['orderby'] ?? $dynamic_content['sorting']['value'] ?? 'date';
+			$args['sorting'] = array(
+				'order'   => $order,
+				'orderby' => $orderby,
+			);
 		}
 
 		if ( isset( $options['filters'] ) ) {
@@ -133,9 +137,13 @@ class Utils {
 
 	private static function get_common_args( $dynamic_content, $options ) {
 		$args = array();
-		if ( isset( $dynamic_content['sorting'], $dynamic_content['sorting']['type'], $dynamic_content['sorting']['value'] ) ) {
-			$args['sorting']['order']   = $dynamic_content['sorting']['type'];
-			$args['sorting']['orderby'] = $dynamic_content['sorting']['value'];
+		if ( isset( $dynamic_content['sorting'] ) && is_array( $dynamic_content['sorting'] ) ) {
+			$order   = $dynamic_content['sorting']['order'] ?? $dynamic_content['sorting']['type'] ?? 'DESC';
+			$orderby = $dynamic_content['sorting']['orderby'] ?? $dynamic_content['sorting']['value'] ?? 'date';
+			$args['sorting'] = array(
+				'order'   => $order,
+				'orderby' => $orderby,
+			);
 		}
 
 		if ( isset( $options['filters'] ) ) {

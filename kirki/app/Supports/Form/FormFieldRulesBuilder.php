@@ -5,8 +5,6 @@ namespace Kirki\App\Supports\Form;
 defined('ABSPATH') || exit;
 
 use Kirki\App\Constants\Form\FormFieldTypes;
-use Kirki\App\Rules\Form\AcceptedFileTypeRule;
-use Kirki\App\Rules\Form\MaxFileSizeRule;
 
 /**
  * Turns a Kirki form's `fields` configuration into rules the framework
@@ -14,9 +12,7 @@ use Kirki\App\Rules\Form\MaxFileSizeRule;
  *
  * A field's `type` maps to a format rule (email, number, ...) and `required`
  * toggles between the `required`/`nullable` rule — the only two constraints
- * the form builder actually lets users configure. File fields get their own
- * rule set (accepted type + max size) since their value lives in `$_FILES`,
- * not the submitted form data.
+ * the form builder actually lets users configure.
  */
 class FormFieldRulesBuilder
 {
@@ -48,17 +44,19 @@ class FormFieldRulesBuilder
         $rules = [];
 
         foreach ($fields as $name => $field) {
-            $rules[$name] = ($field['type'] ?? null) === FormFieldTypes::FILE
-                ? static::rules_for_file_field($field)
-                : static::rules_for_field($field);
+            if (($field['type'] ?? null) === FormFieldTypes::FILE) {
+                continue;
+            }
+
+            $rules[$name] = static::rules_for_field($field);
         }
 
         return $rules;
     }
 
     /**
-     * Build the data to validate: submitted form data with empty values
-     * normalized to null, and file fields' values pulled from `$_FILES`.
+     * Build the data to validate: submitted form data filtered strictly to
+     * configured fields (excluding file fields) with empty values normalized to null.
      *
      * The Validator only skips format rules for a field it never received;
      * an empty string is still "received". Normalizing empty values to null
@@ -67,28 +65,12 @@ class FormFieldRulesBuilder
      *
      * @param array $form_data The submitted form data.
      * @param array $fields    The form's field configuration.
-     * @param array $files     The file array of our own file class.
      * @return array
      */
-    public static function data_for_validation(array $form_data, array $fields, array $files = [])
+    public static function data_for_validation(array $form_data, array $fields)
     {
-        foreach ($files as $field_name => $file) {
-            $field = $fields[$field_name] ?? [];
-
-            if (($field['type'] ?? null) !== FormFieldTypes::FILE) {
-                continue;
-            }
-
-            if (!$file->is_valid()) {
-                $form_data[$field_name] = null;
-                continue;
-            }
-
-            $form_data[$field_name] = $file;
-        }
-
         foreach ($fields as $name => $field) {
-            if (($field['type'] ?? null) !== FormFieldTypes::FILE && isset($form_data[$name]) && empty($form_data[$name])) {
+            if (isset($form_data[$name]) && empty($form_data[$name])) {
                 $form_data[$name] = null;
             }
         }
@@ -111,21 +93,6 @@ class FormFieldRulesBuilder
         }
 
         return $rules;
-    }
-
-    /**
-     * The Validator rules for a single file field.
-     *
-     * @param array $field The field configuration.
-     * @return array<int, string>
-     */
-    protected static function rules_for_file_field(array $field)
-    {
-        return [
-            static::required_rule($field),
-            AcceptedFileTypeRule::class . ':' . ($field['accept'] ?? 'default'),
-            MaxFileSizeRule::class . ':' . ($field['max-file-size'] ?? 2),
-        ];
     }
 
     /**

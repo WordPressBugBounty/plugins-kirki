@@ -70,18 +70,6 @@ class ExceptionalElements {
 			case 'link-block': {
 					return $this->link_block_element( $this_data, $attributes, $options );
 			}
-
-			case 'file-upload-inner': {
-					return $this->file_input_element( $this_data, $attributes, $options );
-			}
-
-			case 'file-upload-threshold-text': {
-					return $this->file_upload_threshold_text( $this_data, $attributes, $options );
-			}
-
-			case 'file-upload': {
-					return $this->file_upload_element( $this_data, $attributes, $options );
-			}
 			case 'slider':
 			case 'collection': {
 				$element_name = $this_data['name'];
@@ -1284,97 +1272,6 @@ class ExceptionalElements {
 		$message = ob_get_contents();
 		ob_end_clean();
 		return $message;
-	}
-
-	/**
-	 * Generate File upload element markup
-	 *
-	 * @param array $this_data single element block.
-	 * @param array $attributes single element all attributes.
-	 * @param array $options single element all options.
-	 * @return string HTML markup.
-	 */
-	private function file_upload_element( $this_data, $attributes, $options ) {
-		$tag       = isset( $this_data['properties']['tag'] ) ? $this_data['properties']['tag'] : 'div';
-		$data_attr = isset( $this_data['properties']['attributes'] ) ? $this_data['properties']['attributes'] : array();
-		$options   = array_merge(
-			$options,
-			array(
-				'file_upload' => array(
-					'name'        => isset( $data_attr['name'] ) ? $data_attr['name'] : '',
-					'accept'      => isset( $data_attr['accept'] ) ? $data_attr['accept'] : '',
-					'required'    => isset( $data_attr['required'] ) ? $data_attr['required'] : '',
-					'maxFileSize' => isset( $this_data['properties']['maxFileSize'] ) ? $this_data['properties']['maxFileSize'] : 2,
-				),
-			)
-		);
-
-		$attributes = $this->getAllAttributes(
-			$this_data,
-			array(
-				'name'     => false,
-				'accept'   => false,
-				'required' => false,
-				'rest'     => true,
-			),
-		);
-
-		$children_markup = $this->construct_children_markup( isset( $this_data['children'] ) ? $this_data['children'] : array(), $options );
-		return "<$tag $attributes>
-						$children_markup
-					</$tag>";
-	}
-
-	/**
-	 * Generate File input threshold text element markup
-	 *
-	 * @param array $this_data single element block.
-	 * @param array $attributes single element all attributes.
-	 * @param array $options single element all options.
-	 * @return string HTML markup.
-	 */
-
-	private function file_upload_threshold_text( $this_data, $attributes, $options ) {
-		$tag           = isset( $this_data['properties']['tag'] ) ? $this_data['properties']['tag'] : 'span';
-		$max_file_size = isset( $options['file_upload']['maxFileSize'] ) ? $options['file_upload']['maxFileSize'] : 2;
-
-		return "<$tag $attributes>Max file size " . $max_file_size . "MB.</$tag>";
-	}
-
-	/**
-	 * Generate File input element markup
-	 *
-	 * @param array $this_data single element block.
-	 * @param array $attributes single element all attributes.
-	 * @param array $options single element all options.
-	 * @return string HTML markup.
-	 */
-	private function file_input_element( $this_data, $attributes, $options ) {
-		$tag      = isset( $this_data['properties']['tag'] ) ? $this_data['properties']['tag'] : 'div';
-		$children = $this_data['children'] ?? array();
-		$markup   = '';
-
-		$name          = isset( $options['file_upload']['name'] ) ? $options['file_upload']['name'] : '';
-		$accept        = isset( $options['file_upload']['accept'] ) ? $options['file_upload']['accept'] : '';
-		$required      = isset( $options['file_upload']['required'] ) ? $options['file_upload']['required'] : '';
-		$max_file_size = isset( $options['file_upload']['maxFileSize'] ) ? $options['file_upload']['maxFileSize'] : 2;
-
-		foreach ( $children as $child ) {
-			$markup .= $this->recGenHTML( $child, $options );
-		}
-
-		return "<$tag $attributes>
-						$markup
-						<input
-							type=\"file\"
-							readonly
-							style=\"display: none;\"
-							name=\"$name\"
-							accept=\"$accept\"
-							required=\"$required\"
-							kirki-max_file_size=$max_file_size
-							/>
-						</$tag>";
 	}
 
 	private function slider_nav_element( $this_data, $attributes, $options ) {

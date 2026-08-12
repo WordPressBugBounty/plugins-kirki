@@ -147,6 +147,14 @@ class Application extends Container
      */
     protected string $namespace = '';
     /**
+     * The application version
+     *
+     * @var string
+     *
+     * @since 1.0.0
+     */
+    protected string $version = '1.0.0';
+    /**
      * Cached namespaces resolved from composer PSR-4 paths.
      *
      * @var array<string, string>
@@ -412,6 +420,20 @@ class Application extends Container
     public function use_prefix(string $prefix)
     {
         $this->prefix = Str::snake($prefix);
+        return $this;
+    }
+    /**
+     * Use a version for the application.
+     *
+     * @param string $version The version to use.
+     *
+     * @return self
+     *
+     * @since 1.0.0
+     */
+    public function use_version(string $version)
+    {
+        $this->version = $version;
         return $this;
     }
     /**
@@ -907,5 +929,16 @@ class Application extends Container
     public function is_dev_mode()
     {
         return $this->mode === 'development';
+    }
+    /**
+     * Get the application version.
+     *
+     * @return string
+     *
+     * @since 1.0.0
+     */
+    public function version()
+    {
+        return $this->version;
     }
 }

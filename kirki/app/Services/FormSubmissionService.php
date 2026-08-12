@@ -2,15 +2,15 @@
 
 namespace Kirki\App\Services;
 
-use Kirki\Framework\Filesystem\UploadedFile;
 use function Kirki\Framework\app;
 use function Kirki\Framework\user;
 
 defined('ABSPATH') || exit;
 
 use Exception;
-use Kirki\App\FormActions\FormActionDispatcher;
+use Kirki\App\Constants\Form\FormFieldTypes;
 use Kirki\App\DTO\Form\FormConfigDTO;
+use Kirki\App\FormActions\FormActionDispatcher;
 use Kirki\App\Models\Form;
 use Kirki\App\Models\FormData;
 use Kirki\App\Supports\ActionHooks;
@@ -20,26 +20,12 @@ use Kirki\App\Supports\Session;
 use Kirki\Framework\Exceptions\ValidationException;
 use Kirki\Framework\Http\Response;
 use Kirki\Framework\Validation\Validator;
-use WP_Error;
 
 /**
  * Orchestrates a front-end form submission.
  */
 class FormSubmissionService
 {
-	/**
-	 * Request keys that are submission metadata, not form field data.
-	 *
-	 * @var array
-	 */
-	protected const ADDITIONAL_KEYS = [
-		'_kirki_form',
-		'_wpnonce',
-		'_wp_http_referer',
-		'g-recaptcha-token',
-		'g-recaptcha-response',
-	];
-
 	/**
 	 * @var FormActionDispatcher
 	 */
@@ -54,7 +40,6 @@ class FormSubmissionService
 	 * Handle a form submission.
 	 *
 	 * @param array $params The full request payload.
-	 * @param array UploadedFile[] the file array of our own file class
 	 * @return bool Whether every configured action (email/webhook/...) succeeded.
 	 *
 	 * @throws ValidationException When field validation fails.
@@ -62,22 +47,22 @@ class FormSubmissionService
 	 *                             submission limit has been reached, or the submission
 	 *                             could not be saved.
 	 */
-	public function handle(array $params, array $files = [])
+	public function handle(array $params)
 	{
 		Recaptcha::verify($params['g-recaptcha-token'] ?? null);
 
-		$form_data = $this->extract_form_data($params);
 		['form_id' => $form_id, 'post_id' => $post_id] = $this->parse_form_metadata($params['_kirki_form'] ?? '');
 		$form_config = $this->load_form_config($form_id, $post_id);
 
-		$form_data = $this->validate_fields($form_data, $form_config->fields, $files);
+		$form_data = $this->extract_form_data($params, $form_config->fields);
+
+		$form_data = $this->validate_fields($form_data, $form_config->fields);
 
 		$form = $this->save_form($form_id, $post_id, $form_config);
 		$session_id = Session::get_session_id(); // todo: need to fix this for user ip
 
 		$this->enforce_submission_limits($form->id, $session_id, $form_config);
 
-		$form_data = $this->process_file_uploads($form_data);
 		$this->save_submission($form->id, $form_data, $form_config, $session_id);
 
 		$actions_succeeded = $this->actions->dispatch($form_data, $form_config);
@@ -92,17 +77,33 @@ class FormSubmissionService
 	}
 
 	/**
-	 * Extract only the form data from the request payload.
+	 * Extract only the valid form field data from the request payload.
+	 *
+	 * Filters out internal submission metadata keys, ignores file-type fields
+	 * (since file uploads are no longer supported), and strips any unconfigured keys.
 	 *
 	 * @param array $params The full request payload.
-	 * @return array The form data without additional keys.
+	 * @param array $fields Form field configuration.
+	 * @return array The cleaned form data.
 	 */
-	protected function extract_form_data(array $params)
+	protected function extract_form_data(array $params, array $fields = [])
 	{
-		$form_data = $params;
+		$raw_data = $params;
 
-		foreach (static::ADDITIONAL_KEYS as $key) {
-			unset($form_data[$key]);
+		if (empty($fields)) {
+			return $raw_data;
+		}
+
+		$form_data = [];
+
+		foreach ($fields as $name => $field) {
+			if (($field['type'] ?? null) === FormFieldTypes::FILE) {
+				continue;
+			}
+
+			if (array_key_exists($name, $raw_data)) {
+				$form_data[$name] = $raw_data[$name];
+			}
 		}
 
 		return $form_data;
@@ -130,8 +131,8 @@ class FormSubmissionService
 			return ['form_id' => null, 'post_id' => null];
 		}
 
-		$form_id   = $form_meta_data[0];
-		$post_id   = $form_meta_data[1];
+		$form_id = $form_meta_data[0];
+		$post_id = $form_meta_data[1];
 		$signature = $form_meta_data[2];
 
 		$expected = wp_hash($form_id . '|' . $post_id);
@@ -175,15 +176,14 @@ class FormSubmissionService
 	 *
 	 * @param array $form_data The submission data.
 	 * @param array $fields    The field configuration.
-	 * @param UploadedFile[] $files     The file array of our own file class.
 	 * @return array The validated form data.
 	 *
 	 * @throws ValidationException When validation fails.
 	 */
-	protected function validate_fields(array $form_data, array $fields, array $files = [])
+	protected function validate_fields(array $form_data, array $fields)
 	{
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing
-		$data = FormFieldRulesBuilder::data_for_validation($form_data, $fields, $files);
+		$data = FormFieldRulesBuilder::data_for_validation($form_data, $fields);
 
 		Validator::make($data, FormFieldRulesBuilder::rules($fields))->validate(); //@todo: not all data are coming
 
@@ -281,50 +281,7 @@ class FormSubmissionService
 		return $count >= intval($limit);
 	}
 
-	/**
-	 * Process file uploads from the submission.
-	 *
-	 * By the time this runs, validate_fields() has already rejected any file
-	 * with an invalid type or size, so this only has to persist the upload.
-	 *
-	 * @param array $form_data Form data array.
-	 * @return array Modified form data with attachment IDs.
-	 *
-	 * @throws Exception When file upload fails.
-	 */
-	protected function process_file_uploads($form_data)
-	{
-		foreach ($form_data as $name => $data) {
-			if (!$data instanceof UploadedFile) {
-				continue;
-			}
 
-			$result = $this->upload_file_to_media($name);
-
-			if (is_wp_error($result)) {
-				throw new Exception($result->get_error_message(), Response::INTERNAL_SERVER_ERROR);
-			}
-
-			$form_data[$name] = $result;
-		}
-
-		return $form_data;
-	}
-
-	/**
-	 * Upload a file to the WordPress media library.
-	 *
-	 * @param string $name File input name.
-	 * @return int|WP_Error Attachment ID or error.
-	 */
-	protected function upload_file_to_media($name)
-	{
-		require_once ABSPATH . 'wp-admin/includes/image.php';
-		require_once ABSPATH . 'wp-admin/includes/file.php';
-		require_once ABSPATH . 'wp-admin/includes/media.php';
-
-		return media_handle_upload($name, 0);
-	}
 
 	/**
 	 * Persist the submission, honouring the form's saveData preference.

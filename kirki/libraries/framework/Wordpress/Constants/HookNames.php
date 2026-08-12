@@ -37,4 +37,5 @@ class HookNames
     public const TEMPLATE_INCLUDE = 'template_include';
     public const TEMPLATE_REDIRECT = 'template_redirect';
     public const GET_BLOCK_TEMPLATES = 'get_block_templates';
+    public const WP_LOGIN = 'wp_login';
 }

@@ -40,8 +40,8 @@ use function Kirki\Framework\value;
 /**
  * The QueryBuilder class provides a fluent interface for building SQL queries.
  *
- * @method QueryBuilder when($value, callable $callback, $default)
- * @method QueryBuilder unless($value, callable $callback, $default)
+ * @method QueryBuilder when($value, callable $callback, $default = null)
+ * @method QueryBuilder unless($value, callable $callback, $default = null)
  */
 class QueryBuilder
 {

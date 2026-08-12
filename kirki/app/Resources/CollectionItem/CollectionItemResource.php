@@ -67,7 +67,8 @@ class CollectionItemResource extends Resource
             } elseif (array_key_exists($meta_key, $non_reference_fields)) {
                 $fields[$parent_field['id']] = $non_reference_fields[$meta_key];
             } else {
-                $fields[$parent_field['id']] = $parent_field['default_value'] ?? '';
+                $default_val = $parent_field['default_value'] ?? '';
+                $fields[$parent_field['id']] = $default_val !== null ? $default_val : '';
             }
         }
 

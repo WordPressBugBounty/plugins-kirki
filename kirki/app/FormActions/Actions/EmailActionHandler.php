@@ -196,7 +196,7 @@ class EmailActionHandler implements FormActionHandler
             if ($body_data['type'] === FormEmailBodyPartTypes::TEXT) {
                 $body_parts[] = $body_data['value'];
             } elseif ($body_data['type'] === FormEmailBodyPartTypes::FORM && isset($form_data[$body_data['value']])) {
-                $body_parts[] = $form_data[$body_data['value']];
+                $body_parts[] = esc_html($form_data[$body_data['value']]);
             }
         }
         return nl2br(implode('', $body_parts));

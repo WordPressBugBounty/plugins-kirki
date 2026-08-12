@@ -471,7 +471,7 @@ class CompLibFormHandler extends WP_REST_Controller {
 			}
 
 			// Prepare email content.
-			$url = HelperFunctions::get_utility_page_url( Page::TYPE_FORGOT_PASSWORD );
+			$url = HelperFunctions::get_utility_page_url( Page::TYPE_RESET_PASSWORD );
 
 			$username  = $user->user_login;
 			$chip_data = array(

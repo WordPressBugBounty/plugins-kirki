@@ -140,12 +140,14 @@ class Users {
 			}
 		}
 
-		if ( $sorting ) {
-			if ( isset( $sorting['order'] ) ) {
-				$args['order'] = $sorting['order'];
+		if ( ! empty( $sorting ) && is_array( $sorting ) ) {
+			$order   = $sorting['order'] ?? $sorting['type'] ?? null;
+			$orderby = $sorting['orderby'] ?? $sorting['value'] ?? null;
+			if ( $order ) {
+				$args['order'] = $order;
 			}
-			if ( isset( $sorting['orderby'] ) ) {
-				$args['orderby'] = $sorting['orderby'];
+			if ( $orderby ) {
+				$args['orderby'] = $orderby;
 			}
 		}
 
