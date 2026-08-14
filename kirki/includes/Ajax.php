@@ -266,8 +266,8 @@ class Ajax
 				Media::upload_media();
 			}
 
-			if ($endpoint === 'upload-font-zip' && HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
-				Media::upload_font_zip();
+			if ($endpoint === 'upload-font' && HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
+				Media::upload_fonts();
 			}
 
 			/**

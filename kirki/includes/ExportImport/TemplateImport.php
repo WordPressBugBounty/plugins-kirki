@@ -158,7 +158,7 @@ class TemplateImport {
 				$json_data['variables']                = $styles_data['variables'];
 				$json_data['variables']['defaultMode'] = $selectedMode;
 
-				if ( empty( $json_data ) || ! isset( $json_data['pages'], $json_data['assetUrls'], $json_data['variables'], $json_data['globalStyleBlocks'], $json_data['customFonts'], $json_data['viewPorts'], $json_data['contentManager'], $json_data['templates'] ) ) {
+				if ( empty( $json_data ) || ! isset( $json_data['pages'], $json_data['assetUrls'], $json_data['variables'], $json_data['customFonts'], $json_data['viewPorts'], $json_data['contentManager'], $json_data['templates'] ) ) {
 					wp_send_json_error( 'Failed to import template, Upload Kirki Exported Zip file' );
 				}
 
@@ -692,6 +692,9 @@ class TemplateImport {
 		return true;
 	}
 	private function import_global_style_blocks( $new_blocks ) {
+		if(!$new_blocks){
+			return true;
+		}
 		$new_styles    = $this->add_prefix_to_style_blocks( $new_blocks );
 		$global_styles = HelperFunctions::get_global_data_using_key( KIRKI_GLOBAL_STYLE_BLOCK_META_KEY );
 		if ( ! $global_styles ) {
@@ -1147,6 +1150,9 @@ class TemplateImport {
 				foreach ( $obj['styleIds'] as $key2 => $style_id ) {
 					$obj['styleIds'][ $key2 ] = $this->add_prefix( $style_id );
 				}
+			}
+			if ( isset( $obj['properties'], $obj['properties']['textStyleId'] ) ) {
+				$obj['properties']['textStyleId'] = $this->add_prefix( $obj['properties']['textStyleId'] );
 			}
 			// update assets url for kirki block
 			$obj = $this->update_asset_url_for_kirki_block( $obj );

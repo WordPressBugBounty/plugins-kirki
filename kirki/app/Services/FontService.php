@@ -69,28 +69,24 @@ class FontService
                 throw new Exception(esc_html__('Failed to fetch Google Fonts CSS.', 'kirki'));
             }
 
-            if (isset($payload->files['regular'])) {
-				$payload->files['400'] = $payload->files['regular'];
-				unset($payload->files['regular']);
-			}
-
             $formats = [
                 'woff2' => 'woff2',
 				'woff'  => 'woff',
 				'ttf'   => 'truetype',
 				'otf'   => 'opentype',
             ];
-            $local_css = '';
 
-            foreach ($payload->files as $weight => $url) {
-				$allowed_ext = array_keys($formats);
-				$extension   = strtolower(pathinfo($url, PATHINFO_EXTENSION));
+            // Keep Google's CSS verbatim (all weights, styles and unicode-range)
+            // and only swap the remote font files for their local counterparts.
+            $css = $response->body();
 
-				if (!in_array($extension, $allowed_ext, true)) {
-                    /* translators: %s: file extension */
-                    throw new Exception(sprintf(esc_html__('Invalid or unsafe file extension: %s.', 'kirki'), $extension));
-				}
+            if (!preg_match_all('/url\(\s*["\']?([^"\'()]+)["\']?\s*\)/i', $css, $matches)) {
+                throw new Exception(esc_html__('No usable font files were downloaded.', 'kirki'));
+            }
 
+            $local_files = [];
+
+            foreach (array_unique($matches[1]) as $url) {
                 $url_parts = wp_parse_url($url);
 
                 if (!$url_parts) {
@@ -105,34 +101,43 @@ class FontService
                     throw new Exception(esc_html__('Only Google Fonts is supported.', 'kirki'));
                 }
 
-				$file_name = "{$weight}.{$extension}";
-				$file_path = clean_path($font_dir . '/' . $file_name, false);
+                $extension = strtolower(pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION));
+
+                if (!array_key_exists($extension, $formats)) {
+                    /* translators: %s: file extension */
+                    throw new Exception(sprintf(esc_html__('Invalid or unsafe file extension: %s.', 'kirki'), $extension));
+                }
+
+                $file_name = preg_replace('/[^a-zA-Z0-9._-]/', '', basename(parse_url($url, PHP_URL_PATH)));
+
+                if (empty($file_name)) {
+                    throw new Exception(esc_html__('Invalid file name.', 'kirki'));
+                }
+
+                $file_path = clean_path($font_dir . '/' . $file_name, false);
 
                 FileHandler::verify_directory_traversal($file_path);
 
-				$font_response = Http::with_options([
-                    'redirection' => 0
-                ])->get($url);
+                if (!File::exists($file_path)) {
+                    $font_response = Http::with_options([
+                        'redirection' => 0
+                    ])->get($url);
 
-				if ($font_response->failed()) {
-					throw new Exception(esc_html__('Failed to fetch font file.', 'kirki'));
-				}
+                    if ($font_response->failed()) {
+                        throw new Exception(esc_html__('Failed to fetch font file.', 'kirki'));
+                    }
 
-                File::put($file_path, $font_response->__toString());
+                    File::put($file_path, $font_response->__toString());
+                }
 
-				$format = $formats[$extension] ?? 'truetype';
-				$local_css .= "@font-face {
-						font-family: '{$payload->family}';
-						font-style: normal;
-						font-weight: {$weight};
-						font-display: swap;
-						src: url('{$file_name}') format('{$format}');
-				}\n";
-			}
+                $local_files[$url] = $file_name;
+            }
 
-			if (empty($local_css)) {
-				throw new Exception(esc_html__('No usable font files were downloaded.', 'kirki'));
-			}
+            $local_css = str_replace(array_keys($local_files), array_values($local_files), $css);
+
+            if (empty($local_css)) {
+                throw new Exception(esc_html__('No usable font files were downloaded.', 'kirki'));
+            }
 
             File::put($css_file_path, $local_css);
 			$payload->localUrl = clean_path(get_upload_directory_url() . "/kirki-fonts/{$font_family_slug}/{$font_family_slug}.css", false);

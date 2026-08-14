@@ -1356,9 +1356,9 @@ class ExceptionalElements {
 		$markup   = '';
 
 		$active_tab_index = isset( $options['active_tab_index'] ) ? $options['active_tab_index'] : 0;
-		$item_index       = isset( $options['item_index'] ) ? $options['item_index'] : 0;
+		$child_index      = isset( $options['child_index'] ) ? $options['child_index'] : 0;
 
-		if ( $active_tab_index === $item_index ) {
+		if ( $active_tab_index === $child_index ) {
 			// Add kirki-current-tab class to attributes
 			if ( preg_match( '/class="([^"]*)"/', $attributes, $matches ) ) {
 				// Class attribute exists, append to it
@@ -1390,9 +1390,9 @@ class ExceptionalElements {
 		$markup   = '';
 
 		$active_tab_index = isset( $options['active_tab_index'] ) ? $options['active_tab_index'] : 0;
-		$item_index       = isset( $options['item_index'] ) ? $options['item_index'] : 0;
+		$child_index      = isset( $options['child_index'] ) ? $options['child_index'] : 0;
 
-		if ( $active_tab_index === $item_index ) {
+		if ( $active_tab_index === $child_index ) {
 			// Add kirki-tab-active class to attributes
 			if ( preg_match( '/class="([^"]*)"/', $attributes, $matches ) ) {
 				// Class attribute exists, append to it

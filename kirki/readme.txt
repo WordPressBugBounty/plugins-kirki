@@ -3,7 +3,7 @@ Contributors: themeum
 Tags: page builder, website builder, drag and drop, form builder, freeform canvas
 Requires at least: 5.9
 Tested up to: 7.0
-Stable tag: 6.2.2
+Stable tag: 6.2.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -190,6 +190,14 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 ---
 
 == Changelog ==
+
+= 6.2.3 =
+* New: Copy-and-paste interactions now also support the interaction library.
+* Update: Updated the default styles for headings, buttons, images, and tabs.
+* Fix: Fixed an issue with font family OpenType feature data parsing.
+* Fix: Prevented font upload issues when changing file extensions.
+* Fix: Reset typography-related CSS when applying a text style.
+* Fix: Removed ZIP file upload functionality from custom font uploads.
 
 = 6.2.2 =
 * New: Added Element Multiselect for selecting and editing multiple elements at once.

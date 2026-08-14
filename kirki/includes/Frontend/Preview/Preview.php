@@ -1708,10 +1708,12 @@ class Preview extends ExceptionalElements {
 	private function updateStylesForInteractionLibrary( $interactionLibraryData, $element ) {
 		$id = $element['id'];
 		foreach ( $interactionLibraryData as $interactionLibrary ) {
-			if ( isset( $interactionLibrary['type'] ) && $interactionLibrary['type'] === 'textAnimation' ) {
-				$devices = isset( $interactionLibrary['deviceAndClassList']['devices'] ) ? $interactionLibrary['deviceAndClassList']['devices'] : array();
-				$this->interaction_library_text_animation_tracker[ $id ] = $devices;
-				break;
+			if ( isset( $interactionLibrary['type'] ) && $interactionLibrary['type'] === 'textAnimation'  ) {
+				if( isset($interactionLibrary['trigger']) && $interactionLibrary['trigger'] === 'scrollIntoView' ) {
+						$devices = isset( $interactionLibrary['deviceAndClassList']['devices'] ) ? $interactionLibrary['deviceAndClassList']['devices'] : array();
+						$this->interaction_library_text_animation_tracker[ $id ] = $devices;
+						break;	
+				}
 			}
 		}
 		return $interactionLibraryData;
@@ -1959,10 +1961,12 @@ class Preview extends ExceptionalElements {
 			if ( isset( $this_data['id'], $this->data[ $this_data['id'] ], $this->data[ $this_data['id'] ]['children'] ) ) {
 				$child_count = count( $this->data[ $this_data['id'] ]['children'] );
 				for ( $i = 0; $i < $child_count; $i++ ) {
+					// Position of the child inside its parent. Kept separate from `item_index`,
+					// which carries the collection item index down the whole item markup.
 					$merged_options    = array_merge(
 							$options,
 							array(
-								'item_index' => $i,
+								'child_index' => $i,
 							)
 						);
 					$html .= $this->recGenHTML( $this->data[ $this_data['id'] ]['children'][ $i ], $merged_options );

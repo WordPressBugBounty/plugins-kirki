@@ -16,8 +16,8 @@ use Kirki\HelperFunctions;
 use DOMDocument;
 use DOMXPath;
 use InvalidArgumentException;
-use ZipArchive;
 use enshrined\svgSanitize\Sanitizer;
+use Exception;
 use Kirki\App\Services\FontService;
 
 /**
@@ -293,11 +293,11 @@ class Media {
 	}
 
 	/**
-	 * Upload font zip
+	 * Upload custom font files (.ttf, .otf, .woff, .woff2), single or multiple.
 	 *
 	 * @return void wp_send_json.
 	 */
-	public static function upload_font_zip() {
+	public static function upload_fonts() {
 		require_once ABSPATH . 'wp-admin/includes/image.php';
 		require_once ABSPATH . 'wp-admin/includes/file.php';
 		require_once ABSPATH . 'wp-admin/includes/media.php';
@@ -327,12 +327,7 @@ class Media {
 
 		$filename           = sanitize_file_name( $file['name'] );
 		$file_extension     = strtolower( pathinfo( $filename, PATHINFO_EXTENSION ) );
-		$allowed_font_files = array( 'ttf', 'otf', 'woff', 'woff2' );
-
-		if ( 'zip' === $file_extension ) {
-			self::handle_font_zip_upload( $file, $filename, $wp_filesystem, $uploads );
-			return;
-		}
+		$allowed_font_files = self::get_allowed_font_extensions();
 
 		if ( in_array( $file_extension, $allowed_font_files, true ) ) {
 			self::handle_raw_font_upload( $file, $filename, $file_extension, $wp_filesystem, $uploads );
@@ -342,13 +337,74 @@ class Media {
 		wp_send_json(
 			array(
 				'status'  => 'failure',
-				'message' => 'Only .zip, .ttf, .otf, .woff, .woff2 files are allowed',
+				'message' => 'Only .ttf, .otf, .woff, .woff2 files are allowed',
 			)
 		);
 	}
 
+	/**
+	 * Allowed font file extensions.
+	 *
+	 * @return array
+	 */
+	private static function get_allowed_font_extensions() {
+		return array( 'ttf', 'otf', 'woff', 'woff2' );
+	}
+
+	/**
+	 * Verify that a file really is a font by inspecting its binary signature.
+	 *
+	 * @param string $file_path      Absolute path to the file on disk.
+	 * @param string $file_extension Extension claimed by the uploaded file name.
+	 * @return bool True when the binary signature matches the claimed extension.
+	 */
+	private static function is_valid_font_file( $file_path, $file_extension ) {
+		// if file is not readable or file size is less than 12 bytes, return false.
+		if ( ! is_readable( $file_path ) || filesize( $file_path ) < 12 ) {
+			return false;
+		}
+
+		// Opening the file in binary read mode ('rb').
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+		$handle = fopen( $file_path, 'rb' );
+		if ( ! $handle ) {
+			return false;
+		}
+
+		// Reading the first 4 bytes of the file to check its signature.
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fread
+		$header = fread( $handle, 4 ); 
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+		fclose( $handle );
+
+		if ( false === $header || 4 !== strlen( $header ) ) {
+			return false;
+		}
+
+		// sfnt based fonts (.ttf / .otf) may use any of these version tags.
+		$sfnt_signatures = array(
+			"\x00\x01\x00\x00", // TrueType outlines.
+			'true',             // Legacy Apple TrueType.
+			'ttcf',             // TrueType collection.
+			'OTTO',             // CFF (PostScript) outlines.
+		);
+
+		$signatures = array(
+			'ttf'   => $sfnt_signatures,
+			'otf'   => $sfnt_signatures,
+			'woff'  => array( 'wOFF' ),
+			'woff2' => array( 'wOF2' ),
+		);
+
+		if ( ! isset( $signatures[ $file_extension ] ) ) {
+			return false;
+		}
+
+		return in_array( $header, $signatures[ $file_extension ], true );
+	}
+
 	private static function handle_raw_font_upload( $file, $filename, $file_extension, $wp_filesystem, $uploads, $family_override = null ) {
-		$allowed_font_files = array( 'ttf', 'otf', 'woff', 'woff2' );
+		$allowed_font_files = self::get_allowed_font_extensions();
 		if ( ! in_array( $file_extension, $allowed_font_files, true ) ) {
 			wp_send_json(
 				array(
@@ -378,7 +434,7 @@ class Media {
 
 		$filetype      = wp_check_filetype_and_ext( $temp_font, $filename );
 		$detected_ext  = ! empty( $filetype['ext'] ) ? strtolower( $filetype['ext'] ) : $file_extension;
-		if ( empty( $detected_ext ) || ! in_array( $detected_ext, $allowed_font_files, true ) ) {
+		if ( empty( $detected_ext ) || ! in_array( $detected_ext, $allowed_font_files, true ) || ! self::is_valid_font_file( $temp_font, $detected_ext ) ) {
 			wp_delete_file( $temp_font );
 			wp_send_json(
 				array(
@@ -420,125 +476,6 @@ class Media {
 			array(
 				'status' => 'success',
 				'data'   => $data,
-			)
-		);
-	}
-
-	private static function handle_font_zip_upload( $file, $filename, $wp_filesystem, $uploads ) {
-		$temp_dir = trailingslashit( $uploads['basedir'] ) .'kirki-font-temp/';
-		wp_mkdir_p( $temp_dir );
-
-		$temp_zip = $temp_dir . wp_unique_filename( $temp_dir, $filename );
-
-		global $wp_filesystem;
-		if ( ! is_object( $wp_filesystem ) ) {
-			WP_Filesystem();
-		}
-
-		if ( ! $wp_filesystem->move( $file['tmp_name'], $temp_zip ) ) {
-			wp_send_json(
-				array(
-					'status'  => 'failure',
-					'message' => 'Zip file upload failed',
-				)
-			);
-		}
-
-		$zip = new ZipArchive();
-		if ( $zip->open( $temp_zip ) !== true ) {
-			wp_delete_file( $temp_zip );
-			wp_send_json(
-				array(
-					'status'  => 'failure',
-					'message' => 'Invalid zip file',
-				)
-			);
-		}
-
-		$blocked_extensions = array( 'php', 'phtml', 'php3', 'php4', 'php5', 'php7', 'phar', 'inc' );
-
-		for ( $i = 0; $i < $zip->numFiles; $i++ ) {
-			$entry = wp_normalize_path( $zip->getNameIndex( $i ) );
-			if ( strpos( $entry, '../' ) !== false || strpos( $entry, '..\\' ) !== false ) {
-				$zip->close();
-				wp_delete_file( $temp_zip );
-				wp_send_json(
-					array(
-						'status'  => 'failure',
-						'message' => 'Invalid zip contents',
-					)
-				);
-			}
-
-			$ext = strtolower( pathinfo( $entry, PATHINFO_EXTENSION ) );
-			if ( $ext && in_array( $ext, $blocked_extensions, true ) ) {
-				$zip->close();
-				wp_delete_file( $temp_zip );
-				wp_send_json(
-					array(
-						'status'  => 'failure',
-						'message' => 'Executable files are not allowed',
-					)
-				);
-			}
-		}
-
-		$folder_name = sanitize_file_name( pathinfo( $filename, PATHINFO_FILENAME ) );
-		$upload_dir  = trailingslashit( $uploads['basedir'] ) .'kirki-fonts/' . $folder_name;
-		wp_mkdir_p( $upload_dir );
-
-		$zip->extractTo( $upload_dir );
-		$zip->close();
-		wp_delete_file( $temp_zip );
-
-		if ( ! file_exists( $upload_dir . '/stylesheet.css' ) ) {
-			self::delete_dir( $upload_dir );
-			wp_send_json(
-				array(
-					'status'  => 'failure',
-					'message' => 'Invalid data',
-				)
-			);
-		}
-
-		$style_sheet_string = $wp_filesystem->get_contents( $upload_dir . '/stylesheet.css' );
-		$font_family_name   = self::get_common_family_name( $style_sheet_string );
-
-		if ( ! $font_family_name ) {
-			self::delete_dir( $upload_dir );
-			wp_send_json(
-				array(
-					'status'  => 'failure',
-					'message' => 'Font family name not found',
-				)
-			);
-		}
-
-		$result = self::get_rewritten_style_and_variants( $style_sheet_string, $font_family_name );
-		$wp_filesystem->put_contents( $upload_dir . '/stylesheet.css', $result['css'] );
-
-		$renamed_folder_name = self::normalize_font_family_slug( $font_family_name );
-		$new_folder_path     = trailingslashit( $uploads['basedir'] ) .'kirki-fonts/' . $renamed_folder_name;
-
-		if ( is_dir( $new_folder_path ) ) {
-			self::delete_dir( $new_folder_path );
-		}
-
-		$wp_filesystem->move( $upload_dir, $new_folder_path );
-
-		self::remove_extra_files_from_font_folder( $new_folder_path );
-
-		wp_send_json(
-			array(
-				'status' => 'success',
-				'data'   => array(
-					'fontUrl'  => trailingslashit( $uploads['baseurl'] ) .'kirki-fonts/' . $renamed_folder_name . '/stylesheet.css',
-					'family'   => $font_family_name,
-					'variants' => $result['variants'],
-					'subsets'  => array( 'latin' ),
-					'uploaded' => true,
-					'version'  => 'v1',
-				),
 			)
 		);
 	}
@@ -617,7 +554,7 @@ class Media {
 	}
 
 	private static function handle_multiple_raw_font_upload( $files, $wp_filesystem, $uploads ) {
-		$allowed_font_files = array( 'ttf', 'otf', 'woff', 'woff2' );
+		$allowed_font_files = self::get_allowed_font_extensions();
 		$temp_dir          = trailingslashit( $uploads['basedir'] ) .'kirki-font-temp/';
 		wp_mkdir_p( $temp_dir );
 
@@ -661,7 +598,7 @@ class Media {
 
 			$filetype     = wp_check_filetype_and_ext( $temp_font, $filename );
 			$detected_ext = ! empty( $filetype['ext'] ) ? strtolower( $filetype['ext'] ) : $ext;
-			if ( empty( $detected_ext ) || ! in_array( $detected_ext, $allowed_font_files, true ) ) {
+			if ( empty( $detected_ext ) || ! in_array( $detected_ext, $allowed_font_files, true ) || ! self::is_valid_font_file( $temp_font, $detected_ext ) ) {
 				wp_delete_file( $temp_font );
 				self::cleanup_temp_files( $temp_dir );
 				wp_send_json(
@@ -742,8 +679,10 @@ class Media {
 		if ( is_dir( $temp_dir ) ) {
 			$files = glob( trailingslashit( $temp_dir ) . '*' );
 			if ( $files ) {
-				if ( is_file( $file ) ) {
-					wp_delete_file( $file );
+				foreach ( $files as $file ) {
+					if ( is_file( $file ) ) {
+						wp_delete_file( $file );
+					}
 				}
 			}
 		}
@@ -782,6 +721,13 @@ class Media {
 			$slug = sanitize_file_name( str_replace( ' ', '', $family ) );
 		}
 
+		// Never return an empty slug: the callers append it to the kirki-fonts
+		// directory and delete that path, so an empty slug would wipe the whole
+		// kirki-fonts folder instead of a single font folder.
+		if ( ! $slug ) {
+			$slug = 'font-' . substr( md5( $family . microtime() ), 0, 12 );
+		}
+
 		return $slug;
 	}
 
@@ -803,172 +749,6 @@ class Media {
 
 		return self::normalize_font_family_slug( $base );
 	}
-
-
-	public static function get_rewritten_style_and_variants( $css_string, $common_family_name ) {
-				// Define weight keywords
-				$weight_keywords = array(
-					'extrablack' => '900',
-					'black'      => '900',
-					'heavy'      => '900',
-					'extrabold'  => '800',
-					'ultrabold'  => '800',
-					'semibold'   => '600',
-					'demibold'   => '600',
-					'bold'       => '700',
-					'medium'     => '500',
-					'extralight' => '200',
-					'ultralight' => '200',
-					'light'      => '300',
-					'book'       => '400',
-					'regular'    => '400',
-					'normal'     => '400',
-					'thin'       => '100',
-				);
-
-					// Extract all @font-face blocks
-					preg_match_all( '/@font-face\s*{[^}]*}/is', $css_string, $blocks );
-
-					$rewritten_css = '';
-					$variants      = array();
-
-				foreach ( $blocks[0] as $block ) {
-					$weight = null;
-					$style  = 'normal';
-
-					// get src
-					preg_match( '/src:[^;]+;/i', $block, $src_match );
-					$src = isset( $src_match[0] ) ? $src_match[0] : '';
-
-					// get font-family
-					preg_match( '/font-family:\s*[\'"]?([^;\'"]+)[\'"]?;/i', $block, $family_match );
-					$family = isset( $family_match[1] ) ? $family_match[1] : '';
-
-					// Detect weight from keywords in src or font-family only
-					foreach ( $weight_keywords as $keyword => $w ) {
-						if ( stripos( $src, $keyword ) !== false || stripos( $family, $keyword ) !== false ) {
-								$weight = $w;
-								break;
-						}
-					}
-
-					// Fallback to declared CSS font-weight if not found
-					if ( $weight === null ) {
-						if ( preg_match( '/font-weight:\s*([0-9]+)/i', $block, $match ) ) {
-								$weight = $match[1];
-						} else {
-								$weight = '400';
-						}
-					}
-
-					if ( stripos( $block, 'italic' ) !== false ) {
-							$style = 'italic';
-					}
-
-					// rewritten @font-face block
-					$rewritten_css .= "@font-face {
-								font-family: '{$common_family_name}';
-								{$src}
-								font-weight: {$weight};
-								font-style: {$style};
-						}\n\n";
-
-					// if weight is 400, change -> regular, if italic 400italic -> italic, 200italic,700italic etc
-					if ( $weight === '400' ) {
-							$variant = ( $style === 'italic' ) ? 'italic' : 'regular';
-					} else {
-							$variant = ( $style === 'italic' ) ? $weight . 'italic' : $weight;
-					}
-
-					$variants[] = $variant;
-				}
-
-				// remove duplicate variants
-				$variants = array_values( array_unique( $variants ) );
-
-				return array(
-					'css'      => $rewritten_css,
-					'variants' => $variants,
-				);
-	}
-
-	public static function get_common_family_name( $css_string ) {
-		// get all font family names
-		$pattern = '/font-family\s*:\s*([^;]+);/i';
-		preg_match_all( $pattern, $css_string, $matches );
-
-		if ( empty( $matches[1] ) ) {
-			return null;
-		}
-
-		$base_names = array();
-
-		foreach ( $matches[1] as $match ) {
-			$parts = explode( ',', $match );
-			foreach ( $parts as $p ) {
-				$f = trim( $p, " \t\n\r\0\x0B'\"" );
-				if ( ! $f ) {
-					continue;
-				}
-
-				// normalize font family name
-				$base = preg_replace( '/[-_\s]?(thin|extra|light|regular|medium|bold|black|italic|\d+)/i', '', $f );
-
-				if ( $base ) {
-					$base_names[] = strtolower( $base );
-				}
-			}
-		}
-
-		if ( empty( $base_names ) ) {
-			return null;
-		}
-
-		// find most common
-		$counts = array_count_values( $base_names );
-		arsort( $counts ); // most frequent first
-		$common_name = array_key_first( $counts );
-		$common_name = str_replace( array( '_', '-' ), ' ', $common_name );
-		$common_name = ucwords( $common_name );
-
-		return $common_name;
-	}
-
-	/**
-	 * Remove extra files from font folder.
-	 * we need only stylesheet.css, .woff and .woff2 file.
-	 * others files will be removed.
-	 *
-	 * @param string $folder_path //raw path of uploaded folder.
-	 * @return void
-	 */
-	private static function remove_extra_files_from_font_folder( $folder_path ) {
-		global $wp_filesystem;
-		if ( empty( $wp_filesystem ) ) {
-			require_once ABSPATH . 'wp-admin/includes/file.php';
-			WP_Filesystem();
-		}
-
-		if ( $wp_filesystem->is_dir( $folder_path ) ) {
-			$files = $wp_filesystem->dirlist( $folder_path );
-
-			if ( ! empty( $files ) ) {
-				foreach ( $files as $file ) {
-					$file_path = $folder_path . '/' . $file['name'];
-
-					if ( 'f' === $file['type'] ) {
-						$ext = pathinfo( $file_path, PATHINFO_EXTENSION );
-						$allowed = array( 'css', 'woff', 'woff2', 'ttf', 'otf' );
-
-						if ( ! in_array( strtolower( $ext ), $allowed, true ) ) {
-							wp_delete_file( $file_path );
-						}
-					}
-				}
-			}
-		}
-	}
-
 
 	/**
 	 * Remove custom font folder from server
