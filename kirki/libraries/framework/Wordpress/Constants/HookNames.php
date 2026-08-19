@@ -38,4 +38,6 @@ class HookNames
     public const TEMPLATE_REDIRECT = 'template_redirect';
     public const GET_BLOCK_TEMPLATES = 'get_block_templates';
     public const WP_LOGIN = 'wp_login';
+    public const SEND_HEADERS = 'send_headers';
+    public const REST_POST_DISPATCH = 'rest_post_dispatch';
 }

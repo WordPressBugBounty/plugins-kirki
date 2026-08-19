@@ -52,7 +52,7 @@ class Ajax
 		add_action('wp_ajax_kirki_get_apis', array($this, 'kirki_get_apis'));
 		add_action('wp_ajax_kirki_post_apis', array($this, 'kirki_post_apis'));
 
-		add_action('wp_ajax_nopriv_kirki_post_apis_nopriv', array($this, 'kirki_post_apis_nopriv'));
+		// add_action('wp_ajax_nopriv_kirki_post_apis_nopriv', array($this, 'kirki_post_apis_nopriv'));
 		add_action('wp_ajax_nopriv_kirki_get_apis', array($this, 'kirki_get_apis'));
 		/**
 		 * Manage Post API call's from WP Admin
@@ -72,20 +72,20 @@ class Ajax
 	 *
 	 * @return void
 	 */
-	public function kirki_post_apis_nopriv()
-	{      //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		$endpoint = HelperFunctions::sanitize_text(isset($_POST['endpoint']) ? $_POST['endpoint'] : null);
-		if (!HelperFunctions::is_api_header_post_editor_preview_token_valid()) {
-			wp_send_json_error('Not authorized');
-		}
-		/**
-		 * Single SYMBOL API
-		 */
-		if ($endpoint === 'get-single-symbol') {
-			Symbol::fetch_symbol();
-			die();
-		}
-	}
+	// public function kirki_post_apis_nopriv()
+	// {      //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+	// 	$endpoint = HelperFunctions::sanitize_text(isset($_POST['endpoint']) ? $_POST['endpoint'] : null);
+	// 	if (!HelperFunctions::is_api_header_post_editor_preview_token_valid()) {
+	// 		wp_send_json_error('Not authorized');
+	// 	}
+	// 	/**
+	// 	 * Single SYMBOL API
+	// 	 */
+	// 	if ($endpoint === 'get-single-symbol') {
+	// 		Symbol::fetch_symbol();
+	// 		die();
+	// 	}
+	// }
 
 	/**
 	 * Initialize post api
@@ -403,11 +403,12 @@ class Ajax
 				Collection::get_collection_batch();
 			}
 
+			if ($endpoint === 'get-single-symbol') {
+				Symbol::fetch_symbol();
+			}
+
 		}
 
-		if ($endpoint === 'get-single-symbol') {
-			Symbol::fetch_symbol();
-		}
 	}
 
 	/**

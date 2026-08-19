@@ -82,7 +82,7 @@ class TemplateExportImport {
 		$file_url     = HelperFunctions::sanitize_text( isset( $_POST['file_url'] ) ? $_POST['file_url'] : '' );
 		$selectedMode = HelperFunctions::sanitize_text( isset( $_POST['selectedMode'] ) ? $_POST['selectedMode'] : 'default' );
 		// Validate the URL to ensure it's a properly formatted and secure URL
-		if ( filter_var( $file_url, FILTER_VALIDATE_URL ) === false ) {
+		if ( empty( $file_url ) || ! HelperFunctions::is_safe_url( $file_url ) ) {
 			wp_send_json_error( 'Invalid file URL', 400 );
 		}
 

@@ -32,7 +32,7 @@ class TemplateRedirection
 	public function __construct()
 	{
 		/* update the the content with our kirki data if page is kirki */
-		add_filter('template_include', array($this, 'load_page_template_to_check_staging'), PHP_INT_MAX);
+		add_filter('template_include', array($this, 'load_page_template_to_check_staging'), 9999); // updated the filter priority to run at last because tutor plugin template_include filter has priority first.
 
 		add_action('login_form_login', array($this, 'redirect_to_custom_login_if_has_kirki_utility_page'));
 		add_action('login_form_register', array($this, 'redirect_to_custom_register_if_has_kirki_utility_page'));

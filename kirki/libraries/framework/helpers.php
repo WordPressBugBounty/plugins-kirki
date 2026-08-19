@@ -15,9 +15,10 @@ use Faker\Factory;
 use Faker\Generator;
 use Kirki\Framework\Application;
 use Kirki\Framework\Collections\Collection;
-use Kirki\Framework\Contracts\Support\Arrayable;
 use Kirki\Framework\Database\Migrations\Migrator;
+use Kirki\Framework\Http\Cookie;
 use Kirki\Framework\Http\Request;
+use Kirki\Framework\Managers\CookieManager;
 use Kirki\Framework\Http\RedirectResponse;
 use Kirki\Framework\Wordpress\User;
 use Kirki\Framework\Http\Response;
@@ -222,6 +223,36 @@ if (!\function_exists('Kirki\\Framework\\response')) {
     function response()
     {
         return app()->make(Response::class)->with_headers(['X-Content-Type-Options' => 'nosniff', 'X-Frame-Options' => 'SAMEORIGIN', 'X-XSS-Protection' => '1; mode=block', 'Referrer-Policy' => 'no-referrer-when-downgrade', 'Cache-Control' => 'public, max-age=60, stale-while-revalidate=30']);
+    }
+}
+if (!\function_exists('Kirki\\Framework\\cookie')) {
+    /**
+     * Create a cookie instance, or get the cookie manager when called without arguments.
+     *
+     * The returned cookie is not sent. Queue it with the Cookie facade or attach it
+     * to a response to have it emitted.
+     *
+     * @param string|null $name The name of the cookie.
+     * @param string $value The value of the cookie.
+     * @param int $minutes The number of minutes the cookie lives, zero for a session cookie.
+     * @param string|null $path The path the cookie is scoped to.
+     * @param string|null $domain The domain the cookie is scoped to.
+     * @param bool|null $secure Whether the cookie is restricted to secure connections.
+     * @param bool $http_only Whether the cookie is hidden from client side scripts.
+     * @param bool $raw Whether the value is sent without URL encoding.
+     * @param string|null $same_site The same site policy of the cookie.
+     *
+     * @return ($name is null ? CookieManager : Cookie)
+     *
+     * @since 1.0.0
+     */
+    function cookie($name = null, $value = '', $minutes = 0, $path = null, $domain = null, $secure = null, $http_only = \true, $raw = \false, $same_site = null)
+    {
+        $manager = app('cookie');
+        if (\is_null($name)) {
+            return $manager;
+        }
+        return $manager->make($name, $value, $minutes, $path, $domain, $secure, $http_only, $raw, $same_site);
     }
 }
 if (!\function_exists('Kirki\\Framework\\view')) {

@@ -280,6 +280,7 @@ class ExportImport
 			$url,
 			array(
 				'timeout' => 300, // Seconds
+				'redirection' => 0,
 			)
 		);
 
@@ -306,6 +307,10 @@ class ExportImport
 
 		// get template file from url
 		$file_url = HelperFunctions::sanitize_text(isset($_POST['file_url']) ? $_POST['file_url'] : false);
+
+		if (!$file_url || !HelperFunctions::is_safe_url($file_url)) {
+			wp_send_json_error('Invalid file URL');
+		}
 
 		$destination_path = $upload_dir['basedir'] . '/kirki-template.zip';
 

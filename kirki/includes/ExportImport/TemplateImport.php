@@ -835,6 +835,11 @@ class TemplateImport {
 					$id                = $matches[1];
 					$new_variable_name = $this->add_prefix( $id );
 					$mode_value        = 'var(--' . $new_variable_name . ')';
+				} else if ( isset( $v['value'][ $mode ] ) ) {
+					// check all the nested nested object and replace the variable name
+					if ( is_array( $v['value'][ $mode ] ) ) {
+						$mode_value = $this->replace_variables_in_nested_array( $v['value'][ $mode ] );
+					}
 				}
 
 				$v['value'] = array( 'default' => $mode_value );
@@ -875,6 +880,36 @@ class TemplateImport {
 
 		HelperFunctions::update_global_data_using_key( KIRKI_USER_SAVED_DATA_META_KEY, $saved_data );
 		return true;
+	}
+
+
+	/**
+	 * Recursively replace variable references in nested arrays
+	 *
+	 * @param mixed $data The data to process (array, string, or other)
+	 * @return mixed The processed data with replaced variable names
+	 */
+	private function replace_variables_in_nested_array( $data ) {
+		if ( is_string( $data ) ) {
+			// Check if the string contains a variable reference like var(--variable-name)
+			if ( preg_match( '/var\(--([a-zA-Z0-9\-]+)\)/', $data, $matches ) ) {
+				$id                = $matches[1];
+				$new_variable_name = $this->add_prefix( $id );
+				return 'var(--' . $new_variable_name . ')';
+			}
+			return $data;
+		}
+
+		if ( is_array( $data ) ) {
+			// Recursively process each element in the array
+			foreach ( $data as $key => $value ) {
+				$data[ $key ] = $this->replace_variables_in_nested_array( $value );
+			}
+			return $data;
+		}
+
+		// Return unchanged for other types (int, bool, null, etc.)
+		return $data;
 	}
 
 	private function import_content_manager( $content_manager_posts ) {

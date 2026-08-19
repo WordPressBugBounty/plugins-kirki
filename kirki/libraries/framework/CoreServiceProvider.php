@@ -19,6 +19,7 @@ use Kirki\Framework\Database\Schema\SchemaManager;
 use Kirki\Framework\Discovery\ListenerDiscovery;
 use Kirki\Framework\Discovery\PolicyDiscovery;
 use Kirki\Framework\Contracts\SomoyInterface;
+use Kirki\Framework\Managers\CookieManager;
 use Kirki\Framework\Managers\EventManager;
 use Kirki\Framework\Managers\LogManager;
 use Kirki\Framework\Managers\PolicyManager;
@@ -92,6 +93,7 @@ class CoreServiceProvider extends ServiceProvider
         $this->app->singleton(LogManager::class);
         $this->app->singleton(EventManager::class);
         $this->app->singleton(PolicyManager::class);
+        $this->app->singleton(CookieManager::class);
         $this->app->bind(SomoyInterface::class, function () {
             return new Somoy();
         });

@@ -13,7 +13,7 @@ namespace Kirki\Framework\Routing;
 \defined('ABSPATH') || exit;
 use Kirki\Framework\Http\JsonResponse;
 use Kirki\Framework\Http\RedirectResponse;
-use Kirki\Framework\Http\Request;
+use Kirki\Framework\Managers\CookieManager;
 use Kirki\Framework\Route;
 use Kirki\Framework\Sanitizer;
 use Kirki\Framework\SiteExceptionHandler;
@@ -391,6 +391,7 @@ class SiteRouter
         status_header(200);
         nocache_headers();
         if ($route->get_redirect() !== null && $route->get_action() === null) {
+            $this->flush_queued_cookies();
             $this->send_route_redirect($route, $params);
         }
         if ($route->get_template() !== null && $route->get_action() === null) {
@@ -398,6 +399,7 @@ class SiteRouter
             if ($file === '') {
                 SiteExceptionHandler::handle(new Exception('Template not found: ' . $route->get_template(), 500));
             }
+            $this->flush_queued_cookies();
             \extract($params, \EXTR_SKIP);
             include $file;
             if ($exit) {
@@ -430,6 +432,17 @@ class SiteRouter
         return $route->dispatch_site($params);
     }
     /**
+     * Emit any queued cookies before response output begins.
+     *
+     * @return void
+     *
+     * @since 1.0.0
+     */
+    protected function flush_queued_cookies()
+    {
+        app(CookieManager::class)->flush_queued_cookies();
+    }
+    /**
      * Send a controller/closure return value to the browser.
      *
      * @param mixed $result The route return value.
@@ -440,6 +453,7 @@ class SiteRouter
      */
     protected function send_response($result)
     {
+        $this->flush_queued_cookies();
         if ($result instanceof RedirectResponse) {
             $result->send();
         }

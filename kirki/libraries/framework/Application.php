@@ -28,6 +28,7 @@ use Kirki\Framework\Console\Commands\MigrateCommand;
 use Kirki\Framework\Console\Commands\SeedCommand;
 use Kirki\Framework\Database\Connection\DatabaseManager;
 use Kirki\Framework\Database\Schema\SchemaManager;
+use Kirki\Framework\Managers\CookieManager;
 use Kirki\Framework\Managers\EventManager;
 use Kirki\Framework\Managers\LogManager;
 use Kirki\Framework\Managers\OptionManager;
@@ -278,7 +279,7 @@ class Application extends Container
      */
     protected function register_base_aliases()
     {
-        foreach (['db' => DatabaseManager::class, 'schema' => SchemaManager::class, 'option' => OptionManager::class, 'policy' => PolicyManager::class, 'event' => EventManager::class, 'log' => LogManager::class, 'client-request' => ClientRequest::class, 'command' => CommandManager::class, RequestContract::class => Request::class, 'request' => Request::class] as $key => $abstract) {
+        foreach (['db' => DatabaseManager::class, 'schema' => SchemaManager::class, 'option' => OptionManager::class, 'policy' => PolicyManager::class, 'event' => EventManager::class, 'log' => LogManager::class, 'cookie' => CookieManager::class, 'client-request' => ClientRequest::class, 'command' => CommandManager::class, RequestContract::class => Request::class, 'request' => Request::class] as $key => $abstract) {
             $this->alias($key, $abstract);
         }
     }

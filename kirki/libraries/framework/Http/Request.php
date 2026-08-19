@@ -64,6 +64,17 @@ class Request implements RequestContract, Arrayable
      */
     protected $headers;
     /**
+     * The cookies sent by the client.
+     *
+     * This bag is deliberately kept out of the request attributes so that a
+     * client supplied cookie can never satisfy or override a validated input.
+     *
+     * @var array<string,mixed>
+     *
+     * @since 1.0.0
+     */
+    protected array $cookies = [];
+    /**
      * The sanitized data.
      *
      * @var array
@@ -191,6 +202,9 @@ class Request implements RequestContract, Arrayable
         $this->route = $request->get_route();
         $this->headers = $request->get_headers();
         $this->route_params = $request->get_url_params();
+        // WP_REST_Request carries no cookie params, so read them from the superglobal.
+        // phpcs:ignore Framework.NamingConventions.SnakeCaseVariable.NotSnakeCase
+        $this->cookies = $this->unslash_array($_COOKIE ?? []);
         return $this;
     }
     /**
@@ -203,7 +217,7 @@ class Request implements RequestContract, Arrayable
     public static function capture()
     {
         // phpcs:ignore Framework.NamingConventions.SnakeCaseVariable.NotSnakeCase
-        return (new static())->make_from_http($_GET, $_POST, $_FILES, $_SERVER);
+        return (new static())->make_from_http($_GET, $_POST, $_FILES, $_SERVER, [], $_COOKIE);
     }
     /**
      * Make a request instance from raw HTTP input arrays.
@@ -213,12 +227,13 @@ class Request implements RequestContract, Arrayable
      * @param array $files Uploaded files.
      * @param array $server Server parameters.
      * @param array $route_params Matched route parameters.
+     * @param array $cookies Cookies sent by the client.
      *
      * @return self
      *
      * @since 1.0.0
      */
-    public function make_from_http(array $query = [], array $body = [], array $files = [], array $server = [], array $route_params = [])
+    public function make_from_http(array $query = [], array $body = [], array $files = [], array $server = [], array $route_params = [], array $cookies = [])
     {
         $query = $this->unslash_array($query);
         $body = $this->unslash_array($body);
@@ -227,6 +242,7 @@ class Request implements RequestContract, Arrayable
         $this->route = $this->resolve_request_path($server);
         $this->headers = $this->extract_headers($server);
         $this->route_params = $route_params;
+        $this->cookies = $this->unslash_array($cookies);
         $this->files = [];
         if (!empty($files)) {
             $this->load_files_from_array($files);
@@ -512,6 +528,49 @@ class Request implements RequestContract, Arrayable
     public function header(string $name, $default = null)
     {
         return $this->get_header($name, $default);
+    }
+    /**
+     * Get all cookies sent by the client.
+     *
+     * @return array<string,mixed>
+     *
+     * @since 1.0.0
+     */
+    public function cookies()
+    {
+        return $this->cookies;
+    }
+    /**
+     * Get a cookie sent by the client.
+     *
+     * Cookie values are client supplied and must be treated as untrusted input.
+     *
+     * @param string|null $key The name of the cookie, or null for every cookie.
+     * @param mixed $default The default value when the cookie is not present.
+     *
+     * @return mixed
+     *
+     * @since 1.0.0
+     */
+    public function cookie(?string $key = null, $default = null)
+    {
+        if (\is_null($key)) {
+            return $this->cookies;
+        }
+        return $this->cookies[$key] ?? value($default);
+    }
+    /**
+     * Check whether a cookie was sent by the client.
+     *
+     * @param string $key The name of the cookie.
+     *
+     * @return bool
+     *
+     * @since 1.0.0
+     */
+    public function has_cookie(string $key)
+    {
+        return \array_key_exists($key, $this->cookies);
     }
     /**
      * Get all input attributes.

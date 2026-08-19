@@ -4889,6 +4889,10 @@ class HelperFunctions
 	 * @return bool
 	 */
 	public static function is_safe_url($url) {
+		if (!is_string($url) || filter_var($url, FILTER_VALIDATE_URL) === false) {
+			return false;
+		}
+
 		$scheme = wp_parse_url($url, PHP_URL_SCHEME);
 		$host = wp_parse_url($url, PHP_URL_HOST);
 

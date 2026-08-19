@@ -10,8 +10,10 @@
 namespace Kirki\Framework\Http;
 
 \defined('ABSPATH') || exit;
+use Kirki\Framework\Http\Concerns\InteractsWithCookies;
 class RedirectResponse
 {
+    use InteractsWithCookies;
     /**
      * The redirect target URL.
      *
@@ -74,6 +76,7 @@ class RedirectResponse
      */
     public function send()
     {
+        $this->cookie_manager()->flush_queued_cookies();
         wp_safe_redirect($this->url, $this->status);
         exit;
     }

@@ -14,12 +14,14 @@ namespace Kirki\Framework\Http;
 \defined('ABSPATH') || exit;
 use Kirki\Framework\Contracts\Support\Arrayable;
 use Kirki\Framework\Contracts\Support\Jsonable;
+use Kirki\Framework\Http\Concerns\InteractsWithCookies;
 use Kirki\Framework\Supports\Arr;
 use InvalidArgumentException;
 use JsonSerializable;
 use WP_REST_Response;
 class JsonResponse extends WP_REST_Response
 {
+    use InteractsWithCookies;
     /**
      * The original data that was passed to the response.
      *

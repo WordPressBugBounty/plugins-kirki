@@ -13,10 +13,12 @@ namespace Kirki\Framework\Http\Client;
 
 \defined('ABSPATH') || exit;
 use BadMethodCallException;
+use Kirki\Framework\Http\Cookie;
 use Kirki\Framework\Supports\Arr;
 use Kirki\Framework\Supports\Str;
 use Kirki\Framework\Supports\Traits\Macroable;
 use RuntimeException;
+use WP_Http_Cookie;
 use function Kirki\Framework\collection;
 use function Kirki\Framework\Polyfill\str_contains;
 class Request
@@ -196,6 +198,63 @@ class Request
     public function with_user_agent($user_agent)
     {
         return $this->with_headers(['User-Agent' => \trim($user_agent)]);
+    }
+    /**
+     * Attach a cookie to the request.
+     *
+     * @param string $name The name of the cookie.
+     * @param string $value The value of the cookie.
+     * @param string|null $domain The domain the cookie is scoped to.
+     *
+     * @return $this
+     *
+     * @since 1.0.0
+     */
+    public function with_cookie(string $name, string $value, ?string $domain = null)
+    {
+        $this->options['cookies'][$name] = $this->normalize_cookie($name, $value, $domain);
+        return $this;
+    }
+    /**
+     * Attach several cookies to the request.
+     *
+     * Accepts name and value pairs, Cookie instances, or WP_Http_Cookie instances.
+     *
+     * @param array $cookies The cookies to attach.
+     * @param string|null $domain The domain the cookies are scoped to.
+     *
+     * @return $this
+     *
+     * @since 1.0.0
+     */
+    public function with_cookies(array $cookies, ?string $domain = null)
+    {
+        foreach ($cookies as $name => $cookie) {
+            $normalized = $this->normalize_cookie($name, $cookie, $domain);
+            $this->options['cookies'][$normalized->name] = $normalized;
+        }
+        return $this;
+    }
+    /**
+     * Normalize a cookie of any supported shape into a WP_Http_Cookie instance.
+     *
+     * @param string|int $name The cookie name, when the value is a plain string.
+     * @param mixed $cookie The cookie value, Cookie instance, or WP_Http_Cookie instance.
+     * @param string|null $domain The domain the cookie is scoped to.
+     *
+     * @return \WP_Http_Cookie
+     *
+     * @since 1.0.0
+     */
+    protected function normalize_cookie($name, $cookie, ?string $domain = null)
+    {
+        if ($cookie instanceof WP_Http_Cookie) {
+            return $cookie;
+        }
+        if ($cookie instanceof Cookie) {
+            return new WP_Http_Cookie(['name' => $cookie->get_name(), 'value' => $cookie->get_value(), 'expires' => $cookie->get_expires_time() ?: null, 'path' => $cookie->get_path(), 'domain' => $cookie->get_domain() ?? $domain]);
+        }
+        return new WP_Http_Cookie(['name' => (string) $name, 'value' => (string) $cookie, 'domain' => $domain]);
     }
     /**
      * Disable SSL verification for the request.
