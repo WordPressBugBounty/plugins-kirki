@@ -49,12 +49,15 @@ class FormSubmissionService
 	 */
 	public function handle(array $params)
 	{
-		Recaptcha::verify($params['g-recaptcha-token'] ?? null);
-
+		
 		['form_id' => $form_id, 'post_id' => $post_id] = $this->parse_form_metadata($params['_kirki_form'] ?? '');
-		$form_config = $this->load_form_config($form_id, $post_id);
 
+		Recaptcha::verify($params, $form_id);
+
+		$form_config = $this->load_form_config($form_id, $post_id);
+		
 		$form_data = $this->extract_form_data($params, $form_config->fields);
+		
 
 		$form_data = $this->validate_fields($form_data, $form_config->fields);
 

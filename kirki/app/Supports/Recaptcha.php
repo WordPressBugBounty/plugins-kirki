@@ -10,10 +10,9 @@
 
 namespace Kirki\App\Supports;
 
-use Kirki\App\Constants\OptionKeys;
 use Kirki\Framework\Http\Response;
 use Kirki\Framework\Supports\Facades\Http;
-use Kirki\Framework\Supports\Facades\Option;
+use Kirki\App\Supports\Session;
 use RuntimeException;
 
 if (!defined('ABSPATH')) {
@@ -36,28 +35,37 @@ class Recaptcha
 	 * check only runs if the front-end sent a token). Throws on misconfiguration
 	 * or a failed verification so the caller can abort the request.
 	 *
-	 * @param string|null $token The reCAPTCHA token from the submission.
+	 * @param array|null $params Get the reCAPTCHA token from the submission params.
+	 * @param string|null $form_id The form ID.
 	 * @return void
 	 *
 	 * @throws RuntimeException When configuration is missing or verification fails.
 	 */
-	public static function verify(?string $token = null)
+	public static function verify(?array $params = [], ?string $form_id = null)
 	{
-		if (empty($token)) {
+		$session_data = Session::get($form_id);
+		$recaptcha = $session_data['recaptcha'] ?? [];
+
+		if (empty($recaptcha)) {
 			return;
 		}
 
-		$common_data = Option::get(OptionKeys::WP_ADMIN_COMMON_DATA, [], false);
-
-		if (!isset($common_data['recaptcha']['GRC_version'])) {
+		if (!isset($recaptcha['GRC_version'])) {
 			throw new RuntimeException(
 				esc_html__('reCAPTCHA configuration not found', 'kirki'),
 				(int) Response::BAD_REQUEST
 			);
 		}
 
-		$version = $common_data['recaptcha']['GRC_version'];
-		$recaptcha = $common_data['recaptcha'][$version] ?? [];
+		$token = $recaptcha['GRC_version'] === '2.0' ? ($params['g-recaptcha-response'] ?? '') : ($params['g-recaptcha-token'] ?? '');
+
+		if (empty($token)) {
+			throw new RuntimeException(
+				esc_html__('Recaptcha is required.', 'kirki'),
+				(int) Response::BAD_REQUEST
+			);
+		}
+
 		$secret_key = $recaptcha['GRC_secret_key'] ?? '';
 
 		if (empty($secret_key)) {

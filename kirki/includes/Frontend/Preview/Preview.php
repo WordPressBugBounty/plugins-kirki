@@ -791,7 +791,13 @@ class Preview extends ExceptionalElements {
 		}
 		$prefix = 'kirki';
 		$value  = wp_json_encode( $value );
-		$s      = "var $prefix$name = window.$prefix$name === undefined? $value : {...$prefix$name, ...$value};";
+		// SECURITY (prototype-pollution guard): only merge a PRE-EXISTING value when it is
+		// an OWN property of window. `window.kirkiX === undefined` is false when
+		// `Object.prototype.kirkiX` has been polluted (crafted query params / third-party
+		// gadget), and `{...kirkiX, ...}` would then launder attacker-controlled keys into a
+		// real own property that downstream scripts trust. Starting from `{}` unless window
+		// truly owns the value keeps inherited (attacker) data out.
+		$s = "var $prefix$name = Object.assign({}, (Object.prototype.hasOwnProperty.call(window, '$prefix$name') && window.$prefix$name) || {}, $value);";
 		return $s;
 	}
 
@@ -1407,15 +1413,29 @@ class Preview extends ExceptionalElements {
 			}
 
 			if ( $element['name'] === 'recaptcha' ) {
-				$common_data = WpAdmin::get_common_data( true );
-				if ( ! isset( $common_data['recaptcha'], $common_data['recaptcha']['GRC_version'] ) ) {
+				if (!isset($properties['recaptcha'], $properties['recaptcha']['GRC_version'])) {
 					return;
 				}
-				$version   = $common_data['recaptcha']['GRC_version'];
-				$recaptcha = $common_data['recaptcha'][ $version ];
 
-				$this->re_captchas[ $id ]['data-version'] = $version;
-				$this->re_captchas[ $id ]['data-sitekey'] = $recaptcha['GRC_site_key'];
+				$parent_form_id = $options['form']['id'] ?? '';
+				$session_data = HelperFunctions::get_session_data($parent_form_id);
+
+				$version = $properties['recaptcha']['GRC_version'];
+				$grc_site_key = $properties['recaptcha']['GRC_site_key'];
+
+				$this->re_captchas[$id]['data-version'] = $version;
+				$this->re_captchas[$id]['data-sitekey'] = $grc_site_key;
+
+				// set recaptcha version and site key at form session data
+				if ($session_data) {
+					$session_data['recaptcha'] = array(
+						'GRC_version' => $properties['recaptcha']['GRC_version'],
+						'GRC_site_key' => $properties['recaptcha']['GRC_site_key'],
+						'GRC_secret_key' => $properties['recaptcha']['GRC_secret_key'],
+					);
+
+					HelperFunctions::set_session_data($parent_form_id, $session_data);
+				}
 			}
 		}
 	}
