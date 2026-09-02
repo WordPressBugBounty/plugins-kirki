@@ -2,6 +2,7 @@
 
 namespace Kirki\App\Http\Controllers\Api;
 
+use Kirki\App\Constants\AccessLevels;
 use Kirki\App\DTO\CollaborationComment\CreateCollaborationCommentDTO;
 use Kirki\App\DTO\CollaborationComment\DeleteCollaborationCommentDTO;
 use Kirki\App\DTO\CollaborationComment\ResolveCollaborationCommentDTO;
@@ -12,9 +13,11 @@ use Kirki\App\Http\Requests\CollaborationComment\CollaborationCommentStoreReques
 use Kirki\App\Resources\CollaborationComment\CollaborationCommentResource;
 use Kirki\App\Resources\CollaborationComment\CollaborationCommentUserResource;
 use Kirki\App\Services\CollaborationCommentService;
+use Kirki\Framework\Exceptions\AuthorizationException;
 use Kirki\Framework\Http\Request;
 use Kirki\Framework\Http\Response;
 
+use function Kirki\Framework\message;
 use function Kirki\Framework\response;
 use function Kirki\Framework\user;
 
@@ -153,6 +156,10 @@ class CollaborationCommentController
      */
     public function resolve_all(Request $request)
     {
+        if (!user()->has_access(AccessLevels::FULL_ACCESS)) {
+            throw new AuthorizationException(message('auth.unauthorized_request'));
+        }
+
         return response()->json([
             'data' => $this->service->resolve_all($request->int('post_id'), $request->string('session_id', '')),
             'message' => __('All comments marked as resolved.', 'kirki'),

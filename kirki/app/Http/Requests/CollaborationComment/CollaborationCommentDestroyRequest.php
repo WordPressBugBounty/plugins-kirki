@@ -2,11 +2,10 @@
 
 namespace Kirki\App\Http\Requests\CollaborationComment;
 
-use Kirki\App\Constants\AccessLevels;
-use Kirki\App\Models\CollaborationComment;
+use Kirki\App\Services\CollaborationCommentService;
+use Kirki\Framework\Container;
 use Kirki\Framework\Http\Request;
 use Kirki\Framework\Sanitizer;
-use function Kirki\Framework\user;
 
 class CollaborationCommentDestroyRequest extends Request
 {
@@ -17,15 +16,9 @@ class CollaborationCommentDestroyRequest extends Request
      */
     public function authorize()
     {
-        $comment = CollaborationComment::find($this->get_int('id'));
-
-        if (!$comment) {
-            return false;
-        }
-
-        $is_author = $comment->user_id === user()->get_id();
-
-        return $is_author || user()->has_access(AccessLevels::FULL_ACCESS);
+        return Container::get_instance()
+            ->make(CollaborationCommentService::class)
+            ->can_manage_comment($this->get_int('id'));
     }
 
     /**

@@ -1040,6 +1040,7 @@ class Media {
 
 		// Quick check to avoid non-SVG files (existing behavior)
 		if ( stripos( $svg, '<svg' ) === false ) {
+			wp_delete_file( $svg_file );
 			return false;
 		}
 
@@ -1057,6 +1058,7 @@ class Media {
 		$clean_svg = $sanitizer->sanitize( $svg );
 
 		if ( $clean_svg === false ) {
+			wp_delete_file( $svg_file );
 			return false; // Sanitization failed
 		}
 
@@ -1065,11 +1067,20 @@ class Media {
 		libxml_use_internal_errors( true );
 
 		if ( ! $dom->loadXML( $clean_svg, LIBXML_NONET ) ) {
+			wp_delete_file( $svg_file );
 			return false;
 		}
 
 		// Ensure root element is <svg>
 		if ( $dom->documentElement->nodeName !== 'svg' ) {
+			wp_delete_file( $svg_file );
+			return false;
+		}
+
+		// Write the sanitized markup back so the sanitized bytes, not the
+		// original upload, are what actually gets stored.
+		if ( file_put_contents( $svg_file, $clean_svg ) === false ) {
+			wp_delete_file( $svg_file );
 			return false;
 		}
 

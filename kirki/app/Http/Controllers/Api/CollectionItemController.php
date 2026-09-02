@@ -129,6 +129,9 @@ class CollectionItemController
             case ActionTypes::DUPLICATE:
                 $data = CollectionItemResource::collection($this->service->bulk_duplicate($post_ids, $parent_id));
                 break;
+            case ActionTypes::DRAFT:
+                $data = $this->service->bulk_draft($post_ids, $parent_id);
+                break;
             default:
                 break;
         }

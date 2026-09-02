@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Kirki 6.2.5\n"
+"Project-Id-Version: Kirki 6.3.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/kirki\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-08-25T09:57:40+00:00\n"
+"POT-Creation-Date: 2026-09-02T11:48:08+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: kirki\n"
@@ -1668,6 +1668,21 @@ msgid "Install and activate the WordPress AI plugin to use AI content."
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+#: assets/js/kirki.min.js:2
+msgid "A component cannot be inserted inside itself."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+#: assets/js/kirki.min.js:2
+msgid "Component"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+#: assets/js/kirki.min.js:2
+msgid "Home"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "Page title"
 msgstr ""
 
@@ -1837,14 +1852,6 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Cut element"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Add class"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Rename class"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2244,6 +2251,10 @@ msgid "Media Manager"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+msgid "Browse"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "Ratio"
 msgstr ""
 
@@ -2257,10 +2268,6 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Crop"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Browse"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2288,107 +2295,47 @@ msgid "Offset"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Backface visibility"
+msgid "Fields"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "3D transformation"
+msgid "Linear gradient"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Self Perspective"
+msgid "Radial gradient"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Children Perspective"
+msgid "Conic gradient"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Transforms"
+msgid "Set default icon"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Click on `+` to replace mixed values"
+msgid "Set default image"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Transform options"
+msgid "Video url"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Curve"
+msgid "URL"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Duration"
+msgid "Upload Video"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Delay"
+msgid "Thumbnail"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Bezier"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Bounce"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Transitions"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Text Shadow"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Blur"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Spread"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Radius"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "You can not drop inside body."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Paste failed. Please try again."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Paste failed. Clipboard access is only available over HTTPS."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Component editing"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Component detached"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Symbol reset to parent symbol"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Parent symbol updated"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Component instance updated"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Cannot wrap these elements"
+msgid "Set default video"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2460,111 +2407,27 @@ msgid "Playback"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Enter Code (HTML, CSS, JS Only)"
+msgid "You can not drop inside body."
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Enter web URL"
+msgid "Paste failed. Please try again."
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Add your URL here..."
+msgid "Paste failed. Clipboard access is only available over HTTPS."
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Migrate"
+msgid "Component detached"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Embed"
+msgid "Symbol reset to parent symbol"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Variable Mode"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Animation"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Easing"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Meta name"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Word count"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Format"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Timing Editor"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Behavior"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Dragging"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Slides Infinite Loop"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Autoplay on Loading"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Stop Autoplay on Hover"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "All Users"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Post Comments"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Comments"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "User"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Term"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Loading..."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "No items were found."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Search collections..."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Search items..."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Detach from component"
+msgid "Cannot wrap these elements"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2636,6 +2499,10 @@ msgid "Create component"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+msgid "Detach from component"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "Animate when the user clicks or taps on the element."
 msgstr ""
 
@@ -2680,7 +2547,48 @@ msgid "Trigger the effect right after a user scrolls the page up or down."
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+#, js-format
+msgid "Interaction pasted to %d elements."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "Interaction"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "All Users"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Post Comments"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Comments"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "User"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Term"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Loading..."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "No items were found."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Search collections..."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Search items..."
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2927,6 +2835,222 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Contents"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Enter Code (HTML, CSS, JS Only)"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Enter web URL"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Add your URL here..."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Migrate"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Embed"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Variable Mode"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Animation"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Easing"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Duration"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Meta name"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Word count"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Format"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Curve"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Delay"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Bezier"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Bounce"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Timing Editor"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Behavior"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Dragging"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Slides Infinite Loop"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Autoplay on Loading"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Stop Autoplay on Hover"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Default SVG"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Enter default rich text..."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Set default fill"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Select default date"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Set default link"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Enter default text..."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Add or select a field to edit its settings."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Default value"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Default Icon"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Field Name"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Enter field name"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Help text"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Enter help text..."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Component fields"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Component field"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Dynamic content"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Add new field"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "On this component"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "No fields were found"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Add fields and connect to elements which needs to be dynamic."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Backface visibility"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "3D transformation"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Self Perspective"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Children Perspective"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Transforms"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Click on `+` to replace mixed values"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Transform options"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Transitions"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Text Shadow"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Blur"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Spread"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Radius"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -3198,10 +3322,6 @@ msgid "Zoom out"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Home"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Global search"
 msgstr ""
 
@@ -3290,23 +3410,53 @@ msgid "Yes, Save"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Component Saved."
+msgid "Editor breadcrumbs"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Component Save"
+msgid "Component saved."
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Are you sure you want to save this component?"
+msgid "Component could not be saved."
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "No"
+msgid "Components saved."
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Yes"
+msgid "Components could not be saved."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+#, js-format
+msgid "%d components have unsaved changes. Do you want to save?"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+#, js-format
+msgid "%d component has unsaved changes. Do you want to save?"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Editing"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Edit fields"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Keep unchanged"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Yes, save all"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Yes, save"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -3438,46 +3588,6 @@ msgid "Use this!"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Name is required"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Help text"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Add additional instruction or information about the field."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Enter help text..."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Slug is required"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Custom Fields"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "You do not have permission to perform this action."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Basic Fields"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Discard changes"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Save changes"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Click to replace"
 msgstr ""
 
@@ -3491,27 +3601,27 @@ msgid "Uploading..."
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Upload or drop your files here"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Upload Image"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Upload Video"
+msgid "Upload or drop your files here"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Name is required"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Add additional instruction or information about the field."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Slug is required"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Set as Default"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Field Name"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Enter field name"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -3528,10 +3638,6 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Mark required"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Default value"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -3623,6 +3729,18 @@ msgid "Add New Option"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+msgid "Custom Fields"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "You do not have permission to perform this action."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Basic Fields"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "Collection name is required"
 msgstr ""
 
@@ -3687,10 +3805,6 @@ msgid "New item"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Edit fields"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Save as draft"
 msgstr ""
 
@@ -3712,6 +3826,14 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Are you sure you want to delete \"{item}\"?"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Discard Changes"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Save and exit"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -3855,10 +3977,6 @@ msgid "Body"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "URL"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Enter an URL"
 msgstr ""
 
@@ -3916,14 +4034,6 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Checked by default"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Video url"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Thumbnail"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -4035,10 +4145,6 @@ msgid "Connect to CMS"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "Change"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
 msgid "Parent Collection"
 msgstr ""
 
@@ -4055,6 +4161,10 @@ msgid "Connect to Field"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+msgid "Add class"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "Add state"
 msgstr ""
 
@@ -4064,6 +4174,46 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Search class..."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Static link"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Add image"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Add video"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "dd/mm/yyyy"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "[The default text]"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Set as [header/footer]"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Edit component"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Reset instance"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Detach instance"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Edit Component"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -4124,6 +4274,14 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Relation"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "No"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Yes"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -4369,10 +4527,6 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Audit"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Edit component"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2

@@ -7,11 +7,11 @@ defined('ABSPATH') || exit;
 use Exception;
 use Kirki\Framework\Supports\Facades\File as FileHelper;
 use Kirki\Framework\Supports\Facades\Http;
+use Kirki\HelperFunctions;
 use PclZip;
 
 use function Kirki\App\get_upload_directory;
 use function Kirki\Framework\clean_path;
-use function Kirki\Framework\Polyfill\array_last;
 
 class FileHandler 
 {
@@ -31,43 +31,75 @@ class FileHandler
 	 */
     public static function download_zip_from_remote(string $remote_file_url, string $file_name)
     {
-        $file_ext = explode('.', $remote_file_url); // ['file', 'ext']
-		$file_ext = strtolower(array_last($file_ext)); // 'ext'
-		$allowed = ['zip'];
+			// Extension check must run against the URL *path* only, not the whole
+			// URL — otherwise "?x=.zip" trivially satisfies a whole-string check.
+			$url_path = (string) wp_parse_url($remote_file_url, PHP_URL_PATH);
+			$file_ext = strtolower(pathinfo($url_path, PATHINFO_EXTENSION));
+			$allowed = ['zip'];
 
-		if (!in_array($file_ext, $allowed)) {
-			return false;
-		}
+			if (!in_array($file_ext, $allowed, true)) {
+				return false;
+			}
 
-		// Download the file from the remote server.
-		$response = Http::timeout(120)
-			->with_options([
-				'redirection' => 0
-			])
-			->with_user_agent('WordPress')
-			->get($remote_file_url);
+			if (!static::is_remote_host_allowed($remote_file_url)) {
+				return false;
+			}
 
-		if ($response->failed()) {
-			return false;
-		}
+			// Download the file from the remote server.
+			$response = Http::timeout(120)
+				->with_options([
+					'redirection' => 0
+				])
+				->with_user_agent('WordPress')
+				->get($remote_file_url);
 
-		// Save the file locally.
-		// Local path to save the downloaded file.
-		$local_file_path = clean_path(get_upload_directory() . '/' . $file_name, false);
+			if ($response->failed()) {
+				return false;
+			}
 
-		static::verify_directory_traversal($local_file_path);
-		
-		$is_downloaded = FileHelper::put($local_file_path, $response->body());
+			// Save the file locally.
+			// Local path to save the downloaded file.
+			$local_file_path = clean_path(get_upload_directory() . '/' . $file_name, false);
 
-		if (!$is_downloaded) {
-			return false;
-		}
-		
-		return $local_file_path;
+			static::verify_directory_traversal($local_file_path);
+			
+			$is_downloaded = FileHelper::put($local_file_path, $response->body());
+
+			if (!$is_downloaded) {
+				return false;
+			}
+			
+			return $local_file_path;
     }
 
 	/**
-	 * @return array|false 
+	 * Same-site URLs are always allowed (e.g. dev config points the apps base
+	 * URL at content_url() on the site's own — sometimes private/loopback —
+	 * host). Any other host must resolve to a public address, so a remote zip
+	 * URL can't be used to probe the server's own internal network.
+	 *
+	 * @param string $url
+	 * @return bool
+	 */
+	private static function is_remote_host_allowed(string $url)
+	{
+		$host = wp_parse_url($url, PHP_URL_HOST);
+
+		if (!is_string($host) || $host === '') {
+			return false;
+		}
+
+		$site_host = wp_parse_url(home_url(), PHP_URL_HOST);
+
+		if (is_string($site_host) && strcasecmp($host, $site_host) === 0) {
+			return true;
+		}
+
+		return HelperFunctions::is_safe_url($url);
+	}
+
+	/**
+	 * @return array|false
 	 * return false on failure
 	 */
 	public static function extract_zip_file(string $zip_file_path, string $destination_dir)

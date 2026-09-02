@@ -18,6 +18,7 @@ use Kirki\App\Http\Controllers\Api\GlobalDataController;
 use Kirki\App\Http\Controllers\Api\PageSettingsController;
 use Kirki\App\Http\Controllers\Api\PostController;
 use Kirki\App\Http\Controllers\Api\UserController;
+use Kirki\App\Http\Middlewares\VerifyRestNonceMiddleware;
 use Kirki\App\Http\Middlewares\ViewAccessMiddleware;
 use Kirki\App\Http\Middlewares\ViewOrPreviewMiddleware;
 use Kirki\Framework\Http\Request;
@@ -174,4 +175,4 @@ Route::group(['middleware' => EditAccessMiddleware::class], function () {
 });
 
 // Front-end form submission
-Route::post('/frontend/form', [FormController::class, 'store']);
+Route::post('/frontend/form', [FormController::class, 'store'])->middleware(VerifyRestNonceMiddleware::class);

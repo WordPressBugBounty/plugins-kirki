@@ -22,7 +22,7 @@ class KirkiComponentLibrary {
 	public function __construct() {
 		$this->init();
 		add_filter( 'kirki_element_generator_' . KIRKI_COMPONENT_LIBRARY_APP_PREFIX, array( $this, 'element_generator' ), 10, 2 );
-		add_filter( 'kirki_external_collection_options', array( $this, 'modify_external_collection_options' ), 10, 2 );
+		// add_filter( 'kirki_external_collection_options', array( $this, 'modify_external_collection_options' ), 10, 2 ); // Commented because of:  getting double comments (post)
 		add_filter( 'kirki_collection_comments', array( $this, 'kirki_collection_comments' ), 10, 2 );
 
 		add_filter( 'kirki_dynamic_content', array( $this, 'kirki_dynamic_content' ), 10, 2 );
@@ -105,25 +105,29 @@ class KirkiComponentLibrary {
 		return $gen;
 	}
 
-	public function modify_external_collection_options( $options, $args ) {
-		$comment_collection = array(
-			'title'               => 'Comments',
-			'value'               => 'comments',
-			'inherit'             => true,
-			'pegination'          => true,
-			'default_select_type' => 'comment',
-			'group'               => array(
-				array(
-					'title'    => 'Post Comments',
-					'value'    => 'comment',
-					'itemType' => 'comment',
-				),
-			  // TODO: need to get all comment type and add it as list here.
-			),
-		);
-		$options[] = $comment_collection;
-		return $options;
-	}
+	// public function modify_external_collection_options( $options, $args ) {
+	// 	$comment_collection = array(
+	// 		'title'               => 'Comments',
+	// 		'value'               => 'comments',
+	// 		'inherit'             => true,
+	// 		'pegination'          => true,
+	// 		'default_select_type' => 'comment',
+	// 		'group'               => array(
+	// 			array(
+	// 				'title'    => 'Post Comments',
+	// 				'value'    => 'comment',
+	// 				'itemType' => 'comment',
+	// 			),
+	// 		  // TODO: need to get all comment type and add it as list here.
+	// 		),
+	// 	);
+	// 	$options[] = array(
+	// 		'title' => 'Others',
+	// 		'options' => $comment_collection,
+	// 	);
+
+	// 	return $options;
+	// }
 
 	public function kirki_collection_comments( $value, $args ) {
 		$all_comments = array();

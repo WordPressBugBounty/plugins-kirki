@@ -31,6 +31,7 @@ use Kirki\Ajax\RBAC;
 use Kirki\Ajax\Taxonomy;
 use Kirki\Ajax\Users;
 use Kirki\Ajax\TemplateExportImport;
+use Kirki\App\Supports\EditorPreview;
 
 /**
  * Kirki Ajax handler
@@ -54,6 +55,8 @@ class Ajax
 
 		// add_action('wp_ajax_nopriv_kirki_post_apis_nopriv', array($this, 'kirki_post_apis_nopriv'));
 		add_action('wp_ajax_nopriv_kirki_get_apis', array($this, 'kirki_get_apis'));
+
+		add_action('wp_ajax_nopriv_kirki_post_apis', array($this, 'kirki_post_apis'));
 		/**
 		 * Manage Post API call's from WP Admin
 		 */
@@ -104,6 +107,33 @@ class Ajax
 
 		//phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$endpoint = HelperFunctions::sanitize_text(isset($_POST['endpoint']) ? $_POST['endpoint'] : null);
+
+		/**
+		 * Editor-preview (read-only) requests.
+		 *
+		 * These endpoints only render HTML from content the preview link is
+		 * already permitted to display — the same data the server-rendered
+		 * preview outputs inline. Canvas fetches them over ajax instead, so
+		 * without this branch they fall through the edit-access gate below and
+		 * return nothing. Read-only and explicitly enumerated: no write
+		 * endpoint is reachable here.
+		 */
+		if (!HelperFunctions::user_has_post_edit_access() && EditorPreview::has_valid_token()) {
+			// get-single-symbol is DELIBERATELY excluded: Symbol::get_single_symbol()
+			// ingests attacker-supplied `contentElement` graph nodes, which feed the
+			// PHP object-injection chain fixed in the 6.2.x CVE. It must remain
+			// reachable only behind the full/content edit-access gate below and must
+			// never be exposed to a shareable, read-only preview token.
+			if ($endpoint === 'get-collection-batch') {
+				Collection::get_collection_batch();
+			}
+
+			if ($endpoint === 'get-dynamic-content-batch') {
+				DynamicContent::get_dynamic_element_data_batch();
+			}
+
+			wp_send_json_error('Not authorized');
+		}
 
 		if (HelperFunctions::user_has_post_edit_access()) {
 			/** 

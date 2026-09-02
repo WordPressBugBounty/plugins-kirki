@@ -18,6 +18,8 @@ use Kirki\Framework\Database\Query\QueryBuilder;
 use Kirki\Framework\Exceptions\NotFoundException;
 use Throwable;
 
+use function Kirki\Framework\user;
+
 /**
  * Business logic for canvas/page collaboration comments.
  *
@@ -31,6 +33,28 @@ class CollaborationCommentService
     public function __construct(CollaborationService $collaboration_service)
     {
         $this->collaboration_service = $collaboration_service;
+    }
+
+    /**
+     * Whether the current user may manage (resolve/delete) a comment: its
+     * author, or a user with an editor/administrator role. Optionally also
+     * checks the comment belongs to the given post.
+     *
+     * @param int|null $comment_id
+     * @param int|null $post_id
+     * @return bool
+     */
+    public function can_manage_comment(?int $comment_id, ?int $post_id = null): bool
+    {
+        $comment = CollaborationComment::find($comment_id);
+
+        if (!$comment || ($post_id && $comment->post_id !== $post_id)) {
+            return false;
+        }
+
+        $is_author = $comment->user_id === user()->get_id();
+
+        return $is_author || user()->has_access(AccessLevels::FULL_ACCESS);
     }
 
     /**

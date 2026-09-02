@@ -2,11 +2,25 @@
 
 namespace Kirki\App\Http\Requests\CollaborationComment;
 
+use Kirki\App\Services\CollaborationCommentService;
+use Kirki\Framework\Container;
 use Kirki\Framework\Http\Request;
 use Kirki\Framework\Sanitizer;
 
 class CollaborationCommentResolveRequest extends Request
 {
+    /**
+     * Validate permissions.
+     *
+     * @return bool
+     */
+    public function authorize()
+    {
+        return Container::get_instance()
+            ->make(CollaborationCommentService::class)
+            ->can_manage_comment($this->get_int('id'), $this->get_int('post_id'));
+    }
+
     /**
      * Validation rules.
      */

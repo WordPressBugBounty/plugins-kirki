@@ -38,7 +38,6 @@ class HelperFunctions
 
 	public static $custom_sections = [];
 	public static $global_session_id = false;
-	private static $printed_font_family_tracker = array();
 
 	private static $posts_where_filter_params = array();
 	/**
@@ -1331,7 +1330,6 @@ class HelperFunctions
 		$post_id = $params['post_id'] ?? null;
 		$get_style = $params['get_style'] ?? true;
 		$get_variable = $params['get_variable'] ?? true;
-		$get_fonts = $params['get_fonts'] ?? true;
 		$should_take_app_script = $params['should_take_app_script'] ?? true;
 		$prefix = $params['prefix'] ?? false;
 		$get_all_style_forcefully_if_get_style_true = $params['get_all_style_forcefully_if_get_style_true'] ?? false;
@@ -1360,9 +1358,6 @@ class HelperFunctions
 		$html = $preview->getHtml($options);// this method need to call first cause after that only used style block array construct.
 		$only_used_style_blocks = $get_all_style_forcefully_if_get_style_true ? $style_blocks : $preview->get_only_used_style_blocks();
 		$s = '';
-		if ($get_fonts) {
-			$s .= $preview->getCustomFontsLinks();
-		}
 
 		if ($get_style) {
 			//style will be false when it calls from collection single item. only first item will generate style. others item will be same.
@@ -1408,7 +1403,7 @@ class HelperFunctions
 
 		// `&lt;` `&gt;` and their numeric/hex forms, in any zero-padded spelling.
 		$content = preg_replace_callback(
-			'/&(?:lt|gt|#0*(?:60|62)|#[xX]0*3[ceCE]);/',
+			'/&(?:lt|gt|#0*(?:60|62)|#[xX]0*3[ceCE]);/i',
 			function ( $matches ) use ( &$held ) {
 				$key          = "\x02kirki-entity-" . count( $held ) . "\x03";
 				$held[ $key ] = $matches[0];
@@ -1451,12 +1446,8 @@ class HelperFunctions
 
 	public static function getFontsHTMLMarkup($fonts_data)
 	{
-		$font_family = str_replace(' ', '+', $fonts_data['family']);
-		if (isset($fonts_data['fontUrl']) && !in_array($font_family, self::$printed_font_family_tracker, true)) {
-			self::$printed_font_family_tracker[] = $font_family;
-
+		if (isset($fonts_data['fontUrl'])) {
 			$font_url = isset($fonts_data['localUrl']) ? $fonts_data['localUrl'] : $fonts_data['fontUrl'];
-
 			//phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet
 			return '<link class="' . 'kirki-custom-fonts-link" href="' . $font_url . '" rel="stylesheet">';
 		}
@@ -2804,12 +2795,15 @@ class HelperFunctions
 
 				if (!empty($matched_post_ids)) {
 					$ids = implode(',', array_map('intval', $matched_post_ids));
-					$reference_where_sql .= " OR {$wpdb->posts}.ID IN (
+					$reference_where_sql .= $wpdb->prepare(
+						" OR {$wpdb->posts}.ID IN (
 						SELECT post_id
 						FROM {$wpdb->prefix}kirki_cm_reference
-						WHERE field_meta_key = '{$meta_key}'
+						WHERE field_meta_key = %s
 						AND ref_post_id IN ($ids)
-					)";
+					)",
+						$meta_key
+					);
 				}
 			}
 		}
@@ -2992,6 +2986,7 @@ class HelperFunctions
 			$total_terms = wp_count_terms(['taxonomy' => $params['taxonomy']]);
 		}
 
+		$total_terms = is_numeric($total_terms) ? (int) $total_terms : 0;
 		$total_pages = ($item_per_page > 0) ? ceil($total_terms / $item_per_page) : 1;
 		$prev_page = ($current_page > 1) ? $current_page - 1 : null;
 		$next_page = ($current_page < $total_pages) ? $current_page + 1 : null;
@@ -3057,6 +3052,7 @@ class HelperFunctions
 			'parent' => $parent,
 			'post_id' => $post_id,
 			'type' => $type,
+			'status' => 'approve',
 			'number' => $item_per_page,
 			'paged' => $current_page,
 			'offset' => $offset_cal,
@@ -3278,7 +3274,16 @@ class HelperFunctions
 		if (isset($_GET['editor-preview-token'])) {
 			//phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			$editor_preview_token = self::sanitize_text(isset($_GET['editor-preview-token']) ? $_GET['editor-preview-token'] : '');
-			return self::is_post_editor_preview_token_valid($editor_preview_token);
+			$is_valid_token = self::is_post_editor_preview_token_valid($editor_preview_token);
+
+			// Token rides in the URL for this one entry request (a clicked link
+			// can't set headers) — stop it leaking onward via the Referer header
+			// on any request this page makes to third-party resources.
+			if ($is_valid_token && !headers_sent()) {
+				header('Referrer-Policy: no-referrer', false);
+			}
+
+			return $is_valid_token;
 		}
 		return self::has_access(
 			array(
@@ -3362,7 +3367,7 @@ class HelperFunctions
 		$status = HelperFunctions::get_global_data_using_key('kirki_editor_read_only_access_status');
 		if ($status) {
 			$kirki_editor_read_only_access_token = HelperFunctions::get_global_data_using_key('kirki_editor_read_only_access_token');
-			if ($kirki_editor_read_only_access_token && $kirki_editor_read_only_access_token === $token) {
+			if ($kirki_editor_read_only_access_token && hash_equals((string) $kirki_editor_read_only_access_token, (string) $token)) {
 				return true;
 			}
 		}

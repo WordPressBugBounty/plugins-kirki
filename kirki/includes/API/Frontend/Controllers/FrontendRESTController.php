@@ -70,6 +70,16 @@ abstract class FrontendRESTController extends WP_REST_Controller {
 						array( 'status' => 403 )
 					);
 				}
+			} else if( 'kirki_utility' === $context_type ) {
+				// Utility contexts are publicly accessible.
+				$post_id = $this->extract_post_id_from_context( $context );
+				if ( $post_id && ! $this->can_user_read_post( $post_id ) ) {
+					return new WP_Error(
+						'rest_forbidden',
+						'You do not have permission to read this post.',
+						array( 'status' => 403 )
+					);
+				}
 			} else {
 				return new WP_Error(
 					'rest_forbidden',
@@ -88,6 +98,22 @@ abstract class FrontendRESTController extends WP_REST_Controller {
 				'You do not have permission to read this post.',
 				array( 'status' => 403 )
 			);
+		}
+
+		// --- Check 3: post_id inside kirki_data (the post actually rendered) ---
+		$raw_kirki_data = $request->get_param( 'kirki_data' );
+
+		if ( $raw_kirki_data ) {
+			$kirki_data      = json_decode( $raw_kirki_data, true );
+			$kirki_data_post_id = is_array( $kirki_data ) && isset( $kirki_data['post_id'] ) ? absint( $kirki_data['post_id'] ) : 0;
+
+			if ( $kirki_data_post_id && ! $this->can_user_read_post( $kirki_data_post_id ) ) {
+				return new WP_Error(
+					'rest_forbidden',
+					'You do not have permission to read this post.',
+					array( 'status' => 403 )
+				);
+			}
 		}
 
 		return true;
@@ -113,6 +139,8 @@ abstract class FrontendRESTController extends WP_REST_Controller {
 				return isset( $context['id'] )      ? absint( $context['id'] )      : null;
 			case 'comment':
 				return isset( $context['post_id'] ) ? absint( $context['post_id'] ) : null;
+			case 'kirki_utility':
+				return isset( $context['kirki_utility_page_id'] ) ? absint( $context['kirki_utility_page_id'] ) : null;
 			default:
 				return null;
 		}

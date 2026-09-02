@@ -62,11 +62,11 @@ class FormSubmissionService
 		$form_data = $this->validate_fields($form_data, $form_config->fields);
 
 		$form = $this->save_form($form_id, $post_id, $form_config);
-		$session_id = Session::get_session_id(); // todo: need to fix this for user ip
+		$submitter_id = $this->resolve_submitter_id();
 
-		$this->enforce_submission_limits($form->id, $session_id, $form_config);
+		$this->enforce_submission_limits($form->id, $submitter_id, $form_config);
 
-		$this->save_submission($form->id, $form_data, $form_config, $session_id);
+		$this->save_submission($form->id, $form_data, $form_config, $submitter_id);
 
 		$actions_succeeded = $this->actions->dispatch($form_data, $form_config);
 
@@ -216,10 +216,36 @@ class FormSubmissionService
 	}
 
 	/**
+	 * Resolve a stable identifier for the submitter.
+	 *
+	 * Used both for the per-submitter entry limit and stored alongside the
+	 * submission. Derived from the network peer address (`REMOTE_ADDR`) rather
+	 * than the client-supplied `kirki_session_id` cookie, which a submitter can
+	 * rotate on every request to reset their entry count. Proxy headers
+	 * (`X-Forwarded-For` et al.) are deliberately not trusted here since they are
+	 * attacker-controlled in the absence of a vetted reverse proxy. Falls back to
+	 * the cookie session id only when no peer address is available (e.g. CLI).
+	 *
+	 * @return string
+	 */
+	protected function resolve_submitter_id()
+	{
+		$ip = isset($_SERVER['REMOTE_ADDR'])
+			? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR']))
+			: '';
+
+		if ($ip === '') {
+			return Session::get_session_id();
+		}
+
+		return 'ip_' . hash('sha256', $ip);
+	}
+
+	/**
 	 * Reject the submission if it hits a configured entry or response limit.
 	 *
 	 * @param int           $form_id     The stored form id.
-	 * @param string        $session_id  The Kirki session id (cookie-identified, see Session::get_session_id()).
+	 * @param string        $session_id  The submitter identifier (see resolve_submitter_id()).
 	 * @param FormConfigDTO $form_config The form configuration.
 	 * @return void
 	 *
@@ -246,7 +272,7 @@ class FormSubmissionService
 	 * Whether the current session has reached the per-session entry limit.
 	 *
 	 * @param int      $form_id    The stored form id.
-	 * @param string   $session_id The Kirki session id (cookie-identified, see Session::get_session_id()).
+	 * @param string   $session_id The submitter identifier (see resolve_submitter_id()).
 	 * @param int|null $limit      The entry limit.
 	 * @return bool
 	 */

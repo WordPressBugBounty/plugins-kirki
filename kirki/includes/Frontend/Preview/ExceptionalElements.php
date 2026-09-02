@@ -785,6 +785,9 @@ class ExceptionalElements {
 		if(isset($options['kirki_template_id']) && $options['kirki_template_id']) {
 			$collection_info['post_id'] = $options['kirki_template_id'];
 		}
+		if(isset($options['kirki_utility_page_id']) && $options['kirki_utility_page_id']){
+			$collection_info['post_id'] = $options['kirki_utility_page_id'];
+		}
 		if(isset($options['inside_symbol']) && $options['inside_symbol'] === true){
 			$collection_info['post_id'] = $options['symbol_id'];
 		}
@@ -1231,10 +1234,87 @@ class ExceptionalElements {
 	 * @return string HTML markup.
 	 */
 	private function generate_symbol_html( $this_data, $attributes, $options = array() ) {
-		$properties        = $this_data['properties'];
-		$symbol_id         = $properties['symbolId'];
-		$symbolElementProp = isset( $properties['symbolElProps'] ) ? $properties['symbolElProps'] : false;
-		$symbol            = Symbol::get_single_symbol( $symbol_id, true, false, $symbolElementProp );
+		$properties             = $this_data['properties'];
+		$symbol_id              = $properties['symbolId'];
+		$symbolElementProp      = isset( $properties['symbolElProps'] ) ? $properties['symbolElProps'] : false;
+		$component_field_values = isset( $properties['componentFieldValues'] ) ? $properties['componentFieldValues'] : false;
+		$master_symbol          = Symbol::get_single_symbol( $symbol_id, true );
+		$master_variants        = $master_symbol && isset( $master_symbol['rootSizeVariant'] )
+			? $master_symbol['rootSizeVariant']
+			: array();
+		$style_ids         = array_merge(
+			isset( $properties['classesIds'] ) ? $properties['classesIds'] : array(),
+			isset( $this_data['styleIds'] ) ? $this_data['styleIds'] : array()
+		);
+		$root_variants     = array();
+
+		foreach ( $style_ids as $style_id ) {
+			if ( ! isset( $this->style_blocks[ $style_id ] ) ) {
+				continue;
+			}
+
+			$style_block = $this->style_blocks[ $style_id ];
+			$is_inherited_root_size = isset( $style_block['symbolRootSize']['source'] )
+				&& 'master' === $style_block['symbolRootSize']['source'];
+
+			if ( $is_inherited_root_size ) {
+				$root_size_overrides             = isset( $style_block['symbolRootSize']['overrides'] )
+					? $style_block['symbolRootSize']['overrides']
+					: array();
+				$style_block['variant']          = Symbol::merge_symbol_root_size_variant(
+					isset( $style_block['variant'] ) ? $style_block['variant'] : array(),
+					$master_variants,
+					$root_size_overrides
+				);
+				$this->style_blocks[ $style_id ] = $style_block;
+				$this->add_to_only_used_style_blocks( $style_block );
+			}
+
+			foreach ( isset( $style_block['variant'] ) ? $style_block['variant'] : array() as $variant_key => $css ) {
+				if ( $is_inherited_root_size ) {
+					$variant_overrides = isset( $root_size_overrides[ $variant_key ] )
+						? $root_size_overrides[ $variant_key ]
+						: array();
+					$override_css      = '';
+					foreach ( $variant_overrides as $property ) {
+						$override_css .= Symbol::get_symbol_root_size_property_css( $css, $property );
+					}
+					$css = $override_css;
+				} else {
+					$css = Symbol::get_symbol_root_size_css( $css );
+				}
+				if ( '' === $css ) {
+					continue;
+				}
+				$root_variants[ $variant_key ] = isset( $root_variants[ $variant_key ] )
+					? $root_variants[ $variant_key ] . $css
+					: $css;
+			}
+		}
+
+		if ( ! empty( $root_variants ) ) {
+			$symbolElementProp = is_array( $symbolElementProp ) ? $symbolElementProp : array();
+			$stored_variants   = isset( $symbolElementProp['__rootStyle']['variant'] )
+				? $symbolElementProp['__rootStyle']['variant']
+				: array();
+			foreach ( $root_variants as $variant_key => $css ) {
+				$stored_variants[ $variant_key ] = isset( $stored_variants[ $variant_key ] )
+					? $stored_variants[ $variant_key ] . $css
+					: $css;
+			}
+			$symbolElementProp['__rootStyle']['variant'] = $stored_variants;
+		}
+		$symbol = false !== $symbolElementProp || false !== $component_field_values
+			? Symbol::get_single_symbol(
+				$symbol_id,
+				true,
+				false,
+				$symbolElementProp,
+				array(),
+				true,
+				$component_field_values
+			)
+			: $master_symbol;
 
 		if ( ! $symbol ) {
 			return '';
@@ -1248,15 +1328,7 @@ class ExceptionalElements {
 		$options['inside_symbol'] = true;
 
 		$s           = HelperFunctions::rec_update_data_id_then_return_new_html( $symbol_data['data'], $symbol_data['styleBlocks'], $symbol_data['root'], $options );
-		$fonts_links = '';
-		if ( isset( $symbol_data['customFonts'] ) ) {
-			foreach ( $symbol_data['customFonts'] as $key => $f ) {
-				if ( isset( $f['fontUrl'] ) ) {
-					$fonts_links .= HelperFunctions::getFontsHTMLMarkup( $f );
-				}
-			}
-		}
-		return '<div ' . $attributes . '>' . $fonts_links . $s . '</div>';
+		return '<div ' . $attributes . '>' . $s . '</div>';
 	}
 
 	/**

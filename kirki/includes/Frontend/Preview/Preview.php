@@ -38,6 +38,16 @@ class Preview extends ExceptionalElements {
 	 */
 	protected $symbol_id = null;
 	protected $prefix    = false;
+
+	/**
+	 * Whether component binding metadata should be included in preview markup.
+	 *
+	 * This is enabled for builder symbol previews only. Public frontend markup
+	 * continues to render without the editor-only metadata.
+	 *
+	 * @var bool
+	 */
+	protected $include_component_field_metadata = false;
 	/**
 	 * $style_blocks for all style blocks merged array. like=> global, migrated, symbols. etc.
 	 */
@@ -274,6 +284,7 @@ class Preview extends ExceptionalElements {
 	 * @return string
 	 */
 	public function getHTML( $options = array() ) {
+		$this->include_component_field_metadata = ! empty( $options['include_component_field_metadata'] );
 		// TODO: need to fix this code
 		// if(!isset($options['user']) && get_current_user_id() > 0){
 		// $options['user'] = Users::get_user_by_id(get_current_user_id());
@@ -709,31 +720,6 @@ class Preview extends ExceptionalElements {
 			}
 		}
 		return $css_string;
-	}
-
-	/**
-	 * Get the custom fonts links
-	 *
-	 * @return string
-	 */
-	public function getCustomFontsLinks() {
-		$post_id = $this->symbol_id ? $this->symbol_id : HelperFunctions::get_post_id_if_possible_from_url();
-		$post    = get_post( $post_id );
-
-		if ( ! $post ) {
-			return '';
-		}
-
-		$s = '';
-		if ( 'kirki_symbol' === $post->post_type ) {
-			$symbol = Symbol::get_single_symbol( $post_id, true );
-			if ( isset( $symbol['symbolData'], $symbol['symbolData']['customFonts'] ) ) {
-				foreach ( $symbol['symbolData']['customFonts'] as $key => $f ) {
-					$s .= HelperFunctions::getFontsHTMLMarkup( $f );
-				}
-			}
-		}
-		return $s;
 	}
 
 	/**
@@ -2391,6 +2377,23 @@ class Preview extends ExceptionalElements {
 
 		if(!empty($this_element['properties']['textStyleId'])) {
 			$attr_str .= ' data-text_style="' . $this_element['properties']['textStyleId'] . '"';
+		}
+
+		if ( $this->include_component_field_metadata ) {
+			$properties = $this_element['properties'];
+
+			if ( ! empty( $properties['symbolElPropId'] ) ) {
+				$attr_str .= ' data-kirki-symbol-el-prop-id="' . esc_attr( $properties['symbolElPropId'] ) . '"';
+			}
+
+			if ( ! empty( $properties['componentFieldBindings'] ) ) {
+				$bindings = base64_encode( wp_json_encode( $properties['componentFieldBindings'] ) );
+				$attr_str .= ' data-kirki-component-field-bindings="' . esc_attr( $bindings ) . '"';
+			}
+
+			if ( 'symbol' === $this_element['name'] && ! empty( $properties['symbolId'] ) ) {
+				$attr_str .= ' data-kirki-component-symbol-id="' . esc_attr( $properties['symbolId'] ) . '"';
+			}
 		}
 
 		// $attr_str .= ' data-kirki_name="' . $this_element['name'] . '"';

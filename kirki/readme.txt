@@ -3,7 +3,7 @@ Contributors: themeum
 Tags: page builder, website builder, drag and drop, form builder, freeform canvas
 Requires at least: 5.9
 Tested up to: 7.1
-Stable tag: 6.2.5
+Stable tag: 6.3.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -190,6 +190,17 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 ---
 
 == Changelog ==
+
+= 6.3.0 =
+* New: Master Components, nested component support, and Custom Component Fields.
+* New: Freeform Positioning across breakpoints for absolutely and fixed-positioned elements.
+* Update: Copy/paste interactions now understand the element structure and hierarchy, enabling more accurate operations.
+* Update: Media selection experience improved for background image, cms, and other media fields.
+* Update: Optimizing canvas drag and drop element outline indicators.
+* Fix: Fixed the bulk update functionality to change the post_status of Content Manager items to Draft.
+* Fix: Keyboard shortcuts now work seamlessly with French and other international keyboard layouts.
+* Fix: Resolved collection rendering issue with view-only tokens.
+* Fix: Addressed all known security vulnerabilities.
 
 = 6.2.5 =
 * Update: Redesigned the Island toolbar with updated icons, layout, and functionality.

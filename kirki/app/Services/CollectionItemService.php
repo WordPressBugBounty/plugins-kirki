@@ -184,6 +184,30 @@ class CollectionItemService
     }
 
     /**
+     * Bulk draft items (supports the '*' wildcard for all children).
+     *
+     * @param array $post_ids
+     * @param int   $parent
+     * @return bool
+     */
+    public function bulk_draft(array $post_ids, int $parent)
+    {
+        if (in_array('*', $post_ids, true)) {
+            $post_ids = CollectionItem::where('post_parent', $parent)->get()->pluck('ID')->all();
+        }
+
+        if (empty($post_ids)) {
+            return false;
+        }
+
+        $updated = CollectionItem::where_in('ID', $post_ids)
+            ->where('post_parent', $parent)
+            ->update(['post_status' => PostStatus::DRAFT]);
+
+        return $updated !== false;
+    }
+
+    /**
      * Bulk duplicate items (supports the '*' wildcard for all children).
      *
      * @param array $post_ids
