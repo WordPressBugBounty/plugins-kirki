@@ -317,6 +317,16 @@ class Utils {
 	 * representation and displays as the literal text the visitor typed instead
 	 * of turning back into a live tag further down the render pipeline.
 	 *
+	 * Decoding runs to a fixed point (repeatedly, until a pass changes nothing)
+	 * rather than once. A single pass leaves multiply-encoded input such as
+	 * `&amp;#91;` as `&#91;` — no literal bracket yet, so the bracket escaping
+	 * below has nothing to act on — and that residual entity would only turn
+	 * into a real `[`/`]` later, once the composed page runs back through
+	 * html_entity_decode() elsewhere in the render pipeline, after this
+	 * escaping step has already run. Decoding to a fixed point first means
+	 * every layer is gone before brackets are doubled, so nothing is left for
+	 * a later decode pass to reveal.
+	 *
 	 * @param mixed $content         The resolved dynamic value.
 	 * @param array $dynamic_content The dynamic content definition.
 	 * @return mixed The escaped value, or the value untouched when it is not plain text.
@@ -332,12 +342,15 @@ class Utils {
 			return $content;
 		}
 
-		$content = htmlspecialchars(
-			html_entity_decode( $content, ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
-			ENT_QUOTES,
-			'UTF-8'
-		);
-		
+		$max_passes = 5;
+		do {
+			$before  = $content;
+			$content = html_entity_decode( $content, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+			--$max_passes;
+		} while ( $content !== $before && $max_passes > 0 );
+
+		$content = htmlspecialchars( $content, ENT_QUOTES, 'UTF-8' );
+
 		return str_replace( array( '[', ']' ), array( '[[', ']]' ), $content );
 	}
 

@@ -132,6 +132,9 @@ class CollectionItemController
             case ActionTypes::DRAFT:
                 $data = $this->service->bulk_draft($post_ids, $parent_id);
                 break;
+            case ActionTypes::PUBLISH:
+                $data = $this->service->bulk_publish($post_ids, $parent_id);
+                break;
             default:
                 break;
         }

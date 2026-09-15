@@ -4,46 +4,33 @@ namespace Kirki\App\Services;
 
 defined('ABSPATH') || exit;
 
+use Kirki\App\Broadcasting\BroadcastManager;
 use Kirki\App\Constants\CollaborationConnectionType;
 use Kirki\App\Constants\CollaborationParent;
 use Kirki\App\DTO\Collaboration\CreateCollaborationDTO;
-use Kirki\App\Models\Collaboration;
 use Kirki\App\Models\CollaborationConnected;
 use Kirki\Framework\Collections\Collection;
 
 use Kirki\Framework\Constants\DateTimeFormats;
-use function Kirki\Framework\user;
+use function Kirki\Framework\collection;
 
 class CollaborationService
 {
 	/**
-	 * Save collaboration data.
+	 * Broadcast a single collaboration action.
 	 * 
 	 * @param CreateCollaborationDTO $dto
 	 * @param bool $cleanup
 	 * 
-	 * @return Collaboration|false
+	 * @return bool
 	 */
 	public function save_action(CreateCollaborationDTO $dto, bool $cleanup = true)
 	{
-		$all_connected_rows = $this->get_all_connected_rows($cleanup);
-
-		if ($all_connected_rows->count() <= 1) {
-			return false;
-		}
-
-		return Collaboration::create([
-			'user_id' => user()->get_id(),
-			'session_id' => $dto->session_id,
-			'parent' => $dto->parent ?? '',
-			'parent_id' => $dto->parent_id,
-			'data' => wp_json_encode($dto->data),
-			'status' => $dto->status,
-		]);
+		return $this->save_actions(collection([$dto]), $cleanup);
 	}
 
 	/**
-	 * Save collaboration batch data.
+	 * Broadcast a batch of collaboration actions.
 	 * 
 	 * @param Collection<CreateCollaborationDTO> $collection
 	 * @param bool $cleanup
@@ -52,28 +39,11 @@ class CollaborationService
 	 */
 	public function save_actions(Collection $collection, bool $cleanup = true)
 	{
-		$all_connected_rows = $this->get_all_connected_rows($cleanup);
-
-		if ($all_connected_rows->count() <= 1) {
+		if ($collection->is_empty()) {
 			return false;
 		}
 
-		$data = $collection->map(function (CreateCollaborationDTO $dto) {
-			return [
-				'user_id' => user()->get_id(),
-				'session_id' => $dto->session_id,
-				'parent' => $dto->parent ?? '',
-				'parent_id' => $dto->parent_id,
-				'data' => wp_json_encode($dto->data),
-				'status' => $dto->status,
-			];
-		})->to_array();
-
-		if (empty($data)) {
-			return false;
-		}
-
-		return Collaboration::insert($data);
+		return (new BroadcastManager())->driver()->broadcast($collection, $cleanup);
 	}
 
 	/**
@@ -102,7 +72,6 @@ class CollaborationService
 	{
 		$twenty_seconds_ago = gmdate(DateTimeFormats::DB_DATETIME, time() - 20);
 
-		// Get all expired connections (session_id + post_id in one query)
 		/** @var Collection $connections */
 		$connections = CollaborationConnected::where('updated_at', '<=', $twenty_seconds_ago)->get();
 
@@ -112,24 +81,20 @@ class CollaborationService
 
 		// Step 1: Broadcast removal for each connection
 		$remove_connections = $connections->map(function (CollaborationConnected $connection) {
-			$data = [
-				'type' => CollaborationConnectionType::REMOVE_CONNECTION,
-				'payload' => [
-					'session_id' => $connection->session_id
-				],
-			];
-
 			return CreateCollaborationDTO::from_array([
 				'session_id' => $connection->session_id,
 				'parent' => CollaborationParent::POST,
 				'parent_id' => $connection->post_id,
-				'data' => $data,
-			])->to_array();
+				'data' => [
+					'type' => CollaborationConnectionType::REMOVE_CONNECTION,
+					'payload' => [
+						'session_id' => $connection->session_id
+					],
+				],
+			]);
 		});
 
-		if ($remove_connections->not_empty()) {
-			Collaboration::insert($remove_connections->to_array());
-		}
+		$this->save_actions($remove_connections, false);
 
 		// Step 2: Bulk delete all expired sessions in one query
 		$session_ids = $connections->pluck('session_id')->to_array();

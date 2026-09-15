@@ -95,7 +95,8 @@ class KirkiComponentLibrary {
 		'kirki-register-error' === $props['element']['name'] ||
 		'kirki-forgot-password-error' === $props['element']['name'] ||
 		'kirki-change-password-error' === $props['element']['name'] ||
-		'kirki-retrieve-username-error' === $props['element']['name']
+		'kirki-retrieve-username-error' === $props['element']['name']||
+		'kirki-comment-error' === $props['element']['name']
 		) {
 			$hide = true;
 		}

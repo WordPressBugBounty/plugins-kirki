@@ -41,17 +41,24 @@ class FileHandler
 				return false;
 			}
 
-			if (!static::is_remote_host_allowed($remote_file_url)) {
+			if (!HelperFunctions::is_safe_url($remote_file_url)) {
 				return false;
 			}
 
 			// Download the file from the remote server.
-			$response = Http::timeout(120)
+			$request = Http::timeout(120)
 				->with_options([
 					'redirection' => 0
 				])
-				->with_user_agent('WordPress')
-				->get($remote_file_url);
+				->with_user_agent('WordPress');
+
+			// Localhost is usually served over a self-signed certificate, which
+			// makes cURL refuse the request.
+			if (HelperFunctions::is_localhost(wp_parse_url($remote_file_url, PHP_URL_HOST))) {
+				$request->without_verifying();
+			}
+
+			$response = $request->get($remote_file_url);
 
 			if ($response->failed()) {
 				return false;
@@ -72,31 +79,6 @@ class FileHandler
 			return $local_file_path;
     }
 
-	/**
-	 * Same-site URLs are always allowed (e.g. dev config points the apps base
-	 * URL at content_url() on the site's own — sometimes private/loopback —
-	 * host). Any other host must resolve to a public address, so a remote zip
-	 * URL can't be used to probe the server's own internal network.
-	 *
-	 * @param string $url
-	 * @return bool
-	 */
-	private static function is_remote_host_allowed(string $url)
-	{
-		$host = wp_parse_url($url, PHP_URL_HOST);
-
-		if (!is_string($host) || $host === '') {
-			return false;
-		}
-
-		$site_host = wp_parse_url(home_url(), PHP_URL_HOST);
-
-		if (is_string($site_host) && strcasecmp($host, $site_host) === 0) {
-			return true;
-		}
-
-		return HelperFunctions::is_safe_url($url);
-	}
 
 	/**
 	 * @return array|false

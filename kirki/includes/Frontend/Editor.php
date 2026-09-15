@@ -12,6 +12,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use Kirki\Ajax\WpAdmin;
+use Kirki\App\Broadcasting\BroadcastManager;
+use Kirki\App\Broadcasting\Channel;
+use Kirki\App\Constants\CollaborationParent;
 use Kirki\HelperFunctions;
 use Kirki\Staging;
 
@@ -220,12 +223,13 @@ class Editor {
 			'version'                 => KIRKI_VERSION,
 			'default_menu_id'         => $this->get_defalut_menu_id(), // TODO: need to check this menu related code
 			'current_user_id'         => get_current_user_id(),
-			'current_user_avatar_url' => get_avatar_url( get_current_user_id() ),
+			'current_user_avatar' => get_avatar_url( get_current_user_id() ),
 			'current_user_name'       => get_the_author_meta( 'display_name', get_current_user_id() ),
 			'staging_version'         => $staging_version,
 			'staging_nonce'           => $staging_nonce,
 			'current_screen' => $is_current_screen_dashboard ? 'dashboard' : 'editor',
 			'assetsUrlBase'           => KIRKI_ASSETS_URL,
+			'broadcasting'            => $this->get_broadcasting_config( $post_id ),
 		);
 		wp_localize_script('kirki-editor', 'wp_kirki', $wp_kirki );
 		wp_enqueue_style('kirki-kirki', KIRKI_ASSETS_URL . 'css/kirki.min.css', null, $version );
@@ -246,6 +250,28 @@ class Editor {
 		// Make the handles accessible globally
 		global $kirki_editor_assets;
 		$kirki_editor_assets = $editor_assets;
+	}
+
+	/**
+	 * Settings the builder needs to receive collaboration events.
+	 *
+	 * @param int $post_id current post id.
+	 *
+	 * @return array
+	 */
+	private function get_broadcasting_config( $post_id ) {
+		$manager = new BroadcastManager();
+
+		return array_merge(
+			$manager->driver()->client_config(),
+			array(
+				'event'    => Channel::EVENT,
+				'channels' => array(
+					'post'   => Channel::name( CollaborationParent::POST, $post_id ),
+					'global' => Channel::name( CollaborationParent::GLOBAL, 0 ),
+				),
+			)
+		);
 	}
 
 	public function add_before_body_tag_end() {

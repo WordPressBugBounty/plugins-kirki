@@ -1304,17 +1304,16 @@ class ExceptionalElements {
 			}
 			$symbolElementProp['__rootStyle']['variant'] = $stored_variants;
 		}
-		$symbol = false !== $symbolElementProp || false !== $component_field_values
-			? Symbol::get_single_symbol(
-				$symbol_id,
-				true,
-				false,
-				$symbolElementProp,
-				array(),
-				true,
-				$component_field_values
-			)
-			: $master_symbol;
+		$symbol = Symbol::get_single_symbol(
+			$symbol_id,
+			true,
+			false,
+			$symbolElementProp,
+			array(),
+			true,
+			$component_field_values,
+			true
+		);
 
 		if ( ! $symbol ) {
 			return '';

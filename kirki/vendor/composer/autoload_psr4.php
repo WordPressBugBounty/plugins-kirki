@@ -7,6 +7,12 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'enshrined\\svgSanitize\\' => array($vendorDir . '/enshrined/svg-sanitize/src'),
+    'Symfony\\Polyfill\\Php82\\' => array($vendorDir . '/symfony/polyfill-php82'),
+    'Symfony\\Polyfill\\Php80\\' => array($vendorDir . '/symfony/polyfill-php80'),
+    'Pusher\\' => array($vendorDir . '/pusher/pusher-php-server/src'),
+    'Psr\\Log\\' => array($vendorDir . '/psr/log/Psr/Log'),
+    'Psr\\Http\\Message\\' => array($vendorDir . '/psr/http-factory/src', $vendorDir . '/psr/http-message/src'),
+    'Psr\\Http\\Client\\' => array($vendorDir . '/psr/http-client/src'),
     'Kirki\\Util\\' => array($baseDir . '/customizer/packages/utils/src', $baseDir . '/customizer/packages/utils/googlefonts/src', $baseDir . '/customizer/packages/utils/l10n/src', $baseDir . '/customizer/packages/utils/url-getter/src'),
     'Kirki\\Tabs\\' => array($baseDir . '/customizer/packages/controls/tabs/src'),
     'Kirki\\Settings\\' => array($baseDir . '/customizer/packages/settings/src'),
@@ -23,4 +29,7 @@ return array(
     'Kirki\\Compatibility\\' => array($baseDir . '/customizer/packages/compatibility/src'),
     'Kirki\\App\\' => array($baseDir . '/app'),
     'Kirki\\' => array($baseDir . '/customizer/packages/controls/base/src', $baseDir . '/customizer/packages/controls/checkbox/src', $baseDir . '/customizer/packages/controls/code/src', $baseDir . '/customizer/packages/controls/color/src', $baseDir . '/customizer/packages/controls/color-palette/src', $baseDir . '/customizer/packages/controls/cropped-image/src', $baseDir . '/customizer/packages/controls/custom/src', $baseDir . '/customizer/packages/controls/dashicons/src', $baseDir . '/customizer/packages/controls/date/src', $baseDir . '/customizer/packages/controls/dimension/src', $baseDir . '/customizer/packages/controls/editor/src', $baseDir . '/customizer/packages/controls/generic/src', $baseDir . '/customizer/packages/controls/image/src', $baseDir . '/customizer/packages/controls/multicheck/src', $baseDir . '/customizer/packages/controls/palette/src', $baseDir . '/customizer/packages/controls/radio/src', $baseDir . '/customizer/packages/controls/react-colorful/src', $baseDir . '/customizer/packages/controls/react-select/src', $baseDir . '/customizer/packages/controls/repeater/src', $baseDir . '/customizer/packages/controls/select/src', $baseDir . '/customizer/packages/controls/slider/src', $baseDir . '/customizer/packages/controls/sortable/src', $baseDir . '/customizer/packages/controls/upload/src', $baseDir . '/customizer/packages/controls/headline-divider/src', $baseDir . '/customizer/packages/controls/input-slider/src', $baseDir . '/customizer/packages/controls/margin-padding/src', $baseDir . '/customizer/packages/controls/responsive/src', $baseDir . '/customizer/packages/controls/tabs/src', $baseDir . '/customizer/packages/fields/base/src', $baseDir . '/customizer/packages/utils/googlefonts/src', $baseDir . '/customizer/packages/utils/l10n/src', $baseDir . '/customizer/packages/modules/panels/src', $baseDir . '/customizer/packages/modules/sections/src', $baseDir . '/customizer/packages/utils/url-getter/src', $baseDir . '/includes'),
+    'GuzzleHttp\\Psr7\\' => array($vendorDir . '/guzzlehttp/psr7/src'),
+    'GuzzleHttp\\Promise\\' => array($vendorDir . '/guzzlehttp/promises/src'),
+    'GuzzleHttp\\' => array($vendorDir . '/guzzlehttp/guzzle/src'),
 );

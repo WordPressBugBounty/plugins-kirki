@@ -909,11 +909,15 @@ class Preview extends ExceptionalElements {
 	 */
 	private static function buildTextStyleCss( $variable, $mode, $view_ports ) {
 		$css         = '';
-		$mode_data   = $variable['value'][ $mode ];
+		$mode_data   = isset( $variable['value'][ $mode ] ) ? $variable['value'][ $mode ] : ( isset( $variable['value']['default'] ) ? $variable['value']['default'] : array() );
+		if ( empty( $mode_data ) ) {
+			return $css;
+		}
 		$var_id      = $variable['id'];
 		$font_family = isset( $mode_data['font-family'] ) ? $mode_data['font-family'] : '';
 		$styles      = isset( $mode_data['styles'] ) ? $mode_data['styles'] : array();
 		$ts_selector = '[data-text_style="' . $var_id . '"]';
+		$device_rules = array();
 
 		foreach ( $styles as $device => $props ) {
 			$css_declarations = '';
@@ -998,12 +1002,26 @@ class Preview extends ExceptionalElements {
 
 			$rule = $ts_selector . '{' . $css_declarations . '}';
 
-			if ( $device === 'md' ) {
-				$css .= $rule;
-			} elseif ( isset( $view_ports[ $device ] ) ) {
-				$max_width = $view_ports[ $device ]['maxWidth'];
-				$css .= '@media only screen and (max-width:' . $max_width . 'px){' . $rule . '}';
+			if ( isset( $device_rules[ $device ] ) ) {
+				$device_rules[ $device ] .= $rule;
+			} else {
+				$device_rules[ $device ] = $rule;
 			}
+		}
+
+		foreach ( $view_ports as $device => $vp ) {
+			if ( empty( $device_rules[ $device ] ) ) {
+				continue;
+			}
+
+			if ( $device === 'md' ) {
+				$css .= $device_rules[ $device ];
+				continue;
+			}
+
+			$media_type = ( isset( $vp['type'] ) && $vp['type'] === 'max' ) ? 'max' : 'min';
+			$media_value = isset( $vp['value'] ) ? $vp['value'] : $vp[ $media_type . 'Width' ];
+			$css .= '@media only screen and (' . $media_type . '-width:' . $media_value . 'px){' . $device_rules[ $device ] . '}';
 		}
 
 		return $css;

@@ -949,6 +949,8 @@ class Media {
 		ob_start();
 		switch ( $mime ) {
 			case 'image/png':
+				imagealphablending( $image, false );
+				imagesavealpha( $image, true );
 				imagepng( $image, null, 9 );
 				break;
 			case 'image/jpeg':
@@ -1028,8 +1030,29 @@ class Media {
 	 * @return bool
 	 */
 	private function validate_svg( $svg_file ) {
-		// File sanity checks
-		if ( ! file_exists( $svg_file ) || ! is_readable( $svg_file ) ) {
+		if ( ! self::sanitize_svg_file( $svg_file ) ) {
+			if ( is_string( $svg_file ) && file_exists( $svg_file ) ) {
+				wp_delete_file( $svg_file );
+			}
+			return false;
+		}
+
+		return true; // SVG is sanitized and safe
+	}
+
+	/**
+	 * Sanitize an SVG file in place.
+	 *
+	 * The sanitized markup is written back over the file, so the bytes that
+	 * come to rest never contain script or other disallowed content. Returns
+	 * false when the file is not a valid SVG or cannot be made safe; the
+	 * caller decides whether to delete the file or reject the upload.
+	 *
+	 * @param string $svg_file Absolute path to the SVG file.
+	 * @return bool
+	 */
+	public static function sanitize_svg_file( $svg_file ) {
+		if ( ! is_string( $svg_file ) || ! file_exists( $svg_file ) || ! is_readable( $svg_file ) ) {
 			return false;
 		}
 
@@ -1038,16 +1061,15 @@ class Media {
 			return false;
 		}
 
-		// Quick check to avoid non-SVG files (existing behavior)
+		// Quick check to avoid non-SVG files (existing behavior).
 		if ( stripos( $svg, '<svg' ) === false ) {
-			wp_delete_file( $svg_file );
 			return false;
 		}
 
-		// Initialize sanitizer
+		// Initialize sanitizer.
 		$sanitizer = new Sanitizer();
 
-		// Security hardening
+		// Security hardening.
 		$sanitizer->removeRemoteReferences( true ); // blocks external <use>, <image>, etc.
 		$sanitizer->minify( true );
 
@@ -1058,33 +1080,74 @@ class Media {
 		$clean_svg = $sanitizer->sanitize( $svg );
 
 		if ( $clean_svg === false ) {
-			wp_delete_file( $svg_file );
-			return false; // Sanitization failed
+			return false; // Sanitization failed.
 		}
 
-		// Final validation using DOM
+		// Final validation using DOM.
 		$dom = new DOMDocument();
 		libxml_use_internal_errors( true );
 
 		if ( ! $dom->loadXML( $clean_svg, LIBXML_NONET ) ) {
-			wp_delete_file( $svg_file );
 			return false;
 		}
 
-		// Ensure root element is <svg>
+		// Ensure root element is <svg>.
 		if ( $dom->documentElement->nodeName !== 'svg' ) {
-			wp_delete_file( $svg_file );
 			return false;
 		}
 
 		// Write the sanitized markup back so the sanitized bytes, not the
 		// original upload, are what actually gets stored.
 		if ( file_put_contents( $svg_file, $clean_svg ) === false ) {
-			wp_delete_file( $svg_file );
 			return false;
 		}
 
-		return true; // SVG is sanitized and safe
+		return true;
+	}
+
+	/**
+	 * Sanitize SVG uploads on WordPress's own upload path.
+	 *
+	 * Kirki's own uploader sanitizes SVGs, but enabling SVG support also opens
+	 * WordPress's native routes — wp-admin/upload.php, async-upload.php and the
+	 * REST media endpoint. Registered on wp_handle_upload_prefilter and
+	 * wp_handle_sideload_prefilter, this runs the same sanitizer on the temp
+	 * file before WordPress stores it, so no SVG with script content is ever
+	 * written to the uploads directory regardless of which route wrote it. An
+	 * SVG that cannot be made safe aborts the upload.
+	 *
+	 * SVGs are identified by extension and sniffed content rather than the
+	 * client-supplied MIME type, which the uploader chooses.
+	 *
+	 * @param array $file Upload array: { name, type, tmp_name, error, size }.
+	 * @return array
+	 */
+	public function kirki_sanitize_svg_on_upload( $file ) {
+		if ( ! is_array( $file ) || empty( $file['tmp_name'] ) || ! is_readable( $file['tmp_name'] ) ) {
+			return $file;
+		}
+
+		// Skip files that already carry an upload error.
+		if ( ! empty( $file['error'] ) ) {
+			return $file;
+		}
+
+		$name       = isset( $file['name'] ) ? strtolower( (string) $file['name'] ) : '';
+		$ext_is_svg = ( '.svg' === substr( $name, -4 ) );
+
+		$contents       = file_get_contents( $file['tmp_name'] );
+		$looks_like_svg = is_string( $contents ) && stripos( $contents, '<svg' ) !== false;
+
+		// Not an SVG by any signal: leave it for WordPress to handle.
+		if ( ! $ext_is_svg && ! $looks_like_svg ) {
+			return $file;
+		}
+
+		if ( ! self::sanitize_svg_file( $file['tmp_name'] ) ) {
+			$file['error'] = __( 'This SVG file could not be sanitized and was rejected.', 'kirki' );
+		}
+
+		return $file;
 	}
 
 }

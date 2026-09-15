@@ -20,11 +20,12 @@ trait SearchablePost {
         if (!is_string($keyword) || $keyword === '') {
             return $query;
         }
+        $keyword = '%' . $keyword . '%';
 
         return $query->where(function (QueryBuilder $query) use ($keyword) {
-                $query->where_like('post_title', $keyword . '%')
-                    ->or_where_like('post_content', $keyword . '%')
-                    ->or_where_like('post_excerpt', $keyword . '%');
+                $query->where_like('post_title', $keyword)
+                    ->or_where_like('post_content', $keyword)
+                    ->or_where_like('post_excerpt', $keyword);
             });
     }
 

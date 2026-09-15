@@ -152,7 +152,7 @@ class Symbol {
 	 */
 	public static function fetch_symbol() {
 		$symbol_id              = HelperFunctions::sanitize_text( isset( $_POST['id'] ) ? $_POST['id'] : null );
-		$symbol_element_prop    = isset( $_POST['symbolElementProp'] ) ? $_POST['symbolElementProp'] : null;
+		// $symbol_element_prop    = isset( $_POST['symbolElementProp'] ) ? $_POST['symbolElementProp'] : null;
 		$component_field_values = isset( $_POST['componentFieldValues'] ) ? $_POST['componentFieldValues'] : null;
 		$collection_item        = isset( $_POST['collectionItem'] ) ? $_POST['collectionItem'] : null;
 		$variable_css           = isset( $_POST['variableCSS'] ) ? $_POST['variableCSS'] : true;
@@ -165,7 +165,7 @@ class Symbol {
 				$options[ $key ] = json_decode( json_encode( $value ) );
 			}
 		}
-		self::get_single_symbol( $symbol_id, false, true, $symbol_element_prop, $options, $variable_css, $component_field_values );
+		self::get_single_symbol( $symbol_id, false, true, false, $options, $variable_css, $component_field_values );
 	}
 
 
@@ -312,7 +312,6 @@ class Symbol {
 					$component_field_values
 				);
 			}
-
 			if ( $html === true ) {
 				$symbol['html'] = self::get_symbol_html_preview( $symbol, $options, $variable_css );
 			}
@@ -799,7 +798,18 @@ class Symbol {
 	 * @return string
 	 */
 	public static function remove_symbol_root_size_css( $css ) {
-		$property_pattern = implode( '|', self::get_symbol_root_size_properties() );
+		return self::remove_symbol_root_size_properties_css( $css, self::get_symbol_root_size_properties() );
+	}
+
+	/**
+	 * Remove a selected set of root sizing declarations from CSS.
+	 *
+	 * @param string $css CSS declarations.
+	 * @param array  $properties Properties to remove.
+	 * @return string
+	 */
+	private static function remove_symbol_root_size_properties_css( $css, $properties ) {
+		$property_pattern = implode( '|', $properties );
 		$css              = ';' . $css;
 		$css = preg_replace(
 			'/;\s*(?:' . $property_pattern . ')\s*:\s*[^;]*(?=;|$)/i',
@@ -947,6 +957,12 @@ class Symbol {
 				}
 				if ( isset( $data['root'] ) ) {
 					$symbol_data['root'] = $data['root'];
+				}
+				if ( array_key_exists( 'symbolEditCanvasSize', $data ) ) {
+					$symbol_data['symbolEditCanvasSize'] = $data['symbolEditCanvasSize'];
+				}
+				if ( array_key_exists( 'componentBody', $data ) ) {
+					$symbol_data['componentBody'] = $data['componentBody'];
 				}
 				if ( array_key_exists( 'fields', $data ) ) {
 					$symbol_data['fields'] = $data['fields'];

@@ -94,6 +94,67 @@ class WpAdmin {
 			$new_data['chatGPT_status'] = $data['chatGPT_status'];
 		}
 
+		// Pusher credentials: sanitize, validate, store.
+		if ( isset( $data['pusher_credentials'] ) ) {
+			$creds = $data['pusher_credentials'];
+
+			// Removal: empty credentials object clears stored values.
+			if ( empty( $creds['app_id'] ) && empty( $creds['app_key'] ) && empty( $creds['app_secret'] ) ) {
+				$new_data['pusher_credentials']  = array();
+				$new_data['broadcasting_driver'] = 'eventstream';
+			} else {
+				// Sanitize every value.
+				$sanitized = array(
+					'app_id'     => sanitize_text_field( $creds['app_id'] ?? '' ),
+					'app_key'    => sanitize_text_field( $creds['app_key'] ?? '' ),
+					'cluster'    => sanitize_text_field( $creds['cluster'] ?? 'mt1' ),
+					'app_secret' => sanitize_text_field( $creds['app_secret'] ?? '' ),
+				);
+
+				// All four fields are required.
+				if ( empty( $sanitized['app_id'] ) || empty( $sanitized['app_key'] ) || empty( $sanitized['cluster'] ) || empty( $sanitized['app_secret'] ) ) {
+					$new_data['pusher_credentials']  = array();
+					$new_data['broadcasting_driver'] = 'eventstream';
+				} else {
+					$existing_creds = $new_data['pusher_credentials'] ?? array();
+					$is_unchanged   = (
+						isset( $existing_creds['app_id'], $existing_creds['app_key'], $existing_creds['cluster'], $existing_creds['app_secret'] ) &&
+						$existing_creds['app_id'] === $sanitized['app_id'] &&
+						$existing_creds['app_key'] === $sanitized['app_key'] &&
+						$existing_creds['cluster'] === $sanitized['cluster'] &&
+						$existing_creds['app_secret'] === $sanitized['app_secret']
+					);
+
+					if ( $is_unchanged ) {
+						$new_data['pusher_credentials'] = $sanitized;
+					} else {
+						// Validate by connecting to Pusher.
+						$valid = self::validate_pusher_credentials( $sanitized );
+
+						if ( $valid ) {
+							$new_data['pusher_credentials']  = $sanitized;
+							$new_data['broadcasting_driver'] = 'pusher';
+						} else {
+							// Invalid credentials — don't store, stay on eventstream.
+							$new_data['pusher_credentials']  = array();
+							$new_data['broadcasting_driver'] = 'eventstream';
+						}
+					}
+				}
+			}
+		}
+
+		if ( isset( $data['broadcasting_driver'] ) ) {
+			$driver = sanitize_text_field( $data['broadcasting_driver'] );
+			if ( 'pusher' === $driver ) {
+				$pusher    = $new_data['pusher_credentials'] ?? array();
+				$has_creds = ! empty( $pusher['app_id'] ) && ! empty( $pusher['app_key'] ) && ! empty( $pusher['cluster'] ) && ! empty( $pusher['app_secret'] );
+				$new_data['broadcasting_driver'] = $has_creds ? 'pusher' : 'eventstream';
+			} else {
+				$new_data['broadcasting_driver'] = 'eventstream';
+			}
+		}
+
 		update_option( KIRKI_WP_ADMIN_COMMON_DATA, $new_data, false );
 
 		wp_send_json(
@@ -102,6 +163,35 @@ class WpAdmin {
 				'data'   => self::get_common_data( true ),
 			)
 		);
+	}
+
+	/**
+	 * Validate Pusher credentials by making a test API call.
+	 *
+	 * @param array $creds Sanitized credentials (app_id, app_key, cluster, app_secret).
+	 *
+	 * @return bool True when the credentials are valid.
+	 */
+	private static function validate_pusher_credentials( $creds ) {
+		try {
+			$pusher = new \Pusher\Pusher(
+				$creds['app_key'],
+				$creds['app_secret'],
+				$creds['app_id'],
+				array(
+					'cluster' => $creds['cluster'],
+					'useTLS'  => true,
+				)
+			);
+
+			// GET /channels is the lightest read-only API call.
+			$result = $pusher->getChannels();
+
+			// A successful response is an object; a failure throws or returns false.
+			return false !== $result;
+		} catch ( \Exception $e ) {
+			return false;
+		}
 	}
 
 	/**
@@ -116,6 +206,11 @@ class WpAdmin {
 		$data['php_zip_ext_enabled'] = class_exists( 'ZipArchive' );
 		if ( ! isset( $data['is_show_wp_theme_header_footer'] ) ) {
 			$data['is_show_wp_theme_header_footer'] = true;
+		}
+		if ( ! isset( $data['broadcasting_driver'] ) ) {
+			$pusher                      = $data['pusher_credentials'] ?? array();
+			$has_creds                   = ! empty( $pusher['app_id'] ) && ! empty( $pusher['app_key'] ) && ! empty( $pusher['cluster'] ) && ! empty( $pusher['app_secret'] );
+			$data['broadcasting_driver'] = $has_creds ? 'pusher' : 'eventstream';
 		}
 		if ( $inernal ) {
 			return $data;

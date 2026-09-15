@@ -11,6 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
+use Kirki\App\DTO\Collaboration\CreateCollaborationDTO;
+use Kirki\App\Services\CollaborationService;
 use Kirki\HelperFunctions;
 
 /**
@@ -84,37 +86,18 @@ class Collaboration {
 	 * @see Kirki\App\Services\CollaborationService::save_action()
 	 */
 	public static function save_action_to_db( $parent, $parent_id, $data, $status = 1, $session_id = '', $cleanup = true ) {
-		if ( count( self::get_all_connected_rows( $cleanup ) ) > 1 ) {
-			$user_id = get_current_user_id();
-
-			global $wpdb;
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-			$wpdb->insert(
-				$wpdb->prefix . KIRKI_COLLABORATION_TABLE,
+		return ( new CollaborationService() )->save_action(
+			CreateCollaborationDTO::from_array(
 				array(
-					'user_id'    => (int) $user_id,
 					'session_id' => $session_id,
 					'parent'     => $parent,
 					'parent_id'  => (int) $parent_id,
-					'data'       => wp_json_encode( $data ),
+					'data'       => $data,
 					'status'     => (int) $status,
-				),
-				array(
-					'%d',
-					'%s',
-					'%s',
-					'%d',
-					'%s',
-					'%d',
 				)
-			);
-			return array(
-				'id'         => $wpdb->insert_id,
-				'session_id' => $session_id,
-			);
-		}
-
-		return false;
+			),
+			$cleanup
+		);
 	}
 
 	/**
@@ -235,17 +218,7 @@ class Collaboration {
 	 * @see Kirki\App\Services\CollaborationService::get_all_connected_rows()
 	 */
 	public static function get_all_connected_rows( $cleanup = true ) {
-		if ( $cleanup ) {
-			self::clean_disconnected_rows();
-		}
-		global $wpdb;
-		$query2 = $wpdb->prepare(
-			'SELECT * FROM %1s',
-			$wpdb->prefix . KIRKI_COLLABORATION_TABLE . '_connected'
-		);
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
-		$res = $wpdb->get_results( $query2 );
-		return $res;
+		return ( new CollaborationService() )->get_all_connected_rows( $cleanup );
 	}
 
 	public static function get_connected_collaboration_users_list( $post_id ) {
@@ -266,6 +239,7 @@ class Collaboration {
 
 	private static function format_connection_data( $connection ) {
 		$connection->user_name = get_the_author_meta( 'display_name', $connection->user_id );
+		$connection->user_avatar = get_avatar_url( $connection->user_id );
 		return $connection;
 	}
 
@@ -278,44 +252,7 @@ class Collaboration {
 	 * @see Kirki\App\Services\CollaborationService::clean_disconnected_rows()
 	 */
 	public static function clean_disconnected_rows() {
-		global $wpdb;
-
-		$fifty_seconds_ago = gmdate( 'Y-m-d H:i:s', strtotime( '-20 seconds' ) );
-		$table_name        = $wpdb->prefix . KIRKI_COLLABORATION_TABLE . '_connected';
-
-		// Get all expired connections (session_id + post_id in one query)
-		$query = $wpdb->prepare(
-			"SELECT session_id, post_id FROM $table_name WHERE updated_at <= %s",
-			$fifty_seconds_ago
-		);
-
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
-		$connections = $wpdb->get_results( $query );
-
-		if ( empty( $connections ) ) {
-			return;
-		}
-
-		// Step 1: Broadcast removal for each connection
-		foreach ( $connections as $connection ) {
-			$data = array(
-				'type'    => 'COLLABORATION_REMOVE_CONNECTION',
-				'payload' => array( 'session_id' => $connection->session_id ),
-			);
-			self::save_action_to_db( 'post', $connection->post_id, $data, 1, $connection->session_id, false );
-		}
-
-		// Step 2: Bulk delete all expired sessions in one query
-		$session_ids  = wp_list_pluck( $connections, 'session_id' );
-		$placeholders = implode( ',', array_fill( 0, count( $session_ids ), '%s' ) );
-
-		$delete_sql = $wpdb->prepare(
-			"DELETE FROM $table_name WHERE session_id IN ($placeholders)",
-			$session_ids
-		);
-
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
-		$wpdb->query( $delete_sql );
+		return ( new CollaborationService() )->clean_disconnected_rows();
 	}
 
 	/**

@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Kirki 6.3.0\n"
+"Project-Id-Version: Kirki 6.3.1\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/kirki\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-02T11:48:08+00:00\n"
+"POT-Creation-Date: 2026-09-15T12:05:42+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: kirki\n"
@@ -1477,6 +1477,11 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 #: assets/js/kirki.min.js:2
+msgid "A component cannot be inserted inside itself."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+#: assets/js/kirki.min.js:2
 msgid "Something went wrong."
 msgstr ""
 
@@ -1665,11 +1670,6 @@ msgstr ""
 #: assets/js/kirki-editor.min.js:2
 #: assets/js/kirki.min.js:2
 msgid "Install and activate the WordPress AI plugin to use AI content."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-#: assets/js/kirki.min.js:2
-msgid "A component cannot be inserted inside itself."
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2930,6 +2930,10 @@ msgid "Default SVG"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+msgid "Set default link"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "Enter default rich text..."
 msgstr ""
 
@@ -2939,10 +2943,6 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Select default date"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Set default link"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -4799,6 +4799,54 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "API Key"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Collaboration"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Collaboration method"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Choose how Kirki broadcasts live updates between editors."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "EventStream"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Pusher"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Pusher credentials"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Active"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "App ID"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "App key"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Cluster"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "App secret"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Remove credentials"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2

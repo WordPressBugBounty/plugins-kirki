@@ -5,7 +5,6 @@ namespace Kirki\App\Resources\CollaborationComment;
 use DateTimeInterface;
 use Kirki\Framework\Constants\DateTimeFormats;
 use Kirki\Framework\Resource;
-use function Kirki\Framework\user;
 
 /**
  * Presentation for a collaboration comment (`CollaborationComment`).
@@ -48,8 +47,8 @@ class CollaborationCommentResource extends Resource
             'created_at' => $this->format_datetime($this->created_at),
             'updated_at' => $this->format_datetime($this->updated_at),
             'replies' => $this->format_replies(),
-            'user_avatar' => user($this->user_id)->get_avatar(),
-            'user_name' => user($this->user_id)->get_display_name(),
+            'user_avatar' => get_avatar_url($this->user_id),
+            'user_name' => get_the_author_meta('display_name', $this->user_id) ?: '',
         ];
     }
 

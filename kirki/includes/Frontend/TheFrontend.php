@@ -130,13 +130,19 @@ class TheFrontend {
 			return '<div id="' . 'kirki-builder"></div>';
 		}
 
+		// Content that arrives untouched must NOT be processed again. Core
+		// escapes a shortcode written `[[tag]]` by consuming the doubled
+		// brackets and emitting a literal `[tag]`; a second pass over that
+		// output sees an ordinary shortcode and executes it. Values escaped by
+		// esc_dynamic_text_value() — comment text supplied by anonymous
+		// visitors — rely on that doubling, so re-running the processor here
+		// would undo their escaping and execute visitor-supplied shortcodes.
 		if ( $this->kirki_type_html_data['content'] ) {
 			$content = $this->kirki_type_html_data['content'];
-		}
-		// Decode HTML entities. Example: [gravityform id=&quot;1&quot;] → [gravityform id="1"]
 
-		// Run shortcode manually
-		$content = do_shortcode( $content );
+			// Run shortcode manually.
+			$content = do_shortcode( $content );
+		}
 
 		if ( 'migration' === $this->call_from ) {
 			return '<div id="' . 'kirki-builder-migration">' . $content . '</div>';

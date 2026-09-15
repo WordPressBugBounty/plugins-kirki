@@ -38,6 +38,12 @@ class PluginInitEvents {
 		add_filter( 'rewrite_rules_array', array( $this, 'kirki_utility_pages_rewrite_rules' ) );
 
 		add_filter( 'wp_handle_upload_prefilter', array( new Media(), 'kirki_handle_upload_prefilter' ) );
+		// Sanitize SVGs on WordPress's own upload routes (wp-admin, async-upload,
+		// REST media), not only Kirki's uploader, so a stored SVG never carries
+		// script content whichever route wrote it. Runs early (priority 5) so the
+		// bytes are cleaned before any later prefilter reads them.
+		add_filter( 'wp_handle_upload_prefilter', array( new Media(), 'kirki_sanitize_svg_on_upload' ), 5 );
+		add_filter( 'wp_handle_sideload_prefilter', array( new Media(), 'kirki_sanitize_svg_on_upload' ), 5 );
 		add_filter( 'wp_generate_attachment_metadata', array( new Media(), 'kirki_convert_sizes_to_webp' ) );
 		add_filter( 'kirki_html_generator', array( $this, 'kirki_html_generator_wrap' ), 10, 2 );
 		add_filter( 'kirki_template_finder', array( new HelperFunctions(), 'find_template_for_this_context' ), 10, 2 );

@@ -9,6 +9,7 @@ use Kirki\App\Http\Controllers\Api\PageController;
 use Kirki\App\Http\Controllers\Api\FormController;
 use Kirki\App\Http\Controllers\Api\CollectionController;
 use Kirki\App\Http\Controllers\Api\CollaborationCommentController;
+use Kirki\App\Http\Controllers\Api\BroadcastingController;
 use Kirki\App\Http\Controllers\Api\CollaborationController;
 use Kirki\App\Http\Middlewares\EditAccessMiddleware;
 use Kirki\App\Http\Middlewares\FullAccessMiddleware;
@@ -64,6 +65,7 @@ Route::group([
     Route::put('/walkthrough-shown-state', [UserController::class, 'set_walkthrough_state']);
 
     Route::post('/collaboration-actions', [CollaborationController::class, 'save_actions']);
+    Route::post('/broadcasting/auth', [BroadcastingController::class, 'authenticate']);
 
     Route::get('/validate-wp-post-slug', [PostController::class, 'validate_slug']);
     Route::post('/global-styles', [GlobalDataController::class, 'save_global_styles']);

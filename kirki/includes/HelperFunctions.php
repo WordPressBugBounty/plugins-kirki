@@ -4893,6 +4893,33 @@ class HelperFunctions
 	 * @param string $url The URL.
 	 * @return bool
 	 */
+	/**
+	 * Whether a host points at the machine the site itself runs on.
+	 *
+	 * @param string $host
+	 * @return bool
+	 */
+	public static function is_localhost($host) {
+		if (!is_string($host) || '' === $host) {
+			return false;
+		}
+
+		$host = strtolower($host);
+
+		if (in_array($host, array('localhost', '127.0.0.1', '::1', '[::1]'), true)) {
+			return true;
+		}
+
+		// The site's own host, e.g. a Herd/Valet `.test` domain pointing at 127.0.0.1.
+		$site_host = wp_parse_url(home_url(), PHP_URL_HOST);
+
+		if (is_string($site_host) && '' !== $site_host && $host === strtolower($site_host)) {
+			return true;
+		}
+
+		return false;
+	}
+
 	public static function is_safe_url($url) {
 		if (!is_string($url) || filter_var($url, FILTER_VALIDATE_URL) === false) {
 			return false;
@@ -4907,6 +4934,10 @@ class HelperFunctions
 
 		if (!is_string($host) || '' === $host) {
 			return false;
+		}
+
+		if (self::is_localhost($host)) {
+			return true;
 		}
 
 		if (filter_var($host, FILTER_VALIDATE_IP)) {
