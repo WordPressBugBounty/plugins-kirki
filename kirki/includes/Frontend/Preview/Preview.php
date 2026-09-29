@@ -2009,6 +2009,9 @@ class Preview extends ExceptionalElements {
 	 */
 	private function print_content( $this_data, $options ) {
 		$html            = '';
+		if(!$this_data || !isset($this_data['properties'])){
+			return $html;
+		}
 		$properties      = $this_data['properties'];
 		$content         = isset( $properties['contents'] ) ? $properties['contents'] : '';
 		$dynamic_content = isset( $properties['dynamicContent'] ) ? $properties['dynamicContent'] : false;
@@ -2051,7 +2054,7 @@ class Preview extends ExceptionalElements {
 			}
 
 			if ( isset( $properties['type'] ) ) {
-				$html = "<a href='{$href}' {$target} {$rel}>{$html}</a>";
+				$html = "<a href='" . esc_url( $href ) . "' {$target} {$rel}>{$html}</a>";
 			}
 		}
 
@@ -2059,6 +2062,9 @@ class Preview extends ExceptionalElements {
 	}
 
 	public function get_href_value( $this_data, $options = array() ) {
+		if(!$this_data || !isset($this_data['properties']) || !isset($this_data['name'])){
+			return '';
+		}
 		$name            = $this_data['name'];
 		$properties      = $this_data['properties'];
 		$dynamic_content = isset( $properties['dynamicContent'] ) ? $properties['dynamicContent'] : false;
@@ -2084,8 +2090,9 @@ class Preview extends ExceptionalElements {
 					}
 					$content = apply_filters( 'kirki_dynamic_content', false, $contentInfo );
 					if ( $content ) {
-						// Plain-text dynamic values (comment fields) are visitor supplied,
-						// so they are never trusted as a URL here.
+						// Plain-text dynamic values (comment, user, author fields)
+						// are visitor/user supplied, so they are never trusted
+						// as a URL here.
 						if ( is_string( $content ) && in_array( $dynamic_content['type'] ?? '', Utils::get_plain_text_dynamic_content_types(), true ) ) {
 							return esc_url( html_entity_decode( $content, ENT_QUOTES | ENT_HTML5, 'UTF-8' ) );
 						}
@@ -2114,13 +2121,18 @@ class Preview extends ExceptionalElements {
 					} elseif ( $dynamic_content['type'] === 'menu' && isset( $options['menu'], $options['menu']->{$dynamic_content['value']} ) ) {
 						$href = $options['menu']->{$dynamic_content['value']};
 					} elseif ( $dynamic_content['type'] === 'user' && isset( $options['user'], $options['user'][ $dynamic_content['value'] ] ) ) {
-						$href = $options['user'][ $dynamic_content['value'] ];
+						$href = esc_url( $options['user'][ $dynamic_content['value'] ] );
 						// $href = $options['post']->{$dynamic_content['value']};
 					} else {
 						$itemType = $dynamic_content['type'];
 						if ( isset( $options[ $itemType ] ) ) {
 							$data  = $options[ $itemType ] ?? array();
 							$value = isset( $data[ $dynamic_content['value'] ] ) ? $data[ $dynamic_content['value'] ] : '';
+							// User/author/comment values must never break out of
+							// the href attribute.
+							if ( is_string( $value ) && in_array( $itemType, Utils::get_plain_text_dynamic_content_types(), true ) ) {
+								$value = esc_url( html_entity_decode( $value, ENT_QUOTES | ENT_HTML5, 'UTF-8' ) );
+							}
 							$href  = $value;
 						}
 					}
@@ -2317,6 +2329,13 @@ class Preview extends ExceptionalElements {
 			if ( $this_element['name'] === 'image' && isset( $attributes['width'] ) ) {
 				unset( $attributes['width'] );
 			}
+			// allow floating point values for number type input
+			if ( $this_element['name'] === 'input' &&
+				isset( $attributes['type'] ) && $attributes['type'] === 'number' &&
+				! isset( $attributes['step'] )
+			) {
+				$attributes['step'] = 'any';
+			}
 
 			$others_attributes = array_map(
 				function ( $value, $key ) use ( $element_name ) {
@@ -2463,7 +2482,7 @@ class Preview extends ExceptionalElements {
 			for ( $i = 0; $i < $style_ids_count; $i++ ) {
 				$style_id = $style_ids[ $i ];
 				$s_block  = isset( $this->style_blocks[ $style_id ] ) ? $this->style_blocks[ $style_id ] : null;
-				if ( ! isset( $s_block ) ) {
+				if ( ! isset( $s_block, $s_block['name'] ) ) {
 					continue;
 				}
 				$this->add_to_only_used_style_blocks( $s_block );

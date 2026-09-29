@@ -130,12 +130,12 @@ class ElementVisibilityConditions {
 			case 'date-is_equal':
 				$operand          = new DateTime( $operand );
 				$fieldValue       = new DateTime( $fieldValue );
-				$condition_result = $operand == $fieldValue;
+				$condition_result = $fieldValue->format( 'Y-m-d' ) === $operand->format( 'Y-m-d' );
 				break;
 			case 'date-not_equal':
 				$operand          = new DateTime( $operand );
 				$fieldValue       = new DateTime( $fieldValue );
-				$condition_result = $operand != $fieldValue;
+				$condition_result = $fieldValue->format( 'Y-m-d' ) !== $operand->format( 'Y-m-d' );
 				break;
 			case 'date-in_between':
 				if ( ! isset( $operand['from'] ) || ! isset( $operand['to'] ) ) {

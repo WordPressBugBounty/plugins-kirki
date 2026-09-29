@@ -20,16 +20,6 @@ use Kirki\HelperFunctions;
 class  Sender {
 
 	/**
-	 * How long a single stream is kept open, in seconds.
-	 */
-	const MAX_LIFETIME = 30;
-
-	/**
-	 * Seconds waited between two reads of the collaboration table.
-	 */
-	const POLL_INTERVAL = 1;
-
-	/**
 	 * Sender instance which will send event-strem as content type
 	 *
 	 * @return void
@@ -37,44 +27,16 @@ class  Sender {
 	public function __construct() {
 		header( 'Content-Type: text/event-stream' );
 		header( 'Cache-Control: no-cache' );
-		header( 'Connection: keep-alive' );
-		// Stop nginx and php from buffering the stream.
-		header( 'X-Accel-Buffering: no' );
-
-		ini_set( 'zlib.output_compression', 'off' ); // phpcs:ignore WordPress.PHP.IniSet.Risky
-		set_time_limit( 0 );
-		ignore_user_abort( false );
-
-		while ( ob_get_level() > 0 ) {
-			ob_end_flush();
-		}
 	}
 
 	/**
-	 * Start method will keep one connection open and push events as they come,
-	 * instead of answering once and letting the browser reconnect every second.
+	 * Start method will answer once and close.
+	 * The browser (EventSource) reconnects on its own for the next check.
 	 *
 	 * @return void
 	 */
 	public function start() {
-		// Reconnect quickly once this connection reaches its lifetime.
-		echo "retry: 1000\n\n";
-		$this->flush();
-
-		$started_at = time();
-
-		while ( ! connection_aborted() && time() - $started_at < self::MAX_LIFETIME ) {
-			$this->fetch_and_send_events();
-
-			// Keeps this session listed as connected while the stream is open.
-			Collaboration::get_connection( self::session_id() );
-
-			// Comment line, it only tells us when the client is gone.
-			echo ": ping\n\n";
-			$this->flush();
-
-			sleep( self::POLL_INTERVAL );
-		}
+		$this->fetch_and_send_events();
 	}
 
 	/**

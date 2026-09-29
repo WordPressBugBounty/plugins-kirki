@@ -3,7 +3,7 @@ Contributors: themeum
 Tags: page builder, website builder, drag and drop, form builder, freeform canvas
 Requires at least: 5.9
 Tested up to: 7.1
-Stable tag: 6.3.1
+Stable tag: 6.3.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -190,6 +190,24 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 ---
 
 == Changelog ==
+
+= 6.3.2 =
+* New: Added an accessibility contrast ratio option to the color picker.
+* New: Added multiselect interaction support.
+* Update: Remember the last selected font family and use it as the default font for newly dropped text elements on the canvas.
+* Update: Reset width and height to auto when changing position with ratio lock enabled.
+* Update: Implemented symbol root transition handling for wrapping and unwrapping elements.
+* Update: Adjusted range input thumb styles for improved consistency.
+* Update: Removed the Role Manager from the Settings panel and updated the API so that Role Manager functionality now depends on WordPress capabilities.
+* Update: Remove the Street View option from the OpenStreetMap map element and remove the deprecated styles from the map settings.
+* Fix: Fixed an issue where form data input values of 0 were not rendered.
+* Fix: Fixed nested symbol export/import issues.
+* Fix: Fixed preview scripts not running for cloned elements when infinite slider mode is enabled.
+* Fix: Resolved multiselect context menu open issue from canvas.
+* Fix: Addressed security issues related to comments and Lookback IP handling.
+* Fix: Resolved collaboration mouse tracker hide issue while dragging an element. 
+* Fix: Fixed flex-reverse drag-and-drop line issues on the canvas.
+* Fix: Addressed security issues related to shortcodes and sensitive metadata.
 
 = 6.3.1 =
 * New: Added dynamic content support to ComponentInstanceFields.

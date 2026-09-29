@@ -10,9 +10,7 @@ namespace Kirki\App\Supports;
 defined('ABSPATH') || exit;
 
 use Kirki\App\Constants\AccessLevels;
-use Kirki\Framework\Supports\Facades\Option;
 use function Kirki\Framework\collection;
-use function Kirki\Framework\with_prefix;
 
 class Role
 {
@@ -30,28 +28,20 @@ class Role
 
 	/**
 	 * Get all the access levels by roles
-	 * 
+	 *
+	 * Access levels are hard-coded per role via AccessLevels::ROLE_ACCESS_MAP.
+	 * Roles not present in the map get NO_ACCESS.
+	 *
 	 * @param array<string> $roles
-	 * 
+	 *
 	 * @return array<string, string>
 	 */
 	public static function get_access_levels_by_roles(array $roles)
 	{
 		$all_accesses = [];
-		$option_keys = collection($roles)->map(fn($role) => with_prefix($role))->to_array();
-
-		$options = Option::get($option_keys, [], false);
 
 		foreach ($roles as $role) {
-			$prefixed_role = with_prefix($role);
-
-			if (in_array($role, AccessLevels::USERS_DEFAULT_FULL_ACCESS, true)) {
-				$all_accesses[$role] = AccessLevels::FULL_ACCESS;
-			}
-
-			if (!empty($options[$prefixed_role])) {
-				$all_accesses[$role] = $options[$prefixed_role];
-			}
+			$all_accesses[$role] = AccessLevels::ROLE_ACCESS_MAP[$role] ?? AccessLevels::NO_ACCESS;
 		}
 
 		return $all_accesses;

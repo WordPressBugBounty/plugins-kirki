@@ -1,6 +1,8 @@
 <?php
 namespace KirkiComponentLib;
 
+use Kirki\Frontend\Preview\Utils;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -81,9 +83,13 @@ class ShowUserMetadata {
 			$value = $custom_meta[ $meta_key ];
 
 			if ( strpos( $meta_key, 'address' ) !== false || strlen( $value ) > 50 ) {
-				$meta_value = sanitize_textarea_field( $value );
+				$meta_value = str_replace(
+					array( '[', ']' ),
+					'',
+					sanitize_textarea_field( html_entity_decode( (string) $value, ENT_QUOTES | ENT_HTML5, 'UTF-8' ) )
+				);
 			} else {
-				$meta_value = sanitize_text_field( $value );
+				$meta_value = Utils::sanitize_plain_text_input( $value );
 			}
 				update_user_meta( $user_id, KIRKI_COMPONENT_LIBRARY_APP_PREFIX . '_' . $meta_key, $meta_value );
 		}

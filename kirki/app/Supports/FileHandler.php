@@ -45,22 +45,26 @@ class FileHandler
 				return false;
 			}
 
-			// Download the file from the remote server.
-			$request = Http::timeout(120)
-				->with_options([
-					'redirection' => 0
-				])
-				->with_user_agent('WordPress');
+			$args = array(
+				'timeout'    => 120,
+				'redirection' => 0,
+				'user-agent' => 'WordPress',
+			);
 
 			// Localhost is usually served over a self-signed certificate, which
 			// makes cURL refuse the request.
-			if (HelperFunctions::is_localhost(wp_parse_url($remote_file_url, PHP_URL_HOST))) {
-				$request->without_verifying();
+			if (HelperFunctions::is_localenv()) {
+				$args['sslverify'] = false;
 			}
 
-			$response = $request->get($remote_file_url);
+			$response = wp_safe_remote_get($remote_file_url, $args);
 
-			if ($response->failed()) {
+			if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
+				return false;
+			}
+
+			$body = wp_remote_retrieve_body($response);
+			if ($body === '' || $body === false) {
 				return false;
 			}
 
@@ -70,7 +74,7 @@ class FileHandler
 
 			static::verify_directory_traversal($local_file_path);
 			
-			$is_downloaded = FileHelper::put($local_file_path, $response->body());
+			$is_downloaded = FileHelper::put($local_file_path, $body);
 
 			if (!$is_downloaded) {
 				return false;

@@ -11,8 +11,9 @@ use Kirki\App\Http\Controllers\Api\CollectionController;
 use Kirki\App\Http\Controllers\Api\CollaborationCommentController;
 use Kirki\App\Http\Controllers\Api\BroadcastingController;
 use Kirki\App\Http\Controllers\Api\CollaborationController;
+use Kirki\App\Http\Middlewares\AdminAccessMiddleware;
+use Kirki\App\Http\Middlewares\BuilderAccessMiddleware;
 use Kirki\App\Http\Middlewares\EditAccessMiddleware;
-use Kirki\App\Http\Middlewares\FullAccessMiddleware;
 use Kirki\App\Http\Controllers\Api\CollectionItemController;
 use Kirki\App\Http\Controllers\Api\EditorController;
 use Kirki\App\Http\Controllers\Api\GlobalDataController;
@@ -73,7 +74,7 @@ Route::group([
 
 Route::group([
     'middleware' => [
-        FullAccessMiddleware::class
+        BuilderAccessMiddleware::class
     ]
 ], function () {
     Route::post('/pages', [PageController::class, 'save']);
@@ -85,12 +86,19 @@ Route::group([
     Route::post('/pages/{page_id}/duplicate', [PageController::class, 'duplicate'])->where('page_id', '[\d]+');
     Route::delete('/pages/{page_id}', [PageController::class, 'delete'])->where('page_id', '[\d]+');
     Route::put('/pages/{page_id}/settings', [PageSettingsController::class, 'update_page_settings'])->where('page_id', '[\d]+');
-    Route::put('/custom-code-data', [PageSettingsController::class, 'update_custom_codes']);
     Route::get('/wp-posts/{post_id}', [PageController::class, 'get_wp_single_post'])->where('post_id', '[\d]+');
 
     Route::post('/back-to-kirki-editor', [EditorController::class, 'back_to_kirki_editor']);
     Route::post('/back-to-wordpress-editor', [EditorController::class, 'back_to_wordpress_editor']);
 
+    Route::put('/custom-code-data', [PageSettingsController::class, 'update_custom_codes']);
+});
+
+Route::group([
+    'middleware' => [
+        AdminAccessMiddleware::class
+    ]
+], function () {
     // Global data routes
     Route::put('/global-custom-fonts', [GlobalDataController::class, 'update_custom_fonts']);
     Route::post('/download-google-font-offline', [GlobalDataController::class, 'download_google_font_offline']);

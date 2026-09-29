@@ -71,19 +71,42 @@ class ExportImport
 			}
 		);
 
-		// get symbols data
+		// Fetch top-level symbols used on the page
+		$fetched_symbol_ids = array();
 		foreach ($symbol_ids as $symbol_id) {
-			$symbol = Symbol::get_single_symbol($symbol_id['id'], true);
-
-			if ($symbol) {
-				$symbol['elementId'] = $symbol_id['elementId'];
-				array_push($symbols, $symbol);
+			$symbol_id_val = $symbol_id['id'];
+			if (!isset($fetched_symbol_ids[$symbol_id_val])) {
+				$fetched_symbol_ids[$symbol_id_val] = true;
+				$symbol = Symbol::get_single_symbol($symbol_id_val, true);
+				if ($symbol) {
+					$symbol['elementId'] = $symbol_id['elementId'];
+					$symbols[]           = $symbol;
+				}
 			}
 		}
-		// iterate through symbols and add assets
-		foreach ($symbols as $symbol) {
-			foreach ($symbol['symbolData']['data'] as $key => $block) {
-				self::add_asset($asset_urls, $key, $block);
+
+		// Collect assets from all symbols and fetch any nested symbols
+		for ($i = 0; $i < count($symbols); $i++) {
+			$current_symbol = $symbols[$i];
+
+			if (empty($current_symbol['symbolData']['data'])) {
+				continue;
+			}
+
+			foreach ($current_symbol['symbolData']['data'] as $block_key => $block) {
+				self::add_asset($asset_urls, $block_key, $block);
+
+				// If a block is a nested symbol that hasn't been fetched yet, fetch and append it
+				if ($block['name'] === 'symbol' && !empty($block['properties']['symbolId'])) {
+					$nested_symbol_id = $block['properties']['symbolId'];
+					if (!isset($fetched_symbol_ids[$nested_symbol_id])) {
+						$fetched_symbol_ids[$nested_symbol_id] = true;
+						$nested_symbol = Symbol::get_single_symbol($nested_symbol_id, true);
+						if ($nested_symbol) {
+							$symbols[] = $nested_symbol;
+						}
+					}
+				}
 			}
 		}
 
@@ -462,60 +485,177 @@ class ExportImport
 				}
 			}
 
-			// update symbols with new asset urls
+			// Update symbols with new asset URLs.
+			// Fix: property paths must include ['properties'] (e.g. ['properties']['attributes']['src']).
 			foreach ($symbols as $sym_key => $symbol) {
 				foreach ($symbol['symbolData']['data'] as $key => $block) {
-					if (isset($assets_urls_map[$block['id']])) {
+					if (!isset($assets_urls_map[$block['id']])) {
+						continue;
+					}
+					$mapped = $assets_urls_map[$block['id']];
+					if ($mapped['name'] === 'image') {
+						$symbols[$sym_key]['symbolData']['data'][$key]['properties']['attributes']['src'] = $mapped['url'];
+						$symbols[$sym_key]['symbolData']['data'][$key]['properties']['wp_attachment_id'] = $mapped['attachment_id'];
+					} elseif ($mapped['name'] === 'video') {
+						if ($mapped['thumbnail']) {
+							$symbols[$sym_key]['symbolData']['data'][$key]['properties']['thumbnail']['url'] = $mapped['url'];
+						} else {
+							$symbols[$sym_key]['symbolData']['data'][$key]['properties']['attributes']['src'] = $mapped['url'];
+						}
+					} elseif ($mapped['name'] === 'lottie') {
+						$symbols[$sym_key]['symbolData']['data'][$key]['properties']['lottie']['src'] = $mapped['url'];
+					} elseif ($mapped['name'] === 'lightbox') {
+						if ($mapped['thumbnail']) {
+							$symbols[$sym_key]['symbolData']['data'][$key]['properties']['lightbox']['thumbnail']['src'] = $mapped['url'];
+						} else {
+							$symbols[$sym_key]['symbolData']['data'][$key]['properties']['lightbox']['media'][$mapped['index']]['sources']['original'] = $mapped['url'];
+						}
+					}
+				}
+			}
+		}
 
-						if ($assets_urls_map[$block['id']]['name'] === 'image') {
-							$symbol['symbolData']['data'][$key]['attributes']['src'] = $assets_urls_map[$block['id']]['url'];
-							$symbol['symbolData']['data'][$key]['wp_attachment_id'] = $assets_urls_map[$block['id']]['attachment_id'];
-						} elseif ($assets_urls_map[$block['id']]['name'] === 'video') {
-							if ($assets_urls_map[$block['id']]['thumbnail']) {
-								$symbol['symbolData']['data'][$key]['thumbnail']['url'] = $assets_urls_map[$block['id']]['url'];
-							} else {
-								$symbol['symbolData']['data'][$key]['attributes']['src'] = $assets_urls_map[$block['id']]['url'];
+		// Tracker for saved symbols and post IDs: maps old_id => new_id
+		$post_id_tracker       = array();
+		$saved_symbols_tracker = array();
+		$asset_pivot           = isset($pivot_table) ? $pivot_table : array();
+
+		if (is_array($symbols) && count($symbols) > 0) {
+			// Phase 1: Save ALL symbols to the DB first and record old_id => new_id mapping in post_id_tracker.
+			foreach ($symbols as &$symbol) {
+				$old_symbol_id = $symbol['id'];
+
+				// Remap fields[].default_value asset URLs before saving to DB.
+				if (!empty($asset_pivot) && !empty($symbol['symbolData']['fields'])) {
+					foreach ($symbol['symbolData']['fields'] as $field_key => $field) {
+						if (!in_array($field['type'], array('image', 'video')) || empty($field['default_value'])) {
+							continue;
+						}
+						$default_value = $field['default_value'];
+						$old_url       = isset($default_value['url']) ? $default_value['url'] : '';
+						if ($old_url && isset($asset_pivot[$old_url])) {
+							$default_value['id']  = $asset_pivot[$old_url]['attachment_id'];
+							$default_value['url'] = $asset_pivot[$old_url]['url'];
+							if (isset($default_value['sources']['original'])) {
+								$default_value['sources']['original'] = $asset_pivot[$old_url]['url'];
 							}
-						} elseif ($assets_urls_map[$block['id']]['name'] === 'lottie') {
-							$symbol['symbolData']['data'][$key]['lottie']['src'] = $assets_urls_map[$block['id']]['url'];
-						} elseif ($assets_urls_map[$block['id']]['name'] === 'lightbox') {
-							if ($assets_urls_map[$block['id']]['thumbnail']) {
-								$symbol['symbolData']['data'][$key]['lightbox']['thumbnail']['src'] = $assets_urls_map[$block['id']]['url'];
-							} else {
-								$symbol['symbolData']['data'][$key]['lightbox']['media'][$assets_urls_map[$block['id']]['index']]['sources']['original'] = $assets_urls_map[$block['id']]['url'];
-							}
+							$symbol['symbolData']['fields'][$field_key]['default_value'] = $default_value;
 						}
 					}
 				}
 
-				$symbols[$sym_key]['symbolData']['data'] = $symbol['symbolData']['data'];
-			}
-		}
-
-		// Tracker for saved symbols
-		$saved_symbols_tracker = array();
-
-		if (is_array($symbols) && count($symbols) > 0) {
-			foreach ($symbols as $symbol) {
-				$symbol_id = $symbol['id'];
-
-				// Check if the symbol is already saved
-				if (!isset($saved_symbols_tracker[$symbol_id])) {
-					// Save the symbol to the database
+				if (!isset($post_id_tracker[$old_symbol_id])) {
 					$saved_symbol = Symbol::save_to_db($symbol);
-
-					// Add the saved symbol to the tracker
 					if ($saved_symbol) {
-						$saved_symbols_tracker[$symbol_id] = $saved_symbol;
+						$post_id_tracker[$old_symbol_id]       = $saved_symbol['id'];
+						$saved_symbols_tracker[$old_symbol_id] = $saved_symbol;
 					}
 				}
+			}
+			unset($symbol);
 
-				// Update all relevant elements with the symbol's ID
-				if (isset($blocks[$symbol['elementId']]) && $blocks[$symbol['elementId']]['name'] === 'symbol') {
-					$blocks[$symbol['elementId']]['properties']['symbolId'] = $saved_symbols_tracker[$symbol_id]['id'];
+			// Phase 2: Now that all symbols are inserted, update all references using post_id_tracker.
+			foreach ($symbols as &$symbol) {
+				$old_symbol_id = $symbol['id'];
+				if (!isset($post_id_tracker[$old_symbol_id])) {
+					continue;
+				}
+				$new_symbol_id = $post_id_tracker[$old_symbol_id];
+				$symbol['id']  = $new_symbol_id;
+
+				$db_symbol_data = get_post_meta($new_symbol_id, 'kirki', true);
+				$meta_updated   = false;
+
+				// Update nested symbol references and links in in-memory symbol data
+				if (isset($symbol['symbolData']['data']) && is_array($symbol['symbolData']['data'])) {
+					foreach ($symbol['symbolData']['data'] as $block_id => &$block_data) {
+						if (isset($block_data['properties']['symbolId']) && isset($post_id_tracker[$block_data['properties']['symbolId']])) {
+							$block_data['properties']['symbolId'] = $post_id_tracker[$block_data['properties']['symbolId']];
+						}
+						if (isset($block_data['properties']['attributes']['href']) && isset($post_id_tracker[$block_data['properties']['attributes']['href']])) {
+							$block_data['properties']['attributes']['href'] = $post_id_tracker[$block_data['properties']['attributes']['href']];
+						}
+					}
+					unset($block_data);
+				}
+
+				// Update nested symbol references and links in DB post meta
+				if (isset($db_symbol_data['data']) && is_array($db_symbol_data['data'])) {
+					foreach ($db_symbol_data['data'] as $block_id => &$block_data) {
+						if (isset($block_data['properties']['symbolId']) && isset($post_id_tracker[$block_data['properties']['symbolId']])) {
+							$block_data['properties']['symbolId'] = $post_id_tracker[$block_data['properties']['symbolId']];
+							$meta_updated                         = true;
+						}
+						if (isset($block_data['properties']['attributes']['href']) && isset($post_id_tracker[$block_data['properties']['attributes']['href']])) {
+							$block_data['properties']['attributes']['href'] = $post_id_tracker[$block_data['properties']['attributes']['href']];
+							$meta_updated                                   = true;
+						}
+					}
+					unset($block_data);
+				}
+
+				// Update symbolRootSize in symbol styleBlocks
+				if (isset($symbol['symbolData']['styleBlocks']) && is_array($symbol['symbolData']['styleBlocks'])) {
+					foreach ($symbol['symbolData']['styleBlocks'] as $style_block_id => &$style_block_data) {
+						if (isset($style_block_data['symbolRootSize']['symbolId']) && isset($post_id_tracker[$style_block_data['symbolRootSize']['symbolId']])) {
+							$style_block_data['symbolRootSize']['symbolId'] = $post_id_tracker[$style_block_data['symbolRootSize']['symbolId']];
+						}
+					}
+					unset($style_block_data);
+				}
+
+				if (isset($db_symbol_data['styleBlocks']) && is_array($db_symbol_data['styleBlocks'])) {
+					foreach ($db_symbol_data['styleBlocks'] as $style_block_id => &$style_block_data) {
+						if (isset($style_block_data['symbolRootSize']['symbolId']) && isset($post_id_tracker[$style_block_data['symbolRootSize']['symbolId']])) {
+							$style_block_data['symbolRootSize']['symbolId'] = $post_id_tracker[$style_block_data['symbolRootSize']['symbolId']];
+							$meta_updated                                   = true;
+						}
+					}
+					unset($style_block_data);
+				}
+
+				if ($meta_updated) {
+					update_post_meta($new_symbol_id, 'kirki', $db_symbol_data);
+				}
+
+				unset($symbol['parentSymbolId']);
+			}
+			unset($symbol);
+		}
+
+		// Phase 3: Update page blocks using post_id_tracker and asset_pivot
+		if (is_array($blocks)) {
+			foreach ($blocks as $block_id => &$block) {
+				if (isset($block['properties']['symbolId']) && isset($post_id_tracker[$block['properties']['symbolId']])) {
+					$block['properties']['symbolId'] = $post_id_tracker[$block['properties']['symbolId']];
+				}
+				if (isset($block['properties']['attributes']['href']) && isset($post_id_tracker[$block['properties']['attributes']['href']])) {
+					$block['properties']['attributes']['href'] = $post_id_tracker[$block['properties']['attributes']['href']];
+				}
+				if (isset($block['properties']['symbolElProps']) && is_array($block['properties']['symbolElProps'])) {
+					foreach ($block['properties']['symbolElProps'] as $element_prop_id => &$element_prop_data) {
+						if (isset($element_prop_data['attributes']['href']) && isset($post_id_tracker[$element_prop_data['attributes']['href']])) {
+							$element_prop_data['attributes']['href'] = $post_id_tracker[$element_prop_data['attributes']['href']];
+						}
+					}
+					unset($element_prop_data);
 				}
 			}
+			unset($block);
 		}
+
+		// Phase 4: Update page styles with new symbol IDs (symbolRootSize.symbolId)
+		if (isset($kirki_json_data['styles']) && is_array($kirki_json_data['styles'])) {
+			foreach ($kirki_json_data['styles'] as $style_id => &$style) {
+				if (isset($style['symbolRootSize']['symbolId']) && isset($post_id_tracker[$style['symbolRootSize']['symbolId']])) {
+					$style['symbolRootSize']['symbolId'] = $post_id_tracker[$style['symbolRootSize']['symbolId']];
+				}
+			}
+			unset($style);
+		}
+
+		// Remap componentFieldValues on page blocks (covers per-instance field overrides).
+		$blocks = self::remap_component_field_values_in_blocks($blocks, $asset_pivot);
 
 		$kirki_json_data['blocks'] = $blocks;
 		$kirki_json_data['symbols'] = $symbols;
@@ -708,5 +848,76 @@ class ExportImport
 		}
 
 		return false;
+	}
+
+	/**
+	 * Remap componentFieldValues on page blocks (per-instance field overrides).
+	 *
+	 * Handles the case where a user has set instance-level overrides on a symbol block.
+	 * Media values (image/video) have their URL and attachment id remapped via the
+	 * asset pivot built during import. Nested symbol instances are handled recursively.
+	 *
+	 * @param array $blocks      All page blocks keyed by block ID.
+	 * @param array $asset_pivot Map of old_url => ['url' => new_url, 'attachment_id' => new_id].
+	 * @return array Updated blocks.
+	 */
+	private static function remap_component_field_values_in_blocks($blocks, $asset_pivot)
+	{
+		if (empty($asset_pivot)) {
+			return $blocks;
+		}
+
+		foreach ($blocks as $block_key => $block) {
+			if (empty($block['properties']['componentFieldValues'])) {
+				continue;
+			}
+
+			$blocks[$block_key]['properties']['componentFieldValues'] = self::remap_component_field_value_entry(
+				$block['properties']['componentFieldValues'],
+				$asset_pivot
+			);
+		}
+
+		return $blocks;
+	}
+
+	/**
+	 * Remap media asset URLs inside a componentFieldValues map.
+	 *
+	 * Each field value is either a scalar (text, color) or a media object:
+	 *   { id, url, sources: { original, thumbnail }, ... }
+	 *
+	 * @param array $field_values The componentFieldValues map to process.
+	 * @param array $asset_pivot  Map of old_url => ['url' => new_url, 'attachment_id' => new_id].
+	 * @return array Updated field values.
+	 */
+	private static function remap_component_field_value_entry($field_values, $asset_pivot)
+	{
+		if (!is_array($field_values)) {
+			return $field_values;
+		}
+
+		foreach ($field_values as $field_key => $value) {
+			// Only process media values: arrays with a 'url' key.
+			if (!is_array($value) || !isset($value['url'])) {
+				continue;
+			}
+
+			$old_url = $value['url'];
+			if (!isset($asset_pivot[$old_url])) {
+				continue;
+			}
+
+			$value['url'] = $asset_pivot[$old_url]['url'];
+			if (array_key_exists('id', $value)) {
+				$value['id'] = $asset_pivot[$old_url]['attachment_id'];
+			}
+			if (isset($value['sources']['original'])) {
+				$value['sources']['original'] = $asset_pivot[$old_url]['url'];
+			}
+			$field_values[$field_key] = $value;
+		}
+
+		return $field_values;
 	}
 }

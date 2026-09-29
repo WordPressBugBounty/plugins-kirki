@@ -28,6 +28,7 @@ class ViewOrPreviewMiddleware implements Middleware
 
         $has_access = user()->has_access([
             AccessLevels::FULL_ACCESS,
+            AccessLevels::EDITOR_ACCESS,
             AccessLevels::CONTENT_ACCESS,
             AccessLevels::VIEW_ACCESS,
         ]);

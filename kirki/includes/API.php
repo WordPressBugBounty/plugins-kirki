@@ -76,7 +76,7 @@ class API
 			wp_send_json_error(esc_html__('Not authorized.', 'kirki'));
 		}
 
-		if (!HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
+		if (!HelperFunctions::user_is_admin()) {
 			wp_send_json_error(esc_html__('Not authorized', 'kirki'), 401);
 		}
 

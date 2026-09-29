@@ -10,6 +10,7 @@ namespace Kirki\Ajax;
 if (!defined('ABSPATH')) {
 	exit; // Exit if accessed directly.
 }
+use Kirki\App\Supports\Role;
 use Kirki\HelperFunctions;
 
 
@@ -76,33 +77,41 @@ class RBAC
 	 */
 	public static function get_editor_access_level()
 	{
-		$curr_user = wp_get_current_user();
-
 		if (HelperFunctions::is_api_call_from_editor_preview() && HelperFunctions::is_api_header_post_editor_preview_token_valid()) {
-			wp_send_json(KIRKI_ACCESS_LEVELS['FULL_ACCESS']);
+			wp_send_json(
+				array(
+					'access'  => KIRKI_ACCESS_LEVELS['FULL_ACCESS'],
+					'isAdmin' => false,
+				)
+			);
 		}
 
-		if ($curr_user) {
-			$roles = $curr_user->roles;
-			$access_arr = array();
+		$levels = array(
+			KIRKI_ACCESS_LEVELS['FULL_ACCESS'],
+			KIRKI_ACCESS_LEVELS['EDITOR_ACCESS'],
+			KIRKI_ACCESS_LEVELS['CONTENT_ACCESS'],
+			KIRKI_ACCESS_LEVELS['VIEW_ACCESS'],
+		);
 
-			foreach ($roles as $role) {
-				$access = get_option('kirki_' . $role);
-				$access_arr[] = $access;
-			}
+		$access = KIRKI_ACCESS_LEVELS['NO_ACCESS'];
 
-			if (in_array(KIRKI_ACCESS_LEVELS['FULL_ACCESS'], $access_arr, true)) {
-				wp_send_json(KIRKI_ACCESS_LEVELS['FULL_ACCESS']);
-			} elseif (in_array(KIRKI_ACCESS_LEVELS['CONTENT_ACCESS'], $access_arr, true)) {
-				wp_send_json(KIRKI_ACCESS_LEVELS['CONTENT_ACCESS']);
-			} elseif (in_array(KIRKI_ACCESS_LEVELS['VIEW_ACCESS'], $access_arr, true)) {
-				wp_send_json(KIRKI_ACCESS_LEVELS['VIEW_ACCESS']);
-			} else {
-				wp_send_json(KIRKI_ACCESS_LEVELS['NO_ACCESS']);
+		if ($curr_user = wp_get_current_user()) {
+			foreach ($levels as $level) {
+				if (HelperFunctions::has_access($level)) {
+					$access = $level;
+					break;
+				}
 			}
 		} else {
-			wp_send_json(KIRKI_ACCESS_LEVELS['VIEW_ACCESS']);
+			$access = KIRKI_ACCESS_LEVELS['VIEW_ACCESS'];
 		}
+
+		wp_send_json(
+			array(
+				'access'  => $access,
+				'isAdmin' => HelperFunctions::user_is_admin(),
+			)
+		);
 	}
 
 	/**
@@ -192,25 +201,12 @@ class RBAC
 	 */
 	public static function get_access_level($roles)
 	{
-		$access_levels = array();
+		$role_ids = array();
 
 		foreach ($roles as $role) {
-			$role_id = $role['id'];
-			$result = get_option('kirki_' . $role_id);
-
-			if ($result) {
-				$access_levels[$role_id] = $result;
-			} else {
-				if (in_array($role_id, KIRKI_USERS_DEFAULT_FULL_ACCESS, true)) {
-					add_option('kirki_' . $role_id, KIRKI_ACCESS_LEVELS['FULL_ACCESS']);
-					$access_levels[$role_id] = KIRKI_ACCESS_LEVELS['FULL_ACCESS'];
-				} else {
-					add_option('kirki_' . $role_id, KIRKI_ACCESS_LEVELS['NO_ACCESS']);
-					$access_levels[$role_id] = KIRKI_ACCESS_LEVELS['NO_ACCESS'];
-				}
-			}
+			$role_ids[] = $role['id'];
 		}
 
-		return $access_levels;
+		return Role::get_access_levels_by_roles($role_ids);
 	}
 }

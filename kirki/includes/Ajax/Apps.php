@@ -107,7 +107,7 @@ class Apps {
 
 		$user_id = get_current_user_id();
 		if ( ! empty( $user_id ) ) {
-			if ( ! HelperFunctions::has_access( KIRKI_ACCESS_LEVELS['FULL_ACCESS'] ) ) {
+			if ( ! HelperFunctions::user_is_admin() ) {
 				wp_send_json_error( 'Not authorized' );
 			}
 
@@ -217,7 +217,7 @@ class Apps {
 	public static function delete_app_using_slug() {
 		$user_id = get_current_user_id();
 		if ( ! empty( $user_id ) ) {
-			if ( ! HelperFunctions::has_access( KIRKI_ACCESS_LEVELS['FULL_ACCESS'] ) ) {
+			if ( ! HelperFunctions::user_is_admin() ) {
 				wp_send_json_error( 'Not authorized' );
 			}
 
@@ -272,7 +272,7 @@ class Apps {
 			wp_send_json_error( 'User authentication failed. Please log in.' );
 		}
 
-		if ( ! HelperFunctions::has_access( KIRKI_ACCESS_LEVELS['FULL_ACCESS'] ) ) {
+		if ( ! HelperFunctions::user_is_admin() ) {
 			wp_send_json_error( 'Not authorized' );
 		}
 

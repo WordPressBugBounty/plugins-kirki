@@ -17,6 +17,7 @@ use Kirki\Ajax\WpAdmin;
 use Kirki\FormValidator\FormValidator;
 use Kirki\HelperFunctions;
 use WP_Error;
+use Kirki\Frontend\Preview\Utils;
 
 
 /**
@@ -489,6 +490,8 @@ class FormController extends FrontendRESTController
 				// Handle array values by serializing them
 				if (is_array($value)) {
 					$value = serialize($value);
+				}else {
+					$value = Utils::sanitize_plain_text_input( $value );
 				}
 
 				array_push(

@@ -1177,6 +1177,8 @@ class ExceptionalElements {
 
 		$str = '';
 
+		$src = esc_url( $src );
+
 		if ( $svg_outer_html ) {
 			$str .= '<img ' . $attributes . ' src="' . $src . '"/>
                <span>' . $svg_outer_html . '</span>';
@@ -1326,8 +1328,8 @@ class ExceptionalElements {
 		$options['symbol_id'] = $symbol_id;
 		$options['inside_symbol'] = true;
 
-		$s           = HelperFunctions::rec_update_data_id_then_return_new_html( $symbol_data['data'], $symbol_data['styleBlocks'], $symbol_data['root'], $options );
-		return '<div ' . $attributes . '>' . $s . '</div>';
+		$s = HelperFunctions::rec_update_data_id_then_return_new_html( $symbol_data['data'], $symbol_data['styleBlocks'], $symbol_data['root'], $options );
+		return '<div data-kirki-component-wrapper="true" ' . $attributes . '>' . $s . '</div>';
 	}
 
 	/**

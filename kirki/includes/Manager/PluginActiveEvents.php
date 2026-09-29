@@ -34,7 +34,6 @@ class PluginActiveEvents {
 		HelperFunctions::set_kirki_version_in_db();
 		$this->deactivate_droip_plugin();
 
-		self::update_rbac();
 		self::create_custom_tables();
 
 		// migrator()->run();
@@ -67,29 +66,6 @@ class PluginActiveEvents {
 		self::create_collaboration_table();
 		self::create_cm_reference_table();
 		self::create_comments_table();
-	}
-
-	/**
-	 * Update role manager data
-	 *
-	 * @return void
-	 */
-	public static function update_rbac() {
-		global $wp_roles;
-		$role_names = $wp_roles ? $wp_roles->role_names : [];
-
-		if ( is_array( $role_names ) && count( $role_names ) ) {
-			foreach ( $role_names as $key => $value ) {
-				$exist = get_option('kirki_' . $key );
-				if ( ! $exist ) {
-					if ( in_array( $key, KIRKI_USERS_DEFAULT_FULL_ACCESS, true ) ) {
-						add_option('kirki_' . $key, KIRKI_ACCESS_LEVELS['FULL_ACCESS'] );
-					} else {
-						add_option('kirki_' . $key, KIRKI_ACCESS_LEVELS['NO_ACCESS'] );
-					}
-				}
-			}
-		}
 	}
 
 	/**

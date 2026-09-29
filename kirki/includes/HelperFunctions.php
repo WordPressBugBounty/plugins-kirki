@@ -23,6 +23,7 @@ use Kirki\Ajax\WpAdmin;
 use Kirki\API\ContentManager\ContentManagerHelper;
 use Kirki\App\Supports\Facades\Page as FacadesPage;
 use Kirki\App\Supports\FileHandler;
+use Kirki\App\Supports\Role;
 use Kirki\Frontend\Preview\DataHelper;
 use Kirki\Frontend\Preview\Preview;
 use WP_Post;
@@ -2770,8 +2771,6 @@ class HelperFunctions
 			return;
 		}
 
-		unset($args['s']);
-
 		$all_custom_fields = ContentManagerHelper::get_post_type_custom_field_keys($post_parent);
 		$meta_query_args = ['relation' => 'OR'];
 		$reference_where_sql = '';
@@ -2809,6 +2808,7 @@ class HelperFunctions
 		}
 
 		if (count($meta_query_args) > 1) {
+			unset($args['s']);
 			$args['meta_query'] = $meta_query_args;
 		}
 
@@ -3259,6 +3259,7 @@ class HelperFunctions
 		return self::has_access(
 			array(
 				KIRKI_ACCESS_LEVELS['FULL_ACCESS'],
+				KIRKI_ACCESS_LEVELS['EDITOR_ACCESS'],
 				KIRKI_ACCESS_LEVELS['CONTENT_ACCESS'],
 			)
 		);
@@ -3288,6 +3289,7 @@ class HelperFunctions
 		return self::has_access(
 			array(
 				KIRKI_ACCESS_LEVELS['FULL_ACCESS'],
+				KIRKI_ACCESS_LEVELS['EDITOR_ACCESS'],
 				KIRKI_ACCESS_LEVELS['CONTENT_ACCESS'],
 				KIRKI_ACCESS_LEVELS['VIEW_ACCESS'],
 			)
@@ -3389,28 +3391,44 @@ class HelperFunctions
 		}
 
 		$user = wp_get_current_user();
-		$roles = $user->roles;
-		$has_access = false;
 
-		if (is_array($access_level)) {
-			foreach ($roles as $role) {
-				$access = get_option('kirki_' . $role);
-				if (!empty($access) && in_array($access, $access_level, true)) {
-					$has_access = true;
-					break;
-				}
-			}
-		} elseif (is_string($access_level)) {
-			foreach ($roles as $role) {
-				$access = get_option('kirki_' . $role);
-				if (!empty($access) && $access === $access_level) {
-					$has_access = true;
-					break;
-				}
-			}
+		if (!$user || !$user->exists()) {
+			return false;
 		}
 
-		return $has_access;
+		// Resolve via the role map directly — the container-bound User object
+		// isn't guaranteed to be registered when this runs early (plugins_loaded).
+		$role_levels = array_values(Role::get_access_levels_by_roles((array) $user->roles));
+		$required = is_array($access_level) ? $access_level : array($access_level);
+
+		return (bool) array_intersect($required, $role_levels);
+	}
+
+	/**
+	 * Check if the current user is a WordPress administrator.
+	 * Admin-only features (settings, license, forms, import/export) use this.
+	 *
+	 * @return boolean
+	 */
+	public static function user_is_admin()
+	{
+		return self::user_is('administrator');
+	}
+
+	/**
+	 * Check if the user has builder power access (full or editor level) —
+	 * page CRUD, symbols, fonts, etc. Everything except site-admin features.
+	 *
+	 * @return boolean
+	 */
+	public static function user_has_builder_access()
+	{
+		return self::has_access(
+			array(
+				KIRKI_ACCESS_LEVELS['FULL_ACCESS'],
+				KIRKI_ACCESS_LEVELS['EDITOR_ACCESS'],
+			)
+		);
 	}
 
 	/**
@@ -3434,6 +3452,11 @@ class HelperFunctions
 	/**
 	 * HTTP get
 	 *
+	 * Uses wp_safe_remote_get() so that the request is validated against
+	 * allowed_redirect_hosts at the transport layer, providing a second
+	 * defence in depth beyond the is_safe_url() check callers should
+	 * perform before calling this wrapper.
+	 *
 	 * @param string $url api endpoint url.
 	 * @return string|bool response.
 	 * 
@@ -3443,7 +3466,7 @@ class HelperFunctions
 	public static function http_get($url, $args = array())
 	{
 		try {
-			$response = wp_remote_get($url, $args);
+			$response = wp_safe_remote_get($url, $args);
 
 			if ((!is_wp_error($response)) && (200 === wp_remote_retrieve_response_code($response))) {
 				$responseBody = $response['body'];
@@ -3460,6 +3483,11 @@ class HelperFunctions
 	/**
 	 * HTTP post
 	 *
+	 * Uses wp_safe_remote_post() so that the request is validated against
+	 * allowed_redirect_hosts at the transport layer, providing a second
+	 * defence in depth beyond the is_safe_url() check callers should
+	 * perform before calling this wrapper.
+	 *
 	 * @param string $url api endpoint url.
 	 * @param array  $options options.
 	 * @return array|WP_Error response.
@@ -3469,7 +3497,7 @@ class HelperFunctions
 	 */
 	public static function http_post($url, $options)
 	{
-		$res = wp_remote_post($url, $options);
+		$res = wp_safe_remote_post($url, $options);
 		return $res;
 	}
 
@@ -4885,6 +4913,46 @@ class HelperFunctions
 	}
 
 	/**
+	 * Whether a the environment is local or not.
+	 *
+	 * @return bool
+	 */
+	public static function is_localenv() {
+		// Depends on WP_ENVIRONMENT_TYPE const or env value
+		if ( 'local' !== wp_get_environment_type() ) {
+      return false;
+    }
+
+    return true;
+	}
+
+	/**
+	 * Whether an IP address falls into a private, loopback or reserved range.
+	 *
+	 * @param string $ip A validated IPv4 or IPv6 address.
+	 * @return bool True when the IP is private, loopback or reserved.
+	 */
+	private static function is_private_or_loopback_ip( $ip ) {
+		$reserved_prefixes = array(
+			'192.0.2.',    // TEST-NET-1, 192.0.2.0/24
+			'198.51.100.', // TEST-NET-2, 198.51.100.0/24
+			'203.0.113.',  // TEST-NET-3, 203.0.113.0/24
+		);
+
+		foreach ( $reserved_prefixes as $prefix ) {
+			if ( str_starts_with( $ip, $prefix ) ) {
+				return true;
+			}
+		}
+
+		return ! (bool) filter_var(
+			$ip,
+			FILTER_VALIDATE_IP,
+			FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+		);
+	}
+
+	/**
 	 * Whether the target url is a safe, externally reachable http(s) URL.
 	 *
 	 * Rejects loopback, private, link-local and cloud-metadata addresses so a
@@ -4893,33 +4961,6 @@ class HelperFunctions
 	 * @param string $url The URL.
 	 * @return bool
 	 */
-	/**
-	 * Whether a host points at the machine the site itself runs on.
-	 *
-	 * @param string $host
-	 * @return bool
-	 */
-	public static function is_localhost($host) {
-		if (!is_string($host) || '' === $host) {
-			return false;
-		}
-
-		$host = strtolower($host);
-
-		if (in_array($host, array('localhost', '127.0.0.1', '::1', '[::1]'), true)) {
-			return true;
-		}
-
-		// The site's own host, e.g. a Herd/Valet `.test` domain pointing at 127.0.0.1.
-		$site_host = wp_parse_url(home_url(), PHP_URL_HOST);
-
-		if (is_string($site_host) && '' !== $site_host && $host === strtolower($site_host)) {
-			return true;
-		}
-
-		return false;
-	}
-
 	public static function is_safe_url($url) {
 		if (!is_string($url) || filter_var($url, FILTER_VALIDATE_URL) === false) {
 			return false;
@@ -4936,20 +4977,19 @@ class HelperFunctions
 			return false;
 		}
 
-		if (self::is_localhost($host)) {
+		if (self::is_localenv()) {
 			return true;
 		}
 
 		if (filter_var($host, FILTER_VALIDATE_IP)) {
-			return (bool) filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+			$ip = $host;
+		} else {
+			$ip = gethostbyname($host);
+			if ($ip === $host) {
+				return false;
+			}
 		}
 
-		$ip = gethostbyname($host);
-
-		if (!filter_var($ip, FILTER_VALIDATE_IP) || $ip === $host) {
-			return false;
-		}
-
-		return (bool) filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+		return ! self::is_private_or_loopback_ip($ip);
 	}
 }

@@ -139,13 +139,11 @@ if (!defined('KIRKI_ACCESS_LEVELS')) {
 		array(
 			'NO_ACCESS' => 'no',
 			'FULL_ACCESS' => 'full',
+			'EDITOR_ACCESS' => 'editor',
 			'CONTENT_ACCESS' => 'content',
 			'VIEW_ACCESS' => 'view',
 		)
 	);
-}
-if (!defined('KIRKI_USERS_DEFAULT_FULL_ACCESS')) {
-	define('KIRKI_USERS_DEFAULT_FULL_ACCESS', array('administrator', 'editor'));
 }
 
 /* Custom DB table names */

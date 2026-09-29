@@ -35,11 +35,41 @@ class User extends \Kirki\Framework\Wordpress\User
         return collection($access_level)->some(fn($level) => in_array($level, $available_levels_by_roles, true));
     }
 
+    /**
+     * Check if the user can edit content (full, editor or content access)
+     *
+     * @return bool
+     */
     public function has_edit_access()
     {
         return $this->has_access([
             AccessLevels::FULL_ACCESS,
+            AccessLevels::EDITOR_ACCESS,
             AccessLevels::CONTENT_ACCESS,
         ]);
+    }
+
+    /**
+     * Check if the user has builder power access — page CRUD, symbols, fonts, etc.
+     * Everything except site-admin features (settings, license, import/export).
+     *
+     * @return bool
+     */
+    public function has_builder_access()
+    {
+        return $this->has_access([
+            AccessLevels::FULL_ACCESS,
+            AccessLevels::EDITOR_ACCESS,
+        ]);
+    }
+
+    /**
+     * Check if the user is a WordPress administrator
+     *
+     * @return bool
+     */
+    public function is_administrator()
+    {
+        return $this->is_logged_in() && $this->has_role('administrator');
     }
 }

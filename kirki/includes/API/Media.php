@@ -142,6 +142,7 @@ class Media extends WP_REST_Controller
 		return HelperFunctions::has_access(
 			array(
 				KIRKI_ACCESS_LEVELS['FULL_ACCESS'],
+				KIRKI_ACCESS_LEVELS['EDITOR_ACCESS'],
 				KIRKI_ACCESS_LEVELS['CONTENT_ACCESS'],
 			)
 		);
@@ -156,7 +157,7 @@ class Media extends WP_REST_Controller
 	 */
 	public function post_items_permissions_check($request)
 	{
-		return HelperFunctions::has_access(array(KIRKI_ACCESS_LEVELS['FULL_ACCESS']));
+		return HelperFunctions::user_has_builder_access();
 	}
 
 	/**

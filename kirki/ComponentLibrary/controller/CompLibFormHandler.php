@@ -7,6 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use Kirki\Ajax\Page;
+use Kirki\Frontend\Preview\Utils;
 use Kirki\HelperFunctions;
 use WP_REST_Server;
 use WP_REST_Controller;
@@ -368,6 +369,10 @@ class CompLibFormHandler extends WP_REST_Controller {
 		};
 
 		$form_data     = $request->get_body_params();
+		foreach($form_data as $key => $value) {
+			$form_data[$key] = Utils::sanitize_plain_text_input($value);
+		}
+		
 		$transiet_name = $this->validate_nonce( 'kirki-register' );
 
 		$username = isset( $form_data['username'] ) ? sanitize_text_field( $form_data['username'] ) : '';
@@ -389,7 +394,8 @@ class CompLibFormHandler extends WP_REST_Controller {
 		foreach ( $form_data as $name => $value ) {
 			if ( $name !== 'username' && $name !== 'email' && $name !== 'password' && $name !== 'confirm_password' ) {
 				if ( $this->validate_meta_field( $name ) ) {
-					$user_data['meta_input'][ KIRKI_COMPONENT_LIBRARY_APP_PREFIX . '_' . $name ] = sanitize_text_field( $value );
+					// Strips tags and shortcode brackets
+					$user_data['meta_input'][ KIRKI_COMPONENT_LIBRARY_APP_PREFIX . '_' . $name ] = Utils::sanitize_plain_text_input( $value );
 				}
 			}
 		}

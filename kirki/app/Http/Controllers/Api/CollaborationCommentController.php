@@ -2,7 +2,6 @@
 
 namespace Kirki\App\Http\Controllers\Api;
 
-use Kirki\App\Constants\AccessLevels;
 use Kirki\App\DTO\CollaborationComment\CreateCollaborationCommentDTO;
 use Kirki\App\DTO\CollaborationComment\DeleteCollaborationCommentDTO;
 use Kirki\App\DTO\CollaborationComment\ResolveCollaborationCommentDTO;
@@ -156,7 +155,7 @@ class CollaborationCommentController
      */
     public function resolve_all(Request $request)
     {
-        if (!user()->has_access(AccessLevels::FULL_ACCESS)) {
+        if (!user()->has_builder_access()) {
             throw new AuthorizationException(message('auth.unauthorized_request'));
         }
 

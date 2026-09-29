@@ -117,6 +117,30 @@ class TemplateRedirection
 	}
 
 	/**
+	 * Whether the current request is allowed to have the given post rendered
+	 * through the full canvas preview path.
+	 *
+	 *
+	 * @param \WP_Post $post The resolved preview post.
+	 * @return bool True when the post may be rendered for this request.
+	 */
+	private function can_view_preview_post($post)
+	{
+		$post_id = $post->ID;
+		$is_password_protected = !empty($post->post_password);
+
+		if ('publish' === $post->post_status && !$is_password_protected) {
+			return true;
+		}
+
+		if ('publish' === $post->post_status && $is_password_protected) {
+			return !post_password_required($post) || current_user_can('read_post', $post_id);
+		}
+
+		return current_user_can('read_post', $post_id);
+	}
+
+	/**
 	 * Load kirki page template
 	 * it will include the template file insted of original template file
 	 * $loadForIframe = true if load for iframe
@@ -132,6 +156,11 @@ class TemplateRedirection
 		if ($post_id) {
 			// this is for template and utility preview
 			$post = get_post($post_id);
+
+			if ($post && !$this->can_view_preview_post($post)) {
+				$post = null;
+			}
+
 			if ($post && $post->post_type === 'kirki_template') {
 				// this is for template preview.(kirki_template post type)
 				$template_content = apply_filters('the_content', get_the_content(null, false, $post_id));

@@ -123,8 +123,6 @@ class PluginLoadedEvents {
 		$version_in_db = HelperFunctions::get_kirki_version_from_db();
 		$needs_rewrite_flush = empty( $version_in_db ) || version_compare( $version_in_db, KIRKI_VERSION, '<' );
 
-		PluginActiveEvents::update_rbac();
-
 		$db_altered_in3 = '2.1.0';
 		if ( empty( $version_in_db ) || version_compare( $version_in_db, $db_altered_in3, '<' ) ) {
 			$this->alter_collection_names();

@@ -29,7 +29,7 @@ class FormFieldRulesBuilder
             // Preserves the legacy (imprecise) datetime-local pattern rather than
             // the stricter `datetime` rule, to avoid rejecting values the old
             // validator accepted.
-        FormFieldTypes::DATETIME_LOCAL => 'regex:/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/',
+        FormFieldTypes::DATETIME_LOCAL => 'regex:/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?$/',
         FormFieldTypes::TEL => 'regex:/^[0-9]{10}+$/',
     ];
 
@@ -70,7 +70,7 @@ class FormFieldRulesBuilder
     public static function data_for_validation(array $form_data, array $fields)
     {
         foreach ($fields as $name => $field) {
-            if (isset($form_data[$name]) && empty($form_data[$name])) {
+            if (isset($form_data[$name]) && $form_data[$name] === '') {
                 $form_data[$name] = null;
             }
         }

@@ -285,7 +285,7 @@ class Ajax
 			/**
 			 * SYMBOL DELETE API
 			 */
-			if ($endpoint === 'delete-user-saved-symbol-data' && HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
+			if ($endpoint === 'delete-user-saved-symbol-data' && HelperFunctions::user_has_builder_access()) {
 				Symbol::delete();
 			}
 
@@ -296,7 +296,7 @@ class Ajax
 				Media::upload_media();
 			}
 
-			if ($endpoint === 'upload-font' && HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
+			if ($endpoint === 'upload-font' && HelperFunctions::user_has_builder_access()) {
 				Media::upload_fonts();
 			}
 
@@ -366,13 +366,13 @@ class Ajax
 			/**
 			 * Export page data
 			 */
-			if ('import-page-data' === $endpoint && HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
+			if ('import-page-data' === $endpoint && HelperFunctions::user_has_builder_access()) {
 				ExportImport::import();
 			}
 			/**
 			 * Export template data
 			 */
-			if ('import-template-data' === $endpoint && HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
+			if ('import-template-data' === $endpoint && HelperFunctions::user_has_builder_access()) {
 				ExportImport::template_import();
 
 			}
@@ -383,13 +383,13 @@ class Ajax
 			if ('export-page-data' === $endpoint) {
 				ExportImport::export();
 			}
-			if ($endpoint === 'import-template-using-url' && HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
+			if ($endpoint === 'import-template-using-url' && HelperFunctions::user_has_builder_access()) {
 				TemplateExportImport::import_using_url();
 			}
-			if ($endpoint === 'process-imported-template' && HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
+			if ($endpoint === 'process-imported-template' && HelperFunctions::user_has_builder_access()) {
 				TemplateExportImport::processImport();
 			}
-			if ($endpoint === 'check-existing-template-data' && HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
+			if ($endpoint === 'check-existing-template-data' && HelperFunctions::user_has_builder_access()) {
 				TemplateExportImport::check_existing_template_data();
 			}
 
@@ -471,7 +471,7 @@ class Ajax
 		 * @see GET /wp-posts/{post_id}
 		 */
 		// if ($endpoint === 'get-wp-single-post') {
-		// 	if (!HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
+		// 	if (!HelperFunctions::user_has_builder_access()) {
 		// 		wp_send_json_error('Not authorized', 401);
 		// 	}
 		// 	$post_id = (int) HelperFunctions::sanitize_text(isset($_GET['post_id']) ? $_GET['post_id'] : null);
@@ -604,7 +604,7 @@ class Ajax
 		 * GET Single prebuilt html API
 		 */
 		if ($endpoint === 'get-pre-built-html') {
-			if (!HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
+			if (!HelperFunctions::user_has_builder_access()) {
 				wp_send_json_error('Not authorized', 401);
 			}
 			Symbol::get_pre_built_html_using_url();
@@ -725,7 +725,7 @@ class Ajax
 		 * AUTHOR LIST
 		 */
 		if ('get-authors' === $endpoint) {
-			if (!HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
+			if (!HelperFunctions::user_has_builder_access()) {
 				wp_send_json_error('Not authorized', 401);
 			}
 			WordpressData::get_author_list();
@@ -736,7 +736,7 @@ class Ajax
 		 */
 
 		if ('get-roles' === $endpoint) {
-			if (!HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
+			if (!HelperFunctions::user_has_builder_access()) {
 				wp_send_json_error('Not authorized', 401);
 			}
 			WordpressData::get_role_list();
@@ -748,7 +748,7 @@ class Ajax
 		if (
 			'get-users' === $endpoint
 		) {
-			if (!HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
+			if (!HelperFunctions::user_has_builder_access()) {
 				wp_send_json_error('Not authorized', 401);
 			}
 			WordpressData::get_user_list();
@@ -769,7 +769,7 @@ class Ajax
 		}
 
 		if ($endpoint === 'get-common-data') {
-			if (!HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
+			if (!HelperFunctions::user_has_builder_access()) {
 				wp_send_json_error('Not authorized', 401);
 			}
 			WpAdmin::get_common_data();
@@ -821,6 +821,7 @@ class Ajax
 		return is_user_logged_in() && HelperFunctions::has_access(
 			array(
 				KIRKI_ACCESS_LEVELS['FULL_ACCESS'],
+				KIRKI_ACCESS_LEVELS['EDITOR_ACCESS'],
 				KIRKI_ACCESS_LEVELS['CONTENT_ACCESS'],
 				KIRKI_ACCESS_LEVELS['VIEW_ACCESS'],
 			)
@@ -836,7 +837,7 @@ class Ajax
 	{
 		HelperFunctions::verify_nonce('wp_rest');
 
-		if (!HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
+		if (!HelperFunctions::user_is_admin()) {
 			wp_send_json_error('Not authorized');
 		}
 
@@ -851,9 +852,9 @@ class Ajax
 			WpAdmin::update_license_validity();
 		}
 
-		if ($endpoint === 'update-access-level') {
-			RBAC::update_access_level();
-		}
+		// if ($endpoint === 'update-access-level') {
+		// 	RBAC::update_access_level();
+		// }
 
 		if ($endpoint === 'delete-form-row') {
 			Form::delete_form_row();
@@ -918,7 +919,7 @@ class Ajax
 			wp_send_json_error('Not authorized', 401);
 		}
 
-		if (!HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
+		if (!HelperFunctions::user_is_admin()) {
 			wp_send_json_error('Not authorized', 401);
 		}
 
@@ -947,7 +948,7 @@ class Ajax
 		}
 
 		if ($endpoint === 'download-form-data') {
-			if (!HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
+			if (!HelperFunctions::user_has_builder_access()) {
 				wp_send_json_error('Not authorized');
 			}
 
@@ -957,7 +958,7 @@ class Ajax
 		// From manipulation from admin dashboard.
 
 		if ($endpoint === 'get-editor-read-only-access-data') {
-			if (!HelperFunctions::has_access(KIRKI_ACCESS_LEVELS['FULL_ACCESS'])) {
+			if (!HelperFunctions::user_has_builder_access()) {
 				wp_send_json_error('Not authorized', 401);
 			}
 			Page::get_editor_read_only_access_data();

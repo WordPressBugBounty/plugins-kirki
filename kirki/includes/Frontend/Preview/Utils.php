@@ -299,14 +299,19 @@ class Utils {
 	 *
 	 * Comment fields are the important case: their content is supplied by
 	 * (potentially unauthenticated) visitors, so anything stored there is
-	 * untrusted. Rich types — `post` (post_content), `reference`, `gallery`,
+	 * untrusted. `user` (and `author`, which resolves to a user's
+	 * display_name) are included for the same reason: display_name is writable
+	 * by any authenticated user on their own account through the core profile
+	 * form, and the KirkiComponentLibrary_* user-meta fields are writable by
+	 * unauthenticated visitors through the plugin's own registration route.
+	 * Rich types — `post` (post_content), `reference`, `gallery`,
 	 * `menu` — are deliberately excluded, because those are authored by users
 	 * with editing capabilities and are expected to emit HTML.
 	 *
 	 * @return string[]
 	 */
 	public static function get_plain_text_dynamic_content_types() {
-		return apply_filters( 'kirki_plain_text_dynamic_content_types', array( 'comment' ) );
+		return apply_filters( 'kirki_plain_text_dynamic_content_types', array( 'comment', 'user', 'author' ) );
 	}
 
 	/**
@@ -327,6 +332,12 @@ class Utils {
 	 * every layer is gone before brackets are doubled, so nothing is left for
 	 * a later decode pass to reveal.
 	 *
+	 * After decoding, every square bracket is removed outright — single or
+	 * paired. A shortcode cannot exist without `[` and `]`, so deleting them
+	 * all guarantees visitor comment text can never be parsed as a shortcode by
+	 * any later do_shortcode() pass, regardless of how many decode passes a
+	 * later pipeline stage (decode_entities_without_creating_markup) performs.
+	 *
 	 * @param mixed $content         The resolved dynamic value.
 	 * @param array $dynamic_content The dynamic content definition.
 	 * @return mixed The escaped value, or the value untouched when it is not plain text.
@@ -342,16 +353,55 @@ class Utils {
 			return $content;
 		}
 
-		$max_passes = 5;
+		// Decode all HTML-entity layers so every hidden bracket pair is revealed.
 		do {
 			$before  = $content;
 			$content = html_entity_decode( $content, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
-			--$max_passes;
-		} while ( $content !== $before && $max_passes > 0 );
+		} while ( $content !== $before );
 
-		$content = htmlspecialchars( $content, ENT_QUOTES, 'UTF-8' );
+		// Remove every square bracket outright — single or paired.
+		$content = str_replace( array( '[', ']' ), '', $content );
 
-		return str_replace( array( '[', ']' ), array( '[[', ']]' ), $content );
+		return htmlspecialchars( $content, ENT_QUOTES, 'UTF-8' );
+	}
+
+	/**
+	 * Sanitize a plain-text value at input time (storage), before it is saved.
+	 *
+	 * Counterpart to esc_dynamic_text_value(), which escapes at render time.
+	 * Same decode-to-fixed-point loop as the comment handler and the output
+	 * escaper (reused pattern, not a new control), so entity-encoded markup
+	 * (`&lt;script&gt;`, `&#91;kirki...&#93;`) cannot smuggle tags or
+	 * shortcodes past storage.
+	 *
+	 * Deliberately does NOT encode quotes or angle brackets here: quotes in
+	 * names (O'Brien) are legitimate data, and each output context neutralises
+	 * them correctly (esc_url() for src/href, esc_attr()/htmlspecialchars for
+	 * text). Stripping quotes at input would corrupt real names while adding
+	 * no safety the output layer does not already provide. Brackets, however,
+	 * have no legitimate use in a name/meta plain-text field and are the
+	 * shortcode trigger, so they are removed outright.
+	 *
+	 * @param mixed $value Raw user-supplied value.
+	 * @return mixed Sanitized string, or the value untouched when not a string.
+	 */
+	public static function sanitize_plain_text_input( $value ) {
+		if ( ! is_string( $value ) || '' === $value ) {
+			return $value;
+		}
+
+		// Decode all HTML-entity layers so hidden tags/brackets are revealed.
+		do {
+			$before = $value;
+			$value  = html_entity_decode( $value, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+		} while ( $value !== $before );
+
+		$value = sanitize_text_field( $value );
+
+		// A shortcode cannot exist without `[` and `]`.
+		$value = str_replace( array( '[', ']' ), '', $value );
+
+		return $value;
 	}
 
 	public static function getDynamicRichTextValue( $dynamic_content, $options ) {
@@ -401,6 +451,13 @@ class Utils {
 				$dynamic_options
 			);
 
+			// `post_author` resolves to a user's display_name, which is writable
+			// by that user (Subscriber+) — treat it as untrusted plain text even
+			// though its container type is `post`.
+			if ( 'post_author' === $dynamic_content['value'] ) {
+				$content = self::esc_dynamic_text_value( $content, array( 'type' => 'author' ) );
+			}
+
 			$html .= $content;
 		} elseif ( $dynamic_content['type'] === 'term' && isset( $options['term'] ) && isset( $options['term'][ $dynamic_content['value'] ] ) ) {
 			$html .= $options['term'][ $dynamic_content['value'] ];
@@ -416,6 +473,10 @@ class Utils {
 			if ( 'registered_date' === $dynamic_content['value'] && isset( $dynamic_content['format'] ) ) {
 				$content = HelperFunctions::format_date( $content, $dynamic_content['format'] );
 			}
+
+			// User-controlled values (display_name, registration meta) must
+			// never become live markup or shortcode source.
+			$content = self::esc_dynamic_text_value( $content, $dynamic_content );
 
 			$html .= $content;
 
@@ -433,6 +494,9 @@ class Utils {
 			if ( isset( $options[ $item_type ] ) ) {
 				$data  = $options[ $item_type ] ?? array();
 				$value = isset( $data[ $dynamic_content['value'] ] ) ? $data[ $dynamic_content['value'] ] : '';
+				// Covers `author` / `comment` collection items that bypass the
+				// `kirki_dynamic_content` filter. No-op for trusted types.
+				$value  = self::esc_dynamic_text_value( $value, $dynamic_content );
 				$html .= $value;
 			}
 		}

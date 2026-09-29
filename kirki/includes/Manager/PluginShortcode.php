@@ -171,6 +171,11 @@ class PluginShortcode {
 				case 'post_meta': {
 					if ( is_singular() ) {
 						global $post;
+
+						if ( '' === $data || is_protected_meta( $data, 'post' ) ) {
+							return '';
+						}
+
 						$meta_value = get_post_meta( $post->ID, $data, true );
 					if ( is_string( $meta_value ) ) {
 						// Post meta is arbitrary, low-privilege-authored data: always escape.

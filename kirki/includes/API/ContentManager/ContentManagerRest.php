@@ -248,6 +248,7 @@ class ContentManagerRest extends WP_REST_Controller
 		return HelperFunctions::has_access(
 			array(
 				KIRKI_ACCESS_LEVELS['FULL_ACCESS'],
+				KIRKI_ACCESS_LEVELS['EDITOR_ACCESS'],
 				KIRKI_ACCESS_LEVELS['CONTENT_ACCESS'],
 				KIRKI_ACCESS_LEVELS['VIEW_ACCESS'],
 			)
@@ -266,6 +267,7 @@ class ContentManagerRest extends WP_REST_Controller
 		return HelperFunctions::has_access(
 			array(
 				KIRKI_ACCESS_LEVELS['FULL_ACCESS'],
+				KIRKI_ACCESS_LEVELS['EDITOR_ACCESS'],
 				KIRKI_ACCESS_LEVELS['CONTENT_ACCESS'],
 			)
 		);

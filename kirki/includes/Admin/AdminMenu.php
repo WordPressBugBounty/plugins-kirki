@@ -25,20 +25,23 @@ class AdminMenu {
 	 */
 	private $dashboard_toolbar_submenus = array(
 		'kirki-home'  => array(
-			'title'   => 'Canvas',
-			'toolbar' => 'home',
+			'title'      => 'Canvas',
+			'toolbar'    => 'home',
+			'admin_only' => false,
 		),
 		'kirki-submissions'  => array(
-			'title'   => 'Submissions',
-			'toolbar' => 'submissions',
+			'title'      => 'Submissions',
+			'toolbar'    => 'submissions',
+			'admin_only' => true,
 		),
-		'kirki-role-manager' => array(
-			'title'   => 'Role Managers',
-			'toolbar' => 'role-manager',
-		),
+		// 'kirki-role-manager' => array(
+		// 	'title'   => 'Role Managers',
+		// 	'toolbar' => 'role-manager',
+		// ),
 		'kirki-settings'     => array(
-			'title'   => 'Settings',
-			'toolbar' => 'settings',
+			'title'      => 'Settings',
+			'toolbar'    => 'settings',
+			'admin_only' => true,
 		)
 	);
 
@@ -49,7 +52,7 @@ class AdminMenu {
 	 * @return void
 	 */
 	public function __construct() {
-		if ( HelperFunctions::user_is( 'administrator' ) ) {
+		if ( HelperFunctions::user_has_builder_access() ) {
 			\add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 			\add_action( 'admin_enqueue_scripts', array( $this, 'load_script_text_domain' ), 100 );
 			\add_action( 'admin_init', array( $this, 'maybe_redirect_kirki_menu' ) );
@@ -117,11 +120,19 @@ class AdminMenu {
 		\add_menu_page( 'Kirki - Home', $menu_title, 'edit_posts', 'kirki', array( $this, 'plugin_page' ), 'dashicons-kirki', 25 );
 
 		foreach ( $this->get_submenu_items() as $slug => $submenu ) {
+			// Submenus are admin-only unless explicitly marked otherwise —
+			// preserves old behavior for items added via the kirki_submenu_items filter.
+			$admin_only = isset( $submenu['admin_only'] ) ? $submenu['admin_only'] : true;
+
+			if ( $admin_only && ! HelperFunctions::user_is_admin() ) {
+				continue;
+			}
+
 			\add_submenu_page(
 				'kirki',
 				$submenu['title'],
 				$submenu['title'],
-				'manage_options',
+				$admin_only ? 'manage_options' : 'edit_posts',
 				$slug,
 				array( $this, 'plugin_page' )
 			);
@@ -154,7 +165,14 @@ class AdminMenu {
 		}
 
 		if ( isset( $this->get_submenu_items()[ $page_slug ] ) ) {
-			$toolbar       = $this->get_submenu_items()[ $page_slug ]['toolbar'];
+			$submenu = $this->get_submenu_items()[ $page_slug ];
+
+			// Let WP's capability check handle admin-only pages for non-admins.
+			if ( ( isset( $submenu['admin_only'] ) ? $submenu['admin_only'] : true ) && ! HelperFunctions::user_is_admin() ) {
+				return;
+			}
+
+			$toolbar       = $submenu['toolbar'];
 			$dashboard_url = \home_url( '/?action=kirki&screen=dashboard&toolbar=' . rawurlencode( $toolbar ) );
 			\wp_safe_redirect( $dashboard_url );
 			exit;

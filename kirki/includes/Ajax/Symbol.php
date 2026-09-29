@@ -49,6 +49,7 @@ class Symbol {
 					'symbolData' => $symbol_data,
 					'type'       => isset( $symbol_data['category'] ) ? $symbol_data['category'] : 'other',
 				);
+				$data['symbolDependencies'] = self::get_nested_symbol_ids( $symbol_data['data'] );
 				$data['rootSizeVariant'] = self::get_symbol_root_size_variant( $symbol_data );
 				$data['html'] = self::get_symbol_html_preview( $data );
 				wp_send_json( $data );
@@ -91,6 +92,7 @@ class Symbol {
 					'symbolData' => $symbol_data,
 					'type'       => isset( $symbol_data['category'] ) ? $symbol_data['category'] : 'other',
 				);
+				$data['symbolDependencies'] = self::get_nested_symbol_ids( $symbol_data['data'] );
 				$data['rootSizeVariant'] = self::get_symbol_root_size_variant( $symbol_data );
 				$data['html'] = self::get_symbol_html_preview( $data );
 
@@ -201,6 +203,9 @@ class Symbol {
 			$symbol_data          = get_post_meta( $post->ID, 'kirki', true );
 			$symbol['id']         = $post->ID;
 			$symbol['symbolData'] = $symbol_data;
+			$symbol['symbolDependencies'] = self::get_nested_symbol_ids(
+				isset( $symbol_data['data'] ) ? $symbol_data['data'] : array()
+			);
 			$symbol['type']       = isset( $symbol_data['category'] ) ? $symbol_data['category'] : 'other';
 			$symbol['setAs']      = isset( $symbol_data['setAs'] ) ? $symbol_data['setAs'] : '';
 			$symbol['rootSizeVariant'] = self::get_symbol_root_size_variant( $symbol_data );
@@ -929,6 +934,78 @@ class Symbol {
 	}
 
 	/**
+	 * Get component IDs referenced by a component element tree.
+	 *
+	 * @param array $data Component element data.
+	 * @return array
+	 */
+	private static function get_nested_symbol_ids( $data ) {
+		$symbol_ids = array();
+		foreach ( is_array( $data ) ? $data : array() as $element ) {
+			if (
+				isset( $element['name'], $element['properties']['symbolId'] ) &&
+				'symbol' === $element['name']
+			) {
+				$symbol_ids[] = (string) $element['properties']['symbolId'];
+			}
+		}
+
+		return array_values( array_unique( $symbol_ids ) );
+	}
+
+	/**
+	 * Check a proposed component update for direct or indirect dependency cycles.
+	 *
+	 * @param string $symbol_id      Component currently being inspected.
+	 * @param string $root_symbol_id Component being updated.
+	 * @param array  $candidate_data Proposed element data for the updated component.
+	 * @param array  $visiting       Components in the current traversal path.
+	 * @param array  $visited        Components already proven acyclic.
+	 * @return bool
+	 */
+	private static function has_symbol_dependency_cycle(
+		$symbol_id,
+		$root_symbol_id,
+		$candidate_data,
+		&$visiting = array(),
+		&$visited = array()
+	) {
+		$symbol_id = (string) $symbol_id;
+		if ( isset( $visiting[ $symbol_id ] ) ) {
+			return true;
+		}
+		if ( isset( $visited[ $symbol_id ] ) ) {
+			return false;
+		}
+
+		$visiting[ $symbol_id ] = true;
+		if ( (string) $symbol_id === (string) $root_symbol_id ) {
+			$symbol_data = $candidate_data;
+		} else {
+			$stored_symbol = get_post_meta( absint( $symbol_id ), 'kirki', true );
+			$symbol_data   = isset( $stored_symbol['data'] ) ? $stored_symbol['data'] : array();
+		}
+
+		foreach ( self::get_nested_symbol_ids( $symbol_data ) as $nested_symbol_id ) {
+			if (
+				self::has_symbol_dependency_cycle(
+					$nested_symbol_id,
+					$root_symbol_id,
+					$candidate_data,
+					$visiting,
+					$visited
+				)
+			) {
+				return true;
+			}
+		}
+
+		unset( $visiting[ $symbol_id ] );
+		$visited[ $symbol_id ] = true;
+		return false;
+	}
+
+	/**
 	 * Update Symbol data
 	 *
 	 * @return void wp_send_json.
@@ -966,6 +1043,22 @@ class Symbol {
 				}
 				if ( array_key_exists( 'fields', $data ) ) {
 					$symbol_data['fields'] = $data['fields'];
+				}
+				$visiting = array();
+				$visited  = array();
+				if (
+					self::has_symbol_dependency_cycle(
+						$symbol_id,
+						$symbol_id,
+						isset( $symbol_data['data'] ) ? $symbol_data['data'] : array(),
+						$visiting,
+						$visited
+					)
+				) {
+					wp_send_json_error(
+						array( 'message' => 'A component cannot contain itself directly or indirectly.' ),
+						400
+					);
 				}
 				// if ( isset( $data['conditions'] ) ) {
 				// $symbol_data['conditions'] = $data['conditions'];

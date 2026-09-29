@@ -351,6 +351,7 @@ class KirkiCommentsRest extends WP_REST_Controller
 		$roles = HelperFunctions::get_all_user_roles_by_access_levels(
 			array(
 				KIRKI_ACCESS_LEVELS['FULL_ACCESS'],
+				KIRKI_ACCESS_LEVELS['EDITOR_ACCESS'],
 				KIRKI_ACCESS_LEVELS['CONTENT_ACCESS'],
 				KIRKI_ACCESS_LEVELS['VIEW_ACCESS'],
 			)
@@ -570,6 +571,7 @@ class KirkiCommentsRest extends WP_REST_Controller
 		return HelperFunctions::has_access(
 			array(
 				KIRKI_ACCESS_LEVELS['FULL_ACCESS'],
+				KIRKI_ACCESS_LEVELS['EDITOR_ACCESS'],
 				KIRKI_ACCESS_LEVELS['CONTENT_ACCESS'],
 				KIRKI_ACCESS_LEVELS['VIEW_ACCESS'],
 			)
@@ -581,6 +583,7 @@ class KirkiCommentsRest extends WP_REST_Controller
 		return HelperFunctions::has_access(
 			array(
 				KIRKI_ACCESS_LEVELS['FULL_ACCESS'],
+				KIRKI_ACCESS_LEVELS['EDITOR_ACCESS'],
 				KIRKI_ACCESS_LEVELS['CONTENT_ACCESS'],
 			)
 		);

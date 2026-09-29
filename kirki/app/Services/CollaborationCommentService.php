@@ -54,7 +54,7 @@ class CollaborationCommentService
 
         $is_author = $comment->user_id === user()->get_id();
 
-        return $is_author || user()->has_access(AccessLevels::FULL_ACCESS);
+        return $is_author || user()->has_builder_access();
     }
 
     /**
@@ -304,6 +304,7 @@ class CollaborationCommentService
     {
         $roles = Role::get_roles_by_levels([
             AccessLevels::FULL_ACCESS,
+            AccessLevels::EDITOR_ACCESS,
             AccessLevels::CONTENT_ACCESS,
             AccessLevels::VIEW_ACCESS,
         ]);
