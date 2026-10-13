@@ -46,6 +46,14 @@ abstract class FrontendRESTController extends WP_REST_Controller {
 		if ( $raw_context ) {
 			$context = json_decode( $raw_context, true );
 
+			if ( ! is_array( $context ) ) {
+				return new WP_Error(
+					'rest_forbidden',
+					'Invalid context.',
+					array( 'status' => 403 )
+				);
+			}
+
 			$context_type = $context['type'];
 
 			// For user contexts, require list_users capability.

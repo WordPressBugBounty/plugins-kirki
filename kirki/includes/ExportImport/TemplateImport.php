@@ -593,7 +593,7 @@ class TemplateImport {
 			$post       = get_post( $post_id );
 			$kirki_data = get_post_meta( $post_id, 'kirki', true );
 			if ( is_serialized( $kirki_data ) ) {
-				$kirki_data = maybe_unserialize( $kirki_data );
+				$kirki_data = HelperFunctions::safe_unserialize( $kirki_data );
 			}
 			foreach ( $block_ids as $key => $block_id_or_array ) {
 				// if $block_id_or_array is array then it is a symbol
@@ -644,7 +644,7 @@ class TemplateImport {
 			$kirki_cm_fields = get_post_meta( $new_post_id, KIRKI_CONTENT_MANAGER_PREFIX . '_fields', true );
 
 			if ( is_serialized( $kirki_cm_fields ) ) {
-				$kirki_cm_fields = maybe_unserialize( $kirki_cm_fields );
+				$kirki_cm_fields = HelperFunctions::safe_unserialize( $kirki_cm_fields );
 			}
 
 			foreach ( $kirki_cm_fields as $field_key => $field ) {
@@ -997,7 +997,15 @@ class TemplateImport {
 		$post_id = $post['ID'];
 
 		foreach ( $meta as $key => $value ) {
-			$v                 = $value[0];
+			$v = HelperFunctions::safe_unserialize( $value[0] ?? null );
+
+			// A value that is STILL a serialized string after
+			// one pass is a nested (double-serialized) payload
+			// aimed at the second-order sinks — drop it too.
+			if ( null === $v || ( is_string( $v ) && is_serialized( $v ) ) ) {
+				continue;
+			}
+
 			$updated_key_value = $this->handle_kirki_related_meta( $key, $v, $post );
 			update_post_meta( $post_id, $updated_key_value[0], $updated_key_value[1] );
 		}
@@ -1021,11 +1029,17 @@ class TemplateImport {
 		$post_parent = $post['post_parent'];
 		$post_id     = $post['ID'];
 
-		if ( is_serialized( $v ) ) {
-			$v = maybe_unserialize( $v );
-		}
+		// Defense in depth: callers pre-decode via HelperFunctions::safe_unserialize(),
+		// but re-apply it here so this method can never rehydrate a PHP object itself.
+		$v = HelperFunctions::safe_unserialize( $v );
+
 		switch ( $key ) {
 			case 'kirki':
+				// Every kirki branch indexes $v as an array. A rejected payload
+				// (null) or malformed scalar has nothing to transform.
+				if ( ! is_array( $v ) ) {
+					return array( $key, $v );
+				}
 				if ( $post_type === 'kirki_symbol' ) {
 					$v['data']        = $this->add_prefix_to_kirki_blocks( $v['data'], $post_id );
 					$v['data']        = $this->update_element_properties_symbol_id( $v['data'], $post_id );
@@ -1056,23 +1070,31 @@ class TemplateImport {
 				return array( $key, $v );
 
 			case 'kirki_used_style_block_ids':
-				foreach ( $v as $key2 => $value ) {
-					$v[ $key2 ] = $this->add_prefix( $value );
+				if ( is_array( $v ) ) {
+					foreach ( $v as $key2 => $value ) {
+						$v[ $key2 ] = $this->add_prefix( $value );
+					}
 				}
 				return array( $key, $v );
 
 			case 'kirki_used_style_block_ids_random':
-				foreach ( $v as $key2 => $value ) {
-					$v[ $key2 ] = $this->add_prefix( $value );
+				if ( is_array( $v ) ) {
+					foreach ( $v as $key2 => $value ) {
+						$v[ $key2 ] = $this->add_prefix( $value );
+					}
 				}
 				return array( $key, $v );
 
 			case 'kirki_global_style_block_random':
-				$updated_blocks = $this->add_prefix_to_style_blocks( $v );
-				return array( $key, $updated_blocks );
+				if ( is_array( $v ) ) {
+					$v = $this->add_prefix_to_style_blocks( $v );
+				}
+				return array( $key, $v );
 
 			case 'kirki_template_conditions':
-				$v = $this->check_kirki_conditions( $v );
+				if ( is_array( $v ) ) {
+					$v = $this->check_kirki_conditions( $v );
+				}
 				return array( $key, $v );
 
 			case 'kirki_cm_fields':
@@ -1109,12 +1131,12 @@ class TemplateImport {
 					}
 
 					if ( is_serialized( $parent_post_fields ) ) {
-						$parent_post_fields = maybe_unserialize( $parent_post_fields );
+						$parent_post_fields = HelperFunctions::safe_unserialize( $parent_post_fields );
 					}
 
 					$field_type = $this->get_parent_post_field_type( $parent_post_fields, $field_id );
 
-					if ( isset( $field_type ) && $field_type === 'gallery' ) {
+					if ( isset( $field_type ) && $field_type === 'gallery' && is_array( $v ) ) {
 						foreach ( $v as $key2 => $value ) {
 							$v[ $key2 ] = $this->format_uploaded_asset( $value );
 						}

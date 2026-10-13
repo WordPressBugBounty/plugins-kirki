@@ -66,6 +66,7 @@ class PluginActiveEvents {
 		self::create_collaboration_table();
 		self::create_cm_reference_table();
 		self::create_comments_table();
+		self::create_page_stage_tables();
 	}
 
 	/**
@@ -200,6 +201,84 @@ class PluginActiveEvents {
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		dbDelta( $sql );
+	}
+
+	/**
+	 * Create the page version tables
+	 *
+	 * They hold the version history that used to be saved in wp_postmeta
+	 * (`kirki_stage_versions` and `staged_{version}_{meta_key}`).
+	 *
+	 * @return bool True when both tables exist after the call.
+	 */
+	public static function create_page_stage_tables() {
+		global $wpdb;
+		$charset_collate = $wpdb->get_charset_collate();
+
+		$stages_table = $wpdb->prefix . KIRKI_PAGE_STAGES_TABLE;
+		$sql          = "CREATE TABLE IF NOT EXISTS $stages_table (
+			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+			post_id BIGINT(20) UNSIGNED NOT NULL,
+			type VARCHAR(50) NOT NULL DEFAULT 'page',
+			version BIGINT(20) UNSIGNED NOT NULL,
+			name VARCHAR(255) NOT NULL DEFAULT '',
+			edited_by BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
+			is_published TINYINT(1) NOT NULL DEFAULT 0,
+			no_legacy_global_style TINYINT(1) NOT NULL DEFAULT 0,
+			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY (id),
+			UNIQUE KEY post_version (post_id, version),
+			KEY post_id (post_id),
+			KEY post_published (post_id, is_published),
+			FOREIGN KEY (post_id) REFERENCES {$wpdb->prefix}posts(ID) ON DELETE CASCADE
+		) ENGINE=InnoDB $charset_collate;";
+
+		/**
+		 * One row per data key of a version. `stage_id` is the version row, which has the post
+		 * id and version number. The unique key starts with `stage_id`, so it also works as the
+		 * index for "get all data of this version".
+		 */
+		$stage_data_table = $wpdb->prefix . KIRKI_PAGE_STAGE_DATA_TABLE;
+		$sql2             = "CREATE TABLE IF NOT EXISTS $stage_data_table (
+			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+			stage_id BIGINT(20) UNSIGNED NOT NULL,
+			meta_key VARCHAR(191) NOT NULL,
+			meta_value LONGTEXT NULL,
+			PRIMARY KEY (id),
+			UNIQUE KEY stage_meta_key (stage_id, meta_key),
+			FOREIGN KEY (stage_id) REFERENCES $stages_table(id) ON DELETE CASCADE
+		) ENGINE=InnoDB $charset_collate;";
+
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		dbDelta( $sql );
+		dbDelta( $sql2 );
+
+		return self::page_stage_tables_exist();
+	}
+
+	/**
+	 * Do both version tables exist (and in the current shape)?
+	 *
+	 * dbDelta does not tell us when it fails, so we check the tables ourselves.
+	 *
+	 * @return bool
+	 */
+	public static function page_stage_tables_exist() {
+		global $wpdb;
+
+		foreach ( array( KIRKI_PAGE_STAGES_TABLE, KIRKI_PAGE_STAGE_DATA_TABLE ) as $table_suffix ) {
+			$table_name = $wpdb->prefix . $table_suffix;
+
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- table name is built from a constant.
+			$found = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table_name ) ) );
+
+			if ( $found !== $table_name ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	private static function create_comments_table() {

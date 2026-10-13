@@ -8,6 +8,8 @@ use Kirki\Database\Migrations\CreateCommentsSeenTable;
 use Kirki\Database\Migrations\CreateCommentsTable;
 use Kirki\Database\Migrations\CreateFormsDataTable;
 use Kirki\Database\Migrations\CreateFormsTable;
+use Kirki\Database\Migrations\CreatePageStageDataTable;
+use Kirki\Database\Migrations\CreatePageStagesTable;
 
 return [
     CreateFormsTable::class,
@@ -18,4 +20,6 @@ return [
     CreateCmReferenceTable::class,
     CreateCommentsTable::class,
     CreateCommentsSeenTable::class,
+    CreatePageStagesTable::class,
+    CreatePageStageDataTable::class,
 ];

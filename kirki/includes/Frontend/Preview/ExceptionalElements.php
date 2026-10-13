@@ -409,6 +409,7 @@ class ExceptionalElements {
 					'id'        => $this_data['id'],
 					'hamburger' => $hamburger,
 					'showNavigationChildrenOn' => isset($this_data['properties']['navigation']['showNavigationChildrenOn']) ? $this_data['properties']['navigation']['showNavigationChildrenOn'] : 'hover',
+					'version' => isset($this_data['properties']['navigation']['version']) ? $this_data['properties']['navigation']['version'] : null,
 				),
 			)
 		);
@@ -423,8 +424,6 @@ class ExceptionalElements {
 	private function navigation_item_element($this_data, $attributes, $options)
 	{
 		$tag = isset($this_data['properties'], $this_data['properties']['tag']) ? $this_data['properties']['tag'] : 'a';
-
-		$children_markup = $this->construct_children_markup(isset($this_data['children']) ? $this_data['children'] : array(), $options);
 
 		$extra_attributes = '';
 
@@ -471,6 +470,9 @@ class ExceptionalElements {
 
 		$extra_attr = isset($options['inside_navigation']) && $options['inside_navigation'] ? 'kirki-navigation-hide="true"' : '';
 
+		$version = isset($options['navigation']['version']) ? $options['navigation']['version'] : null;
+
+
 		if (isset($options['navigation']['hamburger']) && $options['navigation']['hamburger']) {
 			$extra_attr .= ' kirki-navigation-type="close"';
 		}
@@ -495,6 +497,15 @@ class ExceptionalElements {
 
 			$class = $classMatch[1] ?? null;
 			$data_kirki = $dataMatch[1] ?? null;
+
+
+			if ($version === 'v2') {
+				return "
+							<$tag class='$class' data-kirki='$data_kirki' kirki-menu-wrapper-ul='true'>
+							$children_markup
+							</$tag>
+					 ";
+			}
 
 			return "
 							<div kirki-menu-wrapper-div='true'>

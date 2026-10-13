@@ -565,19 +565,20 @@ class HelperFunctions
 	}
 
 	/**
-	 * Save staged style blocks for a specific post and staged meta key.
+	 * Save staged style blocks for a specific post and stage version.
 	 *
-	 * @param int    $post_id   Post ID.
-	 * @param string $meta_key  Staged meta key (can be normal or random).
-	 * @param array  $styles    Styles array to save.
+	 * @param int    $post_id       Post ID.
+	 * @param string $meta_key      Style block meta key, the same one the published version uses.
+	 * @param array  $styles        Styles array to save.
+	 * @param int|false $stage_version Stage version, false saves the published value.
 	 * 
 	 * @deprecated
 	 * @see \Kirki\App\Managers\PageManager::save_deprecated_global_style_blocks()
 	 * @see \Kirki\App\Managers\PageManager::save_style_blocks()
 	 */
-	public static function save_staged_style_blocks($post_id, $meta_key, $styles)
+	public static function save_staged_style_blocks($post_id, $meta_key, $styles, $stage_version = false)
 	{
-		update_post_meta($post_id, $meta_key, $styles);
+		FacadesPage::write_page_meta((int) $post_id, $meta_key, $styles, $stage_version);
 		// $data = array(
 		// 	'type'    => 'COLLABORATION_UPDATE_GLOBAL_STYLE',
 		// 	'payload' => array('styleBlock' => $styles),
@@ -3382,7 +3383,7 @@ class HelperFunctions
 	 * @deprecated Use Kirki\App\Wordpress\User::has_access
 	 * @see Kirki\App\Wordpress\User
 	 * @param string|string[] $access_level The access level to check access.
-	 * 
+	 *
 	 */
 	public static function has_access($access_level)
 	{
@@ -3402,6 +3403,51 @@ class HelperFunctions
 		$required = is_array($access_level) ? $access_level : array($access_level);
 
 		return (bool) array_intersect($required, $role_levels);
+	}
+
+	/**
+	 * Safely unserialize imported data.
+	 *
+	 * Imported template meta originates from attacker-controlled JSON inside an
+	 * uploaded ZIP. A JSON string may itself be a serialized PHP object, which
+	 * must never be rehydrated (PHP Object Injection, CWE-502).
+	 *
+	 * @param mixed $value Raw meta value.
+	 * @return mixed Decoded value, or null when the payload carried an object.
+	 */
+	public static function safe_unserialize($value)
+	{
+		if (!is_string($value) || !is_serialized($value)) {
+			return $value;
+		}
+
+		$data = @unserialize(trim($value), array('allowed_classes' => false));
+
+		return self::contains_object($data) ? null : $data;
+	}
+
+	/**
+	 * Recursively test whether a value contains any object.
+	 * Catches __PHP_Incomplete_Class produced by allowed_classes => false.
+	 *
+	 * @param mixed $data Value to inspect.
+	 * @return boolean
+	 */
+	public static function contains_object($data)
+	{
+		if (is_object($data)) {
+			return true;
+		}
+
+		if (is_array($data)) {
+			foreach ($data as $item) {
+				if (self::contains_object($item)) {
+					return true;
+				}
+			}
+		}
+
+		return false;
 	}
 
 	/**

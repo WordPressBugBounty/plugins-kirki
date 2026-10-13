@@ -10,6 +10,7 @@ namespace Kirki\Ajax;
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
+use Kirki\App\Supports\Facades\Page as PageFacade;
 use Kirki\HelperFunctions;
 use Kirki\Staging;
 
@@ -251,48 +252,14 @@ class Page {
 	public static function duplicate_page() {
         //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$post_id     = (int) HelperFunctions::sanitize_text( isset( $_POST['id'] ) ? $_POST['id'] : '' );
-		$post        = get_post( $post_id );
-		$new_post_id = wp_insert_post(
-			array(
-				'post_title'   => $post->post_title . ' (copy)',
-				'post_content' => $post->post_content,
-				'post_name'    => $post->post_name,
-				'post_type'    => $post->post_type,
-				'post_status'  => $post->post_status,
-			)
-		);
+		$page = \Kirki\App\Models\Page::exclude_trash()->find( $post_id );
 
-		$page_data = get_post_meta( $post_id, 'kirki', true );
-		if ( $page_data ) {
-			update_post_meta( $new_post_id, 'kirki', $page_data );
-			update_post_meta( $new_post_id, KIRKI_META_NAME_FOR_POST_EDITOR_MODE, 'kirki' );
+		if ( empty( $page ) ) {
+			wp_send_json_error( 'Page not found.', 404 );
 		}
 
-		/**
-		 * Also duplicate _wp_page_template meta if exists
-		 */
-		$page_template = get_post_meta( $post_id, '_wp_page_template', true );
-		if ( $page_template ) {
-			$page_template = HelperFunctions::normalize_kirki_full_canvas_template_path($page_template);
-			update_post_meta( $new_post_id, '_wp_page_template', $page_template );
-		}
-
-		/**
-		 * Also duplicate this page style blocks if exists
-		 */
-		$post_styles = get_post_meta( $post_id, KIRKI_GLOBAL_STYLE_BLOCK_META_KEY . '_random', true );
-		if ( $post_styles ) {
-			update_post_meta( $new_post_id, KIRKI_GLOBAL_STYLE_BLOCK_META_KEY . '_random', $post_styles );
-		}
-
-		$used_fonts = get_post_meta( $post_id, KIRKI_META_NAME_FOR_USED_FONT_LIST, true );
-		if ( $used_fonts ) {
-			update_post_meta( $new_post_id, KIRKI_META_NAME_FOR_USED_FONT_LIST, $used_fonts );
-		}
-
-		if ( $post && $post->post_type === 'kirki_utility' ) {
-			self::flush_utility_rewrite_rules();
-		}
+		// Published data is in post meta, unpublished versions are in the stage tables. The service copies both.
+		$new_post_id = ( new \Kirki\App\Services\PageService() )->duplicate_page( $page )->ID;
 
 		wp_send_json( ( new self() )->format_single_post( $new_post_id ) );
 	}
@@ -372,8 +339,7 @@ class Page {
 			}
 
 			if ( $stage_version ) {
-				$meta_name         = Staging::get_staged_meta_name( 'kirki', $post_id, $stage_version );
-				$staging_post_meta = get_post_meta( $post_id, $meta_name, true );
+				$staging_post_meta = PageFacade::read_page_meta( $post_id, 'kirki', $stage_version );
 				if ( $staging_post_meta ) {
 					$post_meta = $staging_post_meta;
 				}
@@ -741,9 +707,9 @@ class Page {
 				foreach ( array(
 					KIRKI_GLOBAL_STYLE_BLOCK_META_KEY,
 					KIRKI_GLOBAL_STYLE_BLOCK_META_KEY . '_random',
-				) as $meta_key_base ) {
-					$meta_key      = Staging::get_staged_meta_name( $meta_key_base, $p_id, $most_recent_stage_id );
-					$staged_styles = get_post_meta( $p_id, $meta_key, true ) ? get_post_meta( $p_id, $meta_key, true ) : array();
+				) as $meta_key ) {
+					$staged_styles = PageFacade::read_page_meta( (int) $p_id, $meta_key, $most_recent_stage_id, array() );
+					$staged_styles = $staged_styles ? $staged_styles : array();
 
 					$temp_styles = $clean_styles( $staged_styles );
 
@@ -751,7 +717,7 @@ class Page {
 					$changed       = $temp_styles[1] ?? false;
 
 					if ( $changed ) {
-						HelperFunctions::save_staged_style_blocks( $p_id, $meta_key, $staged_styles );
+						HelperFunctions::save_staged_style_blocks( $p_id, $meta_key, $staged_styles, $most_recent_stage_id );
 					}
 				}
 			}
@@ -866,11 +832,14 @@ class Page {
 			$staged_used_ids      = array();
 			if ( $most_recent_stage_id ) {
 				$staged_used_keys = array(
-					Staging::get_staged_meta_name( KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS, $p_id, $most_recent_stage_id ),
-					Staging::get_staged_meta_name( KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS . '_random', $p_id, $most_recent_stage_id ),
+					KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS,
+					KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS . '_random',
 				);
 				foreach ( $staged_used_keys as $key ) {
-					$staged_used_ids = array_merge( $staged_used_ids, get_post_meta( $p_id, $key, true ) ?: array() );
+					$staged_used_ids = array_merge(
+						$staged_used_ids,
+						PageFacade::read_page_meta( (int) $p_id, $key, $most_recent_stage_id, array() ) ?: array()
+					);
 				}
 			}
 

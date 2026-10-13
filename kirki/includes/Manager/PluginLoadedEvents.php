@@ -14,6 +14,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use Kirki\Admin;
 use Kirki\Ajax\Page;
+use Kirki\App\Services\PageStageMigrationService;
+use Kirki\App\Supports\Facades\Page as PageFacade;
 use Kirki\Frontend;
 use Kirki\HelperFunctions;
 
@@ -34,6 +36,48 @@ class PluginLoadedEvents {
 	public function __construct() {
 		 add_action( 'plugins_loaded', array( $this, 'init_plugin' ) );
 		add_action( 'plugins_loaded', array( $this, 'do_migration_related_task' ) );
+
+		add_filter( 'cron_schedules', array( $this, 'register_stage_migration_schedule' ) );
+		add_action( PageStageMigrationService::CRON_HOOK, array( $this, 'run_stage_migration_batch' ) );
+		add_action( 'deleted_post', array( $this, 'delete_page_stages' ) );
+	}
+
+	/**
+	 * Add a "every minute" cron schedule for the version data migration
+	 *
+	 * @param array $schedules cron schedules.
+	 * @return array
+	 */
+	public function register_stage_migration_schedule( $schedules ) {
+		if ( ! isset( $schedules['kirki_stage_migration_interval'] ) ) {
+			$schedules['kirki_stage_migration_interval'] = array(
+				'interval' => MINUTE_IN_SECONDS,
+				'display'  => 'Kirki staging data migration',
+			);
+		}
+
+		return $schedules;
+	}
+
+	/**
+	 * Cron job: move one batch of old version data into the new tables
+	 *
+	 * @return void
+	 */
+	public function run_stage_migration_batch() {
+		( new PageStageMigrationService() )->run_batch();
+	}
+
+	/**
+	 * Delete the versions of a deleted page
+	 *
+	 * The foreign key does this too. This is a backup for databases without the foreign key.
+	 *
+	 * @param int $post_id deleted post id.
+	 * @return void
+	 */
+	public function delete_page_stages( $post_id ) {
+		PageFacade::stages()->delete_for_post( (int) $post_id );
 	}
 
 	/**
@@ -136,6 +180,24 @@ class PluginLoadedEvents {
 		$db_altered_in6 = '2.4.0';
 		if ( empty( $version_in_db ) || version_compare( $version_in_db, $db_altered_in6, '<' ) ) {
 			PluginActiveEvents::add_post_field_in_collaboaration_connected_table();
+		}
+
+		// Version history moved from wp_postmeta into its own tables.
+		$db_altered_in7 = '6.4.0';
+		if ( empty( $version_in_db ) || version_compare( $version_in_db, $db_altered_in7, '<' ) ) {
+			if ( ! PluginActiveEvents::create_page_stage_tables() ) {
+				/**
+				 * The tables could not be created (e.g. no CREATE permission).
+				 * Stop here and do not save the new version, so the next request tries again.
+				 * The old data stays in wp_postmeta and keeps working.
+				 */
+				error_log( 'Kirki: failed to create the page staging tables, staging data stays in wp_postmeta.' ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+				return;
+			}
+
+			( new PageStageMigrationService() )->start();
+		} else {
+			( new PageStageMigrationService() )->ensure_scheduled();
 		}
 
 		HelperFunctions::set_kirki_version_in_db();

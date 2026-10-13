@@ -14,9 +14,6 @@ use Kirki\Framework\Resource;
 
 class PageContentResource extends Resource
 {
-    /** @var string */
-    protected $stage_block_key;
-
     /** @var int|false */
     protected $stage_version = false;
 
@@ -36,14 +33,9 @@ class PageContentResource extends Resource
 
         $this->stage_version = $stage_version;
 
-        $this->stage_block_key = Page::get_staged_meta_name(PageMetaKeys::BLOCKS, $page_id, $stage_version);
-
         $page->load_missing([
-            'meta' => function (QueryBuilder $query) use ($page_id) {
-                $query->where_in('meta_key', [
-                    PageMetaKeys::BLOCKS,
-                    $this->stage_block_key
-                ]);
+            'meta' => function (QueryBuilder $query) {
+                $query->where_in('meta_key', [PageMetaKeys::BLOCKS]);
             }
         ]);
 
@@ -65,7 +57,9 @@ class PageContentResource extends Resource
         $blocks = !empty($meta[PageMetaKeys::BLOCKS]) ? $meta[PageMetaKeys::BLOCKS] : [];
 
         if ($this->stage_version) {
-            $blocks = !empty($meta[$this->stage_block_key]) ? $meta[$this->stage_block_key] : [];
+            $staged_blocks = Page::read_page_meta($this->ID, PageMetaKeys::BLOCKS, $this->stage_version, []);
+
+            $blocks = !empty($staged_blocks) ? $staged_blocks : [];
         }
 
         return [

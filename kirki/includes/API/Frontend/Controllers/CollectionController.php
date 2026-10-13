@@ -109,9 +109,13 @@ class CollectionController extends FrontendRESTController {
 					}
 				}
 			}else {
-				$all_blocks = get_post_meta($post_id, 'kirki', true);
-				$all_styles = Page::get_page_styleblocks($post_id, false);
-				DataHelper::get_data_and_styles_from_root( $collection_data_id, $data_n_styles, $all_blocks['blocks'], $all_styles );
+				// read_page_meta() resolves the most recent version to the right source
+				// either post_meta or the staging table, depending on the post's state.
+				$all_blocks = Page::read_page_meta( $post_id, 'kirki', false, null );
+				$all_styles = Page::get_page_styleblocks( $post_id, false );
+				if ( is_array( $all_blocks ) && isset( $all_blocks['blocks'] ) ) {
+					DataHelper::get_data_and_styles_from_root( $collection_data_id, $data_n_styles, $all_blocks['blocks'], $all_styles );
+				}
 			}
 		}
 		return $data_n_styles;
@@ -153,17 +157,24 @@ class CollectionController extends FrontendRESTController {
 					'user' => Users::get_user_by_id( absint( $context['id'] ?? 0 ) ),
 				);
 			} elseif ( isset( $context['type'] ) && $context['type'] === 'term' ) {
+				$term    = get_term( absint( $context['id'] ?? 0 ) );
 				$options = array(
-					'term' => get_term( absint( $context['id'] ?? 0 ) )->to_array(),
+					'term' => $term instanceof \WP_Term ? $term->to_array() : null,
 				);
 			} elseif ( isset( $context['type'] ) && $context['type'] === 'comment' ) {
 				$options = array(
 					'post'    => get_post( absint( $context['post_id'] ?? 0 ) ),
 					'comment' => get_comment( absint( $context['comment']['comment_ID'] ?? 0 ) ),
 				);
+			} elseif ( isset( $context['type'] ) && $context['type'] === 'kirki_utility' ) {
+				$options = array(
+					'kirki_utility_page_id' => absint( $context['kirki_utility_page_id'] ?? 0 ),
+				);
 			}
 		}
 
+		// Never merge the raw request context here: only the values resolved above
+		// have passed get_item_permissions_check().
 		$params = array(
 			'blocks'       => $blocks,
 			'style_blocks' => $styles,
@@ -175,8 +186,7 @@ class CollectionController extends FrontendRESTController {
 					'collection_param_filters' => $collection_param_filters,
 					'q'                        => $query,
 				),
-				$options,
-				$context
+				$options
 			),
 			'search_related_collection_ids' => [$collection_id => true],
 		);

@@ -8,7 +8,9 @@
 
 namespace Kirki;
 
-use Kirki\Ajax\Collaboration\Collaboration;
+use Kirki\App\Constants\PageMetaKeys;
+use Kirki\App\Services\PageStageMigrationService;
+use Kirki\App\Supports\Facades\Page as PageFacade;
 use Kirki\HelperFunctions;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -16,7 +18,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Frontend handler class
+ * Staging handler class.
+ *
+ * Every method here just calls \Kirki\App\Managers\PageManager. Versions are saved in the
+ * kirki_stages / kirki_stage_data tables. The published data stays in wp_postmeta.
  */
 class Staging {
 
@@ -25,27 +30,7 @@ class Staging {
 	 * @see Kirki\App\Managers\PageManager::get_most_recent_stage_version()
 	 */
 	public static function get_most_recent_stage_version( $post_id, $stage_must = true, $restoring = false, $old_version = false ) {
-		$staged_versions      = self::get_all_staged_versions( $post_id, true );
-		$recent_stage_version = false;
-		$version_number       = 0;
-		$being_restored       = false;
-
-		foreach ( $staged_versions as $version ) {
-			if ( is_array( $version ) && intval( $version['version'] ) > $version_number ) {
-				$version_number       = $version['version'];
-				$recent_stage_version = $version;
-			}
-
-			if ( $restoring && intval( $old_version ) === intval( $version['version'] ) ) {
-				$being_restored = $version;
-			}
-		}
-
-		if ( $version_number === 0 || ( $stage_must && isset( $recent_stage_version['publish'] ) && $recent_stage_version['publish'] ) || $restoring ) {
-			$version_number = self::add_stage_version( $post_id, $version_number + 1, $staged_versions, $being_restored );
-		}
-
-		return $version_number;
+		return PageFacade::get_most_recent_stage_version( (int) $post_id, $stage_must, $restoring, $old_version );
 	}
 
 	/**
@@ -53,17 +38,12 @@ class Staging {
 	 * @see Kirki\App\Managers\PageManager::get_all_staged_versions()
 	 */
 	public static function get_all_staged_versions( $post_id, $internal = false, $withname = false ) {
-		// delete_post_meta($post_id, KIRKI_META_NAME_FOR_STAGED_VERSIONS);
-		$staged_versions = get_post_meta( $post_id, KIRKI_META_NAME_FOR_STAGED_VERSIONS, true );
-		if ( ! is_array( $staged_versions ) || count( $staged_versions ) < 1 ) {
-			$staged_versions = self::create_first_stage_version( $post_id );
-		}
-		if ( $withname ) {
-			$staged_versions = self::add_editor_names_into_stage_versions( $staged_versions );
-		}
+		$staged_versions = PageFacade::get_all_staged_versions( (int) $post_id )->to_array();
+
 		if ( $internal ) {
 			return $staged_versions;
 		}
+
 		wp_send_json( $staged_versions );
 	}
 
@@ -80,20 +60,12 @@ class Staging {
 			wp_send_json( false, 400 );
 		}
 
-		$version_id      = self::get_most_recent_stage_version( $post_id, false );
-		$staged_versions = self::get_all_staged_versions( $post_id, true, true );
-		$staged_versions = array_map(
-			function ( $item ) use ( $version_id ) {
-				return ( is_array( $item ) && isset( $item['version'] ) && intval( $item['version'] ) === intval( $version_id ) )
-				? array_merge( $item, array( 'publish' => true ) )
-				: array_merge( $item, array( 'publish' => false ) );
-			},
-			$staged_versions
-		);
-		update_post_meta( $post_id, KIRKI_META_NAME_FOR_STAGED_VERSIONS, $staged_versions );
+		$staged_versions = PageFacade::publish_stage_version( (int) $post_id )->to_array();
+
 		if ( $internal ) {
 			return $staged_versions;
 		}
+
 		wp_send_json( $staged_versions );
 	}
 
@@ -103,18 +75,7 @@ class Staging {
 	 * @see Kirki\App\Managers\PageManager::get_published_stage_version()
 	 */
 	public static function get_published_stage_version( $post_id ) {
-		$staged_versions = self::get_all_staged_versions( $post_id, true, true );
-
-		// Find the first staged version that has 'publish' set to true
-		$published_version = null;
-		foreach ( $staged_versions as $item ) {
-			if ( ! empty( $item['publish'] ) ) {
-				$published_version = $item;
-				break;
-			}
-		}
-
-		return isset( $published_version['version'] ) ? $published_version['version'] : false;
+		return PageFacade::get_published_stage_version( (int) $post_id );
 	}
 
 	/**
@@ -122,32 +83,22 @@ class Staging {
 	 * @see Kirki\App\Managers\PageManager::get_published_staged_version_info()
 	 */
 	public static function get_published_stage_version_info( $post_id ) {
-		$staged_versions = self::get_all_staged_versions( $post_id, true, true );
+		$published_version = PageFacade::get_published_staged_version_info( (int) $post_id );
 
-		// Find the first staged version that has 'publish' set to true
-		$published_version = null;
-		foreach ( $staged_versions as $item ) {
-			if ( ! empty( $item['publish'] ) ) {
-				$published_version = $item;
-				break;
-			}
-		}
-
-		return isset( $published_version['version'] ) ? $published_version : false;
+		return $published_version ? $published_version : false;
 	}
 
 	public static function get_page_staging_data( $post_id, $version_id ) {
-		$kirki_data           = array();
-		$kirki_data['blocks'] = null;
+		$kirki_data = PageFacade::read_page_meta( (int) $post_id, PageMetaKeys::BLOCKS, $version_id );
 
-		$meta_name         = self::get_staged_meta_name( 'kirki', $post_id, $version_id );
-		$staging_post_meta = get_post_meta( $post_id, $meta_name, true );
-		if ( $staging_post_meta ) {
-			$kirki_data = $staging_post_meta;
+		if ( ! is_array( $kirki_data ) ) {
+			$kirki_data           = array();
+			$kirki_data['blocks'] = null;
 		}
 
 		$styles               = HelperFunctions::get_page_styleblocks( $post_id, $version_id );
 		$kirki_data['styles'] = isset( $styles ) ? $styles : '';
+
 		return $kirki_data;
 	}
 
@@ -158,8 +109,11 @@ class Staging {
 	 * @see Kirki\App\Services\PageService::save_page_data()
 	 */
 	public static function save_page_staging_data_to_db( $post_id, $page_data ) {
-		$staging_version = self::get_most_recent_stage_version( $post_id );
-		self::update_last_edited_datetime_of_stage_version( $post_id );
+		$post_id = (int) $post_id;
+
+		$staging_version = PageFacade::get_most_recent_stage_version( $post_id );
+		PageFacade::set_last_edited_datetime_of_stage_version( $post_id );
+
 		if ( isset( $page_data['styles'] ) ) {
 			$new_random_styles     = $page_data['styles'];
 			$new_global_styles     = array(); // global Styleblocks which won't be saved in publish but stage
@@ -178,23 +132,8 @@ class Staging {
 				}
 			}
 
-			$meta_key = self::get_staged_meta_name( KIRKI_GLOBAL_STYLE_BLOCK_META_KEY . '_random', $post_id, $staging_version );
-			update_post_meta( $post_id, $meta_key, $new_random_styles );
-
-			// $data = array(
-			// 'type'    => 'COLLABORATION_UPDATE_GLOBAL_STYLE',
-			// 'payload' => array( 'styleBlock' => $new_random_styles ),
-			// );
-			// Collaboration::save_action_to_db( 'post', $post_id, $data, 1 );
-
-			$global_meta_key = self::get_staged_meta_name( KIRKI_GLOBAL_STYLE_BLOCK_META_KEY, $post_id, $staging_version );
-			update_post_meta( $post_id, $global_meta_key, $new_global_styles );
-
-			// $data = array(
-			// 'type'    => 'COLLABORATION_UPDATE_GLOBAL_STYLE',
-			// 'payload' => array( 'styleBlock' => $new_global_styles ),
-			// );
-			// Collaboration::save_action_to_db( 'global', 0, $data, 1 );
+			PageFacade::save_style_blocks( $post_id, $new_random_styles, $staging_version );
+			PageFacade::save_deprecated_global_style_blocks( $post_id, $new_global_styles, $staging_version );
 
 			if ( count( $add_to_publish_global ) ) {
 				$page_data['styles'] = $add_to_publish_global;
@@ -204,36 +143,23 @@ class Staging {
 		}
 
 		if ( isset( $page_data['usedStyles'] ) ) {
-			$meta_key = KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS;
-			$meta_key = self::get_staged_meta_name( $meta_key, $post_id, $staging_version );
-			update_post_meta( $post_id, $meta_key, $page_data['usedStyles'] );
+			PageFacade::save_used_global_style_block_ids( $post_id, $page_data['usedStyles'], $staging_version );
 			unset( $page_data['usedStyles'] );
 		}
 
 		if ( isset( $page_data['usedStyleIdsRandom'] ) ) {
-			$meta_key = KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS . '_random';
-			$meta_key = self::get_staged_meta_name( $meta_key, $post_id, $staging_version );
-			update_post_meta( $post_id, $meta_key, $page_data['usedStyleIdsRandom'] );
+			PageFacade::save_used_style_block_ids( $post_id, $page_data['usedStyleIdsRandom'], $staging_version );
 			unset( $page_data['usedStyleIdsRandom'] );
 		}
 
 		if ( isset( $page_data['usedFonts'] ) ) {
-			$meta_key = KIRKI_META_NAME_FOR_USED_FONT_LIST;
-			$meta_key = self::get_staged_meta_name( $meta_key, $post_id, $staging_version );
-			update_post_meta( $post_id, $meta_key, $page_data['usedFonts'] );
+			PageFacade::save_used_font_list( $post_id, $page_data['usedFonts'], $staging_version );
 			unset( $page_data['usedFonts'] );
 		}
 
 		if ( isset( $page_data['blocks'] ) ) {
-			$meta_key = 'kirki';
-			$meta_key = self::get_staged_meta_name( $meta_key, $post_id, $staging_version );
-			update_post_meta( $post_id, $meta_key, array( 'blocks' => $page_data['blocks'] ) );
-			// $data = array(
-			// 'type'    => 'COLLABORATION_PAGE_DATA',
-			// 'payload' => array('data' => $page_data['blocks']),
-			// );
+			PageFacade::save_blocks( $post_id, array( 'blocks' => $page_data['blocks'] ), $staging_version );
 			unset( $page_data['blocks'] );
-			// Collaboration::save_action_to_db('post', $post_id, $data, 1);
 		}
 
 		return array(
@@ -247,43 +173,21 @@ class Staging {
 	 * @see Kirki\App\Managers\PageManager::restore_stage_version()
 	 */
 	public static function restore_stage_version() {
-
 		$post_id        = HelperFunctions::sanitize_text( isset( $_POST['post_id'] ) ? $_POST['post_id'] : null );
 		$old_version_id = HelperFunctions::sanitize_text( isset( $_POST['stage_version'] ) ? $_POST['stage_version'] : null );
 
-		$new_version = self::get_most_recent_stage_version( $post_id, true, true, $old_version_id );
+		if ( ! $post_id || ! $old_version_id ) {
+			wp_send_json( false, 400 );
+		}
 
-		$old_meta_key = self::get_staged_meta_name( KIRKI_GLOBAL_STYLE_BLOCK_META_KEY . '_random', $post_id, $old_version_id );
-		$old_data     = get_post_meta( $post_id, $old_meta_key, true );
-		$new_meta_key = self::get_staged_meta_name( KIRKI_GLOBAL_STYLE_BLOCK_META_KEY . '_random', $post_id, $new_version );
-		update_post_meta( $post_id, $new_meta_key, $old_data );
+		$new_version = PageFacade::restore_stage_version( (int) $post_id, (int) $old_version_id );
 
-		$old_meta_key = self::get_staged_meta_name( KIRKI_GLOBAL_STYLE_BLOCK_META_KEY, $post_id, $old_version_id );
-		$old_data     = get_post_meta( $post_id, $old_meta_key, true );
-		$new_meta_key = self::get_staged_meta_name( KIRKI_GLOBAL_STYLE_BLOCK_META_KEY, $post_id, $new_version );
-		update_post_meta( $post_id, $new_meta_key, $old_data );
-
-		$old_meta_key = self::get_staged_meta_name( KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS, $post_id, $old_version_id );
-		$old_data     = get_post_meta( $post_id, $old_meta_key, true );
-		$new_meta_key = self::get_staged_meta_name( KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS, $post_id, $new_version );
-		update_post_meta( $post_id, $new_meta_key, $old_data );
-
-		$old_meta_key = self::get_staged_meta_name( KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS . '_random', $post_id, $old_version_id );
-		$old_data     = get_post_meta( $post_id, $old_meta_key, true );
-		$new_meta_key = self::get_staged_meta_name( KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS . '_random', $post_id, $new_version );
-		update_post_meta( $post_id, $new_meta_key, $old_data );
-
-		$old_meta_key = self::get_staged_meta_name( KIRKI_META_NAME_FOR_USED_FONT_LIST, $post_id, $old_version_id );
-		$old_data     = get_post_meta( $post_id, $old_meta_key, true );
-		$new_meta_key = self::get_staged_meta_name( KIRKI_META_NAME_FOR_USED_FONT_LIST, $post_id, $new_version );
-		update_post_meta( $post_id, $new_meta_key, $old_data );
-
-		$old_meta_key = self::get_staged_meta_name( 'kirki', $post_id, $old_version_id );
-		$old_data     = get_post_meta( $post_id, $old_meta_key, true );
-		$new_meta_key = self::get_staged_meta_name( 'kirki', $post_id, $new_version );
-		update_post_meta( $post_id, $new_meta_key, $old_data );
-
-		wp_send_json( array_merge( array( 'versions' => self::get_all_staged_versions( $post_id, true, true ) ), array( 'new_version' => $new_version ) ) );
+		wp_send_json(
+			array_merge(
+				array( 'versions' => PageFacade::get_all_staged_versions( (int) $post_id )->to_array() ),
+				array( 'new_version' => $new_version )
+			)
+		);
 	}
 
 	/**
@@ -299,18 +203,7 @@ class Staging {
 			wp_send_json( false, 400 );
 		}
 
-		$staged_versions = self::get_all_staged_versions( $post_id, true, true );
-		$staged_versions = array_map(
-			function ( $item ) use ( $version_id, $name ) {
-				return ( is_array( $item ) && isset( $item['version'] ) && intval( $item['version'] ) === intval( $version_id ) )
-				? array_merge( $item, array( 'name' => $name ) )
-				: $item;
-			},
-			$staged_versions
-		);
-
-		update_post_meta( $post_id, KIRKI_META_NAME_FOR_STAGED_VERSIONS, $staged_versions );
-		wp_send_json( $staged_versions );
+		wp_send_json( PageFacade::rename_stage_version( (int) $post_id, (int) $version_id, $name )->to_array() );
 	}
 
 	/**
@@ -324,171 +217,42 @@ class Staging {
 		if ( ! $post_id || ! $version_id ) {
 			wp_send_json( false, 400 );
 		}
-		// Delete stage meta data
-		$meta_key = self::get_staged_meta_name( KIRKI_GLOBAL_STYLE_BLOCK_META_KEY . '_random', $post_id, $version_id, true );
-		delete_post_meta( $post_id, $meta_key );
 
-		$meta_key = self::get_staged_meta_name( KIRKI_GLOBAL_STYLE_BLOCK_META_KEY, $post_id, $version_id, true );
-		delete_post_meta( $post_id, $meta_key );
-
-		$meta_key = self::get_staged_meta_name( KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS, $post_id, $version_id, true );
-		delete_post_meta( $post_id, $meta_key );
-
-		$meta_key = self::get_staged_meta_name( KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS . '_random', $post_id, $version_id, true );
-		delete_post_meta( $post_id, $meta_key );
-
-		$meta_key = self::get_staged_meta_name( KIRKI_META_NAME_FOR_USED_FONT_LIST, $post_id, $version_id, true );
-		delete_post_meta( $post_id, $meta_key );
-
-		$meta_key = self::get_staged_meta_name( 'kirki', $post_id, $version_id, true );
-		delete_post_meta( $post_id, $meta_key );
-
-		// delete the version from stage version list
-		$staged_versions = self::get_all_staged_versions( $post_id, true, true );
-		$staged_versions = array_values(
-			array_filter(
-				$staged_versions,
-				function ( $item ) use ( $version_id ) {
-					return ! ( is_array( $item ) && ! $item['publish'] && intval( $item['version'] ) === intval( $version_id ) );
-				}
-			)
-		);
-		update_post_meta( $post_id, KIRKI_META_NAME_FOR_STAGED_VERSIONS, $staged_versions );
-
-		wp_send_json( $staged_versions );
+		wp_send_json( PageFacade::remove_stage_version( (int) $post_id, (int) $version_id )->to_array() );
 	}
 
 	/**
-	 * @deprecated
+	 * @deprecated Version data is not in wp_postmeta any more, so this key points to nothing.
+	 *             Use PageFacade::read_page_meta()/write_page_meta().
 	 * @see Kirki\App\Managers\PageManager::get_staged_meta_name()
 	 */
 	public static function get_staged_meta_name( $meta_name, $post_id, $stage_version = false, $stage_only = false ) {
-		$version = $stage_version;
-		if ( ! $version ) {
-			$version = self::get_most_recent_stage_version( $post_id, false );
-		} elseif ( ! $stage_only ) {
-			$published_version = self::get_published_stage_version( $post_id );
-			if ( $published_version && $version == $published_version ) {
-				return $meta_name;
-			}
-		}
-		return 'staged_' . $version . '_' . $meta_name;
+		return PageFacade::get_staged_meta_name( $meta_name, (int) $post_id, $stage_version, $stage_only );
 	}
 
+	/**
+	 * Old staged meta keys this page still has in wp_postmeta.
+	 *
+	 * Empty for pages that are already moved to the new tables. Only pages that are not moved
+	 * yet return keys here.
+	 */
 	public static function get_all_stage_related_meta_names( $post_id ) {
-		$versions = get_post_meta( $post_id, KIRKI_META_NAME_FOR_STAGED_VERSIONS, true );
-		if ( ! $versions ) {
+		$versions = get_post_meta( $post_id, PageStageMigrationService::LEGACY_VERSIONS_META_KEY, true );
+		if ( ! $versions || ! is_array( $versions ) ) {
 			return array();
 		}
-		$meta_names = array( KIRKI_META_NAME_FOR_STAGED_VERSIONS );
+
+		$migration  = new PageStageMigrationService();
+		$meta_names = array( PageStageMigrationService::LEGACY_VERSIONS_META_KEY );
 		foreach ( $versions as $version ) {
-			$version_id   = $version['version'];
-			$meta_key     = self::get_staged_meta_name( KIRKI_GLOBAL_STYLE_BLOCK_META_KEY . '_random', $post_id, $version_id, true );
-			$meta_names[] = $meta_key;
-			$meta_key     = self::get_staged_meta_name( KIRKI_GLOBAL_STYLE_BLOCK_META_KEY, $post_id, $version_id, true );
-			$meta_names[] = $meta_key;
-			$meta_key     = self::get_staged_meta_name( KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS, $post_id, $version_id, true );
-			$meta_names[] = $meta_key;
-			$meta_key     = self::get_staged_meta_name( KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS . '_random', $post_id, $version_id, true );
-			$meta_names[] = $meta_key;
-			$meta_key     = self::get_staged_meta_name( KIRKI_META_NAME_FOR_USED_FONT_LIST, $post_id, $version_id, true );
-			$meta_names[] = $meta_key;
-			$meta_key     = self::get_staged_meta_name( 'kirki', $post_id, $version_id, true );
-			$meta_names[] = $meta_key;
+			if ( ! is_array( $version ) || ! isset( $version['version'] ) ) {
+				continue;
+			}
+			foreach ( PageMetaKeys::get_stage_content_keys() as $meta_key ) {
+				$meta_names[] = $migration->get_legacy_meta_key( (int) $version['version'], $meta_key );
+			}
 		}
 		return $meta_names;
-	}
-
-	private static function add_editor_names_into_stage_versions( $versions ) {
-		$versions = array_map(
-			function ( $item ) {
-				$user = get_user_by( 'id', $item['edited_by'] );
-				if ( ! $user ) {
-					return $item;
-				}
-				return array_merge( $item, array( 'edited_by' => $user->data->display_name ) );
-			},
-			$versions
-		);
-		return $versions;
-	}
-
-	/**
-	 * @deprecated
-	 * @see Kirki\App\Managers\PageManager::create_first_stage_version_if_empty()
-	 */
-	private static function create_first_stage_version( $post_id ) {
-		$new_version = self::add_stage_version( $post_id, 1 );
-
-		$old_meta_key = KIRKI_GLOBAL_STYLE_BLOCK_META_KEY . '_random';
-		$old_data     = get_post_meta( $post_id, $old_meta_key, true );
-		$new_meta_key = self::get_staged_meta_name( KIRKI_GLOBAL_STYLE_BLOCK_META_KEY . '_random', $post_id, $new_version );
-		update_post_meta( $post_id, $new_meta_key, $old_data );
-
-		$new_meta_key = self::get_staged_meta_name( KIRKI_GLOBAL_STYLE_BLOCK_META_KEY, $post_id, $new_version );
-		update_post_meta( $post_id, $new_meta_key, array() );
-
-		$old_meta_key = KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS;
-		$old_data     = get_post_meta( $post_id, $old_meta_key, true );
-		$new_meta_key = self::get_staged_meta_name( KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS, $post_id, $new_version );
-		update_post_meta( $post_id, $new_meta_key, $old_data );
-
-		$old_meta_key = KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS . '_random';
-		$old_data     = get_post_meta( $post_id, $old_meta_key, true );
-		$new_meta_key = self::get_staged_meta_name( KIRKI_META_NAME_FOR_USED_STYLE_BLOCK_IDS . '_random', $post_id, $new_version );
-		update_post_meta( $post_id, $new_meta_key, $old_data );
-
-		$old_meta_key = KIRKI_META_NAME_FOR_USED_FONT_LIST;
-		$old_data     = get_post_meta( $post_id, $old_meta_key, true );
-		$new_meta_key = self::get_staged_meta_name( KIRKI_META_NAME_FOR_USED_FONT_LIST, $post_id, $new_version );
-		update_post_meta( $post_id, $new_meta_key, $old_data );
-
-		$old_meta_key = 'kirki';
-		$old_data     = get_post_meta( $post_id, $old_meta_key, true );
-		$new_meta_key = self::get_staged_meta_name( 'kirki', $post_id, $new_version );
-		update_post_meta( $post_id, $new_meta_key, $old_data );
-
-		return self::publish_stage_version( true, $post_id );
-	}
-
-	/**
-	 * @deprecated
-	 * @see Kirki\App\Managers\PageManager::set_last_edited_datetime_of_stage_version()
-	 */
-	private static function update_last_edited_datetime_of_stage_version( $post_id ) {
-		$staged_versions = self::get_all_staged_versions( $post_id, true, true );
-		if ( count( $staged_versions ) === 0 ) {
-			return;
-		}
-
-		$datetime = new \DateTime( 'now', wp_timezone() );
-		$datetime = $datetime->format( 'Y-m-d H:i:s' );
-		$staged_versions[ count( $staged_versions ) - 1 ] = array_merge( $staged_versions[ count( $staged_versions ) - 1 ], array( 'last_updated' => $datetime ) );
-		update_post_meta( $post_id, KIRKI_META_NAME_FOR_STAGED_VERSIONS, $staged_versions );
-		return $staged_versions;
-	}
-
-	/**
-	 * @deprecated
-	 * @see Kirki\App\Managers\PageManager::add_stage_version()
-	 */
-	private static function add_stage_version( $post_id, $version_number, $prev_versions = array(), $being_restored = false ) {
-		$format   = 'F j g:i A';
-		$datetime = new \DateTime( 'now', wp_timezone() );
-		$date     = $datetime->format( $format );
-		$datetime = $datetime->format( 'Y-m-d H:i:s' );
-
-		$new_version     = array(
-			'version'      => $version_number,
-			'edited_by'    => get_current_user_id(),
-			'created_on'   => $datetime,
-			'last_updated' => $datetime,
-			'name'         => $being_restored ? '[Restored] ' . $being_restored['name'] : $date,
-			'publish'      => false,
-		);
-		$prev_versions[] = $new_version;
-		update_post_meta( $post_id, KIRKI_META_NAME_FOR_STAGED_VERSIONS, $prev_versions );
-		return $version_number;
 	}
 
 	/**
@@ -496,16 +260,8 @@ class Staging {
 	 * @see Kirki\App\Managers\PageManager::get_most_recent_unpublished_stage_version()
 	 */
 	public static function get_most_recent_unpublished_stage_id( $post_id ) {
-		$staged_versions      = get_post_meta( $post_id, 'kirki_stage_versions', true ) ?: array();
-		$most_recent_stage_id = false;
+		$version = PageFacade::get_most_recent_unpublished_stage_version( (int) $post_id );
 
-		foreach ( $staged_versions as $version ) {
-			if ( ! empty( $version['publish'] ) ) {
-				continue; // skip published versions
-			}
-			$most_recent_stage_id = $version['version'];
-		}
-
-		return $most_recent_stage_id;
+		return $version ? $version : false;
 	}
 }

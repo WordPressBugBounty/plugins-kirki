@@ -106,6 +106,12 @@ class FormSubmissionService
 
 			if (array_key_exists($name, $raw_data)) {
 				$form_data[$name] = $raw_data[$name];
+			} else {
+				// ponytail: PHP mangles spaces/dots to _ in request keys ("First Name" arrives as "First_Name").
+				$mangled = str_replace([' ', '.'], '_', $name);
+				if (array_key_exists($mangled, $raw_data)) {
+					$form_data[$name] = $raw_data[$mangled];
+				}
 			}
 		}
 

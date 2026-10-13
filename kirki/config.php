@@ -162,6 +162,12 @@ if (!defined('KIRKI_CM_REFERENCE_TABLE')) {
 if (!defined('KIRKI_COMMENTS_TABLE')) {
 	define('KIRKI_COMMENTS_TABLE', 'kirki_comments');
 }
+if (!defined('KIRKI_PAGE_STAGES_TABLE')) {
+	define('KIRKI_PAGE_STAGES_TABLE', 'kirki_stages');
+}
+if (!defined('KIRKI_PAGE_STAGE_DATA_TABLE')) {
+	define('KIRKI_PAGE_STAGE_DATA_TABLE', 'kirki_stage_data');
+}
 /* Custom DB table names */
 
 if (!defined('KIRKI_SUPPORTED_MEDIA_TYPES')) {

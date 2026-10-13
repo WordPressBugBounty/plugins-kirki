@@ -3,7 +3,7 @@ Contributors: themeum
 Tags: page builder, website builder, drag and drop, form builder, freeform canvas
 Requires at least: 5.9
 Tested up to: 7.1
-Stable tag: 6.3.2
+Stable tag: 6.4.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -190,6 +190,18 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 ---
 
 == Changelog ==
+
+= 6.4.0 =
+* New: Added a new SVG Drawing Tool to the canvas.
+* New: Added list style options to the Advanced Typography settings.
+* Update: Improved the page staging data store mechanism.
+* Update: Enhanced the Navigation element's default styles and functionality.
+* Update: Updated the Wrap element to use Fill for width and Hug for height by default.
+* Update: Improved the Follow Cursor auto-reset position functionality.
+* Fix: Fixed an issue with submitting forms containing empty values.
+* Fix: Fixed layout shifting during text animations.
+* Fix: Fixed ticker animation sizing issues when elements are transformed or cloned.
+
 
 = 6.3.2 =
 * New: Added an accessibility contrast ratio option to the color picker.

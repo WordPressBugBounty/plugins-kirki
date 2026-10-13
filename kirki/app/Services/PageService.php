@@ -164,7 +164,13 @@ class PageService
         $page_data = $payload->data;
 
 		if($payload->is_staging) {
-			$staging_version = Page::get_most_recent_stage_version($payload->page->ID);
+			$staging_version = $this->get_stage_version_for_save($payload->page->ID, $page_content_type, $page_data);
+
+			// Same as the published data, and no unpublished version yet: nothing to save.
+			if (!$staging_version) {
+				return false;
+			}
+
 			Page::set_last_edited_datetime_of_stage_version($payload->page->ID);
 		}
 
@@ -229,6 +235,35 @@ class PageService
 
 		return $staging_version;
     }
+
+	/**
+	 * Get the version an editor save must write to. False when there is nothing new to save.
+	 *
+	 * @see \Kirki\App\Managers\PageManager::get_stage_version_for_save()
+	 *
+	 * @param int $page_id
+	 * @param string $page_content_type
+	 * @param array $page_data
+	 *
+	 * @return int|false
+	 */
+	protected function get_stage_version_for_save(int $page_id, string $page_content_type, array $page_data)
+	{
+		switch ($page_content_type) {
+			case PageContentTypes::BLOCKS:
+				return Page::get_stage_version_for_save($page_id, PageMetaKeys::BLOCKS, ['blocks' => $page_data['blocks'] ?? []]);
+			case PageContentTypes::STYLES:
+				return Page::get_stage_version_for_save($page_id, PageMetaKeys::STYLE_BLOCKS, $page_data['styles'] ?? []);
+			case PageContentTypes::USED_STYLES:
+				return Page::get_stage_version_for_save($page_id, PageMetaKeys::USED_GLOBAL_STYLE_BLOCK_IDS, $page_data['usedStyles'] ?? []);
+			case PageContentTypes::USED_STYLE_IDS_RANDOM:
+				return Page::get_stage_version_for_save($page_id, PageMetaKeys::USED_STYLE_BLOCK_IDS, $page_data['usedStyleIdsRandom'] ?? []);
+			case PageContentTypes::USED_FONTS:
+				return Page::get_stage_version_for_save($page_id, PageMetaKeys::USED_FONT_LIST, $page_data['usedFonts'] ?? []);
+			default:
+				return Page::get_most_recent_stage_version($page_id);
+		}
+	}
 
 	/**
 	 * Toggle disabled page symbols
@@ -301,11 +336,53 @@ class PageService
 			Page::save_used_font_list($new_page->ID, $current_used_fonts);
 		}
 
+		$this->duplicate_unpublished_stage($current_page->ID, $new_page->ID);
+
 		if ($current_page->post_type === PostTypes::UTILITY) {
 			soft_flush_rewrite_rules();
 		}
 
 		return $new_page;
+	}
+
+	/**
+	 * Copy the latest unpublished version of a page to a new version of another page.
+	 *
+	 * Published data is in wp_postmeta, but unpublished edits are in the stage tables.
+	 * Without this the duplicate would lose every edit made after the last publish
+	 * (or be empty, when the page was never published).
+	 *
+	 * @param int $from_page_id
+	 * @param int $to_page_id
+	 *
+	 * @return void
+	 */
+	protected function duplicate_unpublished_stage(int $from_page_id, int $to_page_id)
+	{
+		$latest_version = Page::get_all_staged_versions($from_page_id, false)->last();
+
+		if (empty($latest_version) || !empty($latest_version['publish'])) {
+			return;
+		}
+
+		$values = Page::stages()->get_values($from_page_id, (int) $latest_version['version'], PageMetaKeys::get_stage_content_keys());
+
+		if (empty($values)) {
+			return;
+		}
+
+		// Creates the published first version of the new page, then a new unpublished one.
+		$new_version = Page::get_most_recent_stage_version($to_page_id);
+
+		foreach ($values as $meta_key => $value) {
+			Page::write_page_meta($to_page_id, $meta_key, $value, $new_version);
+		}
+
+		Page::stages()->update_version($to_page_id, $new_version, [
+			'no_legacy_global_style' => empty($latest_version['no_legacy_global_style']) ? 0 : 1,
+		]);
+
+		Page::save_editor_mode($to_page_id);
 	}
 
 	public function delete_page(PageModel $page) {

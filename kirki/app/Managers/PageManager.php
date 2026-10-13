@@ -10,7 +10,9 @@ use Kirki\App\Constants\PageMetaKeys;
 use Kirki\App\Constants\PostTypes;
 use Kirki\App\Models\Page as PageModel;
 use Kirki\App\Models\Post as PostModel;
+use Kirki\App\Models\PageStage;
 use Kirki\App\Models\PostMeta;
+use Kirki\App\Repositories\PageStageRepository;
 use Kirki\App\Supports\Facades\GlobalData;
 use Kirki\Framework\Collections\Collection;
 use Kirki\Framework\Supports\Facades\Option;
@@ -19,7 +21,6 @@ use Kirki\Framework\Supports\Facades\Date;
 
 use function Kirki\App\get_editor_mode;
 use function Kirki\App\get_timezone;
-use function Kirki\App\is_falsy;
 use function Kirki\App\is_truthy;
 use function Kirki\Framework\collection;
 use function Kirki\Framework\user;
@@ -32,10 +33,147 @@ class PageManager
 	/** @var array */
 	protected $all_block_post_ids;
 
+	/** @var PageStageRepository */
+	protected $stages;
 
-	public function __construct()
+
+	public function __construct(?PageStageRepository $stages = null)
 	{
 		$this->staged_versions = collection();
+		$this->stages = $stages ?: new PageStageRepository();
+	}
+
+	/**
+	 * Where page versions and their data are saved.
+	 *
+	 * @return PageStageRepository
+	 */
+	public function stages()
+	{
+		return $this->stages;
+	}
+
+	/**
+	 * Read a page value for a version.
+	 *
+	 * Published version: read from wp_postmeta. Other versions: read from the
+	 * kirki_stage_data table. Both use the same $meta_key.
+	 *
+	 * @param int $page_id
+	 * @param string $meta_key
+	 * @param int|false $stage_version
+	 * @param mixed $default
+	 *
+	 * @return mixed
+	 */
+	public function read_page_meta(int $page_id, string $meta_key, $stage_version = false, $default = null)
+	{
+		$stage_version = $this->resolve_stage_version($page_id, $stage_version);
+
+		if ($this->is_published_stage_version($page_id, $stage_version)) {
+			return PostMeta::get_meta_value($page_id, $meta_key, $default);
+		}
+
+		return $this->stages->get_value($page_id, (int) $stage_version, $meta_key, $default);
+	}
+
+	/**
+	 * Save a page value for a version.
+	 *
+	 * @param int $page_id
+	 * @param string $meta_key
+	 * @param mixed $value
+	 * @param int|false $stage_version
+	 *
+	 * @return void
+	 */
+	public function write_page_meta(int $page_id, string $meta_key, $value, $stage_version = false)
+	{
+		// No version means "save the published value" (wp_postmeta).
+		// Do not look up a version here: saving must never create a new version.
+		if (!$stage_version || $this->is_published_stage_version($page_id, $stage_version)) {
+			PostMeta::update_meta_value($page_id, $meta_key, $value);
+			return;
+		}
+
+		$this->stages->set_value($page_id, (int) $stage_version, $meta_key, $value);
+	}
+
+	/**
+	 * Use the given version, or the latest version when none is given (same as before).
+	 *
+	 * @param int $page_id
+	 * @param int|false $stage_version
+	 *
+	 * @return int|false
+	 */
+	protected function resolve_stage_version(int $page_id, $stage_version)
+	{
+		if ($stage_version) {
+			return (int) $stage_version;
+		}
+
+		$stage_must = false;
+
+		return $this->get_most_recent_stage_version($page_id, $stage_must);
+	}
+
+	/**
+	 * Is this the published version? (Its data is in wp_postmeta.)
+	 *
+	 * @param int $page_id
+	 * @param int|false $stage_version
+	 *
+	 * @return bool
+	 */
+	protected function is_published_stage_version(int $page_id, $stage_version)
+	{
+		if (!$stage_version) {
+			return true;
+		}
+
+		$published_version = $this->get_published_stage_version($page_id);
+
+		return $published_version && (int) $published_version === (int) $stage_version;
+	}
+
+	/**
+	 * Turn a version row into the array the editor and REST API expect.
+	 *
+	 * @param \Kirki\App\Models\PageStage $stage
+	 *
+	 * @return array
+	 */
+	protected function format_stage_version($stage)
+	{
+		$edited_by_id = (int) $stage->edited_by;
+
+		return [
+			'version' => (int) $stage->version,
+			'edited_by_id' => $edited_by_id,
+			'edited_by' => $edited_by_id ? user($edited_by_id)->get_display_name() : '',
+			'created_on' => $stage->created_at,
+			'last_updated' => $stage->updated_at,
+			'name' => $stage->name,
+			'publish' => (bool) $stage->is_published,
+			'no_legacy_global_style' => (bool) $stage->no_legacy_global_style,
+		];
+	}
+
+	/**
+	 * Load the versions of a page again from the database.
+	 *
+	 * @param int $page_id
+	 *
+	 * @return Collection
+	 */
+	protected function refresh_staged_versions(int $page_id)
+	{
+		$this->stages->forget_versions($page_id);
+
+		return $this->staged_versions = $this->stages
+			->find_versions($page_id)
+			->map(fn ($stage) => $this->format_stage_version($stage));
 	}
 
 	/**
@@ -47,14 +185,7 @@ class PageManager
 	 */
 	public function save_style_blocks(int $page_id, $data = [], $staging_version = false)
 	{
-		if (!$staging_version) {
-			PostMeta::update_meta_value($page_id, PageMetaKeys::STYLE_BLOCKS, $data);
-			return;
-		}
-
-		$new_meta_key = $this->get_staged_meta_name(PageMetaKeys::STYLE_BLOCKS, $page_id, $staging_version);
-
-		PostMeta::update_meta_value($page_id, $new_meta_key, $data);
+		$this->write_page_meta($page_id, PageMetaKeys::STYLE_BLOCKS, $data, $staging_version);
 	}
 
 	/**
@@ -66,14 +197,7 @@ class PageManager
 	 */
 	public function save_deprecated_global_style_blocks(int $page_id, $data = [], $staging_version = false)
 	{
-		if (!$staging_version) {
-			PostMeta::update_meta_value($page_id, PageMetaKeys::GLOBAL_STYLE_BLOCK_DEPRECATED, $data);
-			return;
-		}
-
-		$new_meta_key = $this->get_staged_meta_name(PageMetaKeys::GLOBAL_STYLE_BLOCK_DEPRECATED, $page_id, $staging_version);
-
-		PostMeta::update_meta_value($page_id, $new_meta_key, $data);
+		$this->write_page_meta($page_id, PageMetaKeys::GLOBAL_STYLE_BLOCK_DEPRECATED, $data, $staging_version);
 	}
 
 	/**
@@ -85,14 +209,7 @@ class PageManager
 	 */
 	public function save_used_global_style_block_ids(int $page_id, $data = [], $staging_version = false)
 	{
-		if (!$staging_version) {
-			PostMeta::update_meta_value($page_id, PageMetaKeys::USED_GLOBAL_STYLE_BLOCK_IDS, $data);
-			return;
-		}
-
-		$new_meta_key = $this->get_staged_meta_name(PageMetaKeys::USED_GLOBAL_STYLE_BLOCK_IDS, $page_id, $staging_version);
-
-		PostMeta::update_meta_value($page_id, $new_meta_key, $data);
+		$this->write_page_meta($page_id, PageMetaKeys::USED_GLOBAL_STYLE_BLOCK_IDS, $data, $staging_version);
 	}
 
 	/**
@@ -104,14 +221,7 @@ class PageManager
 	 */
 	public function save_used_style_block_ids(int $page_id, $data = [], $staging_version = false)
 	{
-		if (!$staging_version) {
-			PostMeta::update_meta_value($page_id, PageMetaKeys::USED_STYLE_BLOCK_IDS, $data);
-			return;
-		}
-
-		$new_meta_key = $this->get_staged_meta_name(PageMetaKeys::USED_STYLE_BLOCK_IDS, $page_id, $staging_version);
-
-		PostMeta::update_meta_value($page_id, $new_meta_key, $data);
+		$this->write_page_meta($page_id, PageMetaKeys::USED_STYLE_BLOCK_IDS, $data, $staging_version);
 	}
 
 	/**
@@ -123,14 +233,7 @@ class PageManager
 	 */
 	public function save_used_font_list(int $page_id, $data = [], $staging_version = false)
 	{
-		if (!$staging_version) {
-			PostMeta::update_meta_value($page_id, PageMetaKeys::USED_FONT_LIST, $data);
-			return;
-		}
-
-		$new_meta_key = $this->get_staged_meta_name(PageMetaKeys::USED_FONT_LIST, $page_id, $staging_version);
-
-		PostMeta::update_meta_value($page_id, $new_meta_key, $data);
+		$this->write_page_meta($page_id, PageMetaKeys::USED_FONT_LIST, $data, $staging_version);
 	}
 
 	/**
@@ -142,14 +245,7 @@ class PageManager
 	 */
 	public function save_blocks(int $page_id, $data = [], $staging_version = false)
 	{
-		if (!$staging_version) {
-			PostMeta::update_meta_value($page_id, PageMetaKeys::BLOCKS, $data);
-			return;
-		}
-
-		$new_meta_key = $this->get_staged_meta_name(PageMetaKeys::BLOCKS, $page_id, $staging_version);
-
-		PostMeta::update_meta_value($page_id, $new_meta_key, $data);
+		$this->write_page_meta($page_id, PageMetaKeys::BLOCKS, $data, $staging_version);
 	}
 
 	public function save_editor_mode(int $page_id)
@@ -179,28 +275,18 @@ class PageManager
 	{
 		$staged_versions = $this->get_all_staged_versions($page_id);
 
-		$total_versions = $staged_versions->count();
-
-		if ($total_versions === 0) {
+		if ($staged_versions->count() === 0) {
 			return false;
 		}
 
-		$this->staged_versions = $staged_versions->map(function ($item, $index) use ($total_versions, $has_legacy_global_style) {
-			if ($index === $total_versions - 1) {
-				$item['last_updated'] = Date::now(get_timezone(true))->format(DateTimeFormats::DB_DATETIME);
-				$item['no_legacy_global_style'] = !$has_legacy_global_style;
-			}
+		$last_version = $staged_versions->last();
 
-			return $item;
-		});
+		$this->stages->update_version($page_id, (int) $last_version['version'], [
+			'updated_at' => Date::now(get_timezone(true))->format(DateTimeFormats::DB_DATETIME),
+			'no_legacy_global_style' => $has_legacy_global_style ? 0 : 1,
+		]);
 
-		PostMeta::update_meta_value(
-			$page_id,
-			PageMetaKeys::STAGED_VERSIONS,
-			$this->staged_versions->to_array()
-		);
-
-		return $this->staged_versions;
+		return $this->refresh_staged_versions($page_id);
 	}
 
 	/**
@@ -215,6 +301,80 @@ class PageManager
 	 */
 	public function get_most_recent_stage_version(int $page_id, $stage_must = true, $restoring = false, $old_version = false)
 	{
+		[$version_number, $recent_stage_version] = $this->find_recent_stage_version($page_id);
+
+		if (!$this->needs_new_stage_version($version_number, $recent_stage_version, $stage_must, $restoring)) {
+			return (int) $version_number;
+		}
+
+		// The editor sends several save requests at the same time. Only the first one creates
+		// the new version. The others wait for the lock, see the new version and use it.
+		return (int) $this->stages->with_version_lock($page_id, function () use ($page_id, $stage_must, $restoring, $old_version) {
+			$this->staged_versions = collection();
+
+			[$version_number, $recent_stage_version, $being_restored] = $this->find_recent_stage_version($page_id, $restoring, $old_version);
+
+			if (!$this->needs_new_stage_version($version_number, $recent_stage_version, $stage_must, $restoring)) {
+				return (int) $version_number;
+			}
+
+			return $this->add_stage_version($page_id, $version_number + 1, [], $being_restored);
+		});
+	}
+
+	/**
+	 * Get the version an editor save (auto save or Save button) must write to.
+	 *
+	 * - Latest version is not published: use it.
+	 * - Latest version is published and the value is the same as the published one: return false,
+	 *   nothing changed. (The editor auto saves right after a publish. Without this check that
+	 *   save would add a new version that is only a copy of the published one.)
+	 * - Latest version is published and the value is new: create a new version. It starts as a
+	 *   copy of the published data, so the parts of the page that did not change are in it too.
+	 *
+	 * The editor saves each part of the page in its own request, all at the same time. The lock
+	 * makes them run one by one here, so every request sees the complete new version.
+	 *
+	 * @param int $page_id
+	 * @param string $meta_key
+	 * @param mixed $value
+	 *
+	 * @return int|false
+	 */
+	public function get_stage_version_for_save(int $page_id, string $meta_key, $value)
+	{
+		return $this->stages->with_version_lock($page_id, function () use ($page_id, $meta_key, $value) {
+			$this->staged_versions = collection();
+
+			$version_id = $this->get_most_recent_stage_version($page_id, false);
+
+			if (!$this->is_published_stage_version($page_id, $version_id)) {
+				return $version_id;
+			}
+
+			if ($this->is_same_page_meta($value, get_post_meta($page_id, $meta_key, true))) {
+				return false;
+			}
+
+			$new_version_id = $this->add_stage_version($page_id, $version_id + 1);
+
+			$this->snapshot_published_data($page_id, $new_version_id);
+
+			return $new_version_id;
+		});
+	}
+
+	/**
+	 * Get the latest version of a page, and the version being restored (when restoring).
+	 *
+	 * @param int $page_id
+	 * @param bool $restoring
+	 * @param int|bool $old_version
+	 *
+	 * @return array{0:int, 1:array|false, 2:array|false}
+	 */
+	protected function find_recent_stage_version(int $page_id, $restoring = false, $old_version = false)
+	{
 		$staged_versions = $this->get_all_staged_versions($page_id);
 		$recent_stage_version = false;
 		$version_number = 0;
@@ -222,7 +382,7 @@ class PageManager
 
 		foreach ($staged_versions as $version) {
 			if (is_array($version) && intval($version['version']) > $version_number) {
-				$version_number = $version['version'];
+				$version_number = (int) $version['version'];
 				$recent_stage_version = $version;
 			}
 
@@ -231,15 +391,22 @@ class PageManager
 			}
 		}
 
-		if (
-			$version_number === 0
-			|| ($stage_must && isset($recent_stage_version['publish']) && $recent_stage_version['publish'])
-			|| $restoring
-		) {
-			$version_number = $this->add_stage_version($page_id, $version_number + 1, $staged_versions->to_array(), $being_restored);
-		}
+		return [$version_number, $recent_stage_version, $being_restored];
+	}
 
-		return (int) $version_number;
+	/**
+	 * @param int $version_number
+	 * @param array|false $recent_stage_version
+	 * @param bool $stage_must
+	 * @param bool $restoring
+	 *
+	 * @return bool
+	 */
+	protected function needs_new_stage_version($version_number, $recent_stage_version, $stage_must, $restoring)
+	{
+		return $version_number === 0
+			|| ($stage_must && isset($recent_stage_version['publish']) && $recent_stage_version['publish'])
+			|| $restoring;
 	}
 
 	/**
@@ -251,39 +418,18 @@ class PageManager
 	 */
 	public function get_all_staged_versions(int $page_id, bool $create_if_empty = true)
 	{
-		if ($this->staged_versions->not_empty()) {
-			return $this->staged_versions;
-		}
+		$stages = $this->stages->find_versions($page_id);
 
-		$staged_versions = PostMeta::get_meta_value($page_id, PageMetaKeys::STAGED_VERSIONS);
-
-		if (empty($staged_versions) || !is_array($staged_versions)) {
-			if (!$create_if_empty) {
+		if ($stages->is_empty()) {
+			// A version needs a real post (foreign key), so do not create one for a missing post.
+			if (!$create_if_empty || !get_post($page_id)) {
 				return $this->staged_versions = collection();
 			}
 
-			$staged_versions = $this->create_first_stage_version_if_empty($page_id);
-		} else {
-			$staged_versions = collection($staged_versions);
+			return $this->create_first_stage_version_if_empty($page_id);
 		}
 
-
-		$this->staged_versions = $staged_versions->map(function ($item) {
-			if (isset($item['edited_by']) && is_numeric($item['edited_by'])) {
-
-				return array_merge(
-					$item,
-					[
-						'edited_by_id' => (int) $item['edited_by'],
-						'edited_by' => user((int) $item['edited_by'])->get_display_name(),
-					]
-				);
-			}
-
-			return $item;
-		});
-
-		return $this->staged_versions;
+		return $this->staged_versions = $stages->map(fn ($stage) => $this->format_stage_version($stage));
 	}
 
 	/**
@@ -294,27 +440,23 @@ class PageManager
 	 */
 	private function create_first_stage_version_if_empty(int $page_id)
 	{
-		// When stage version is empty, it means there is legacy global style blocks
-		$has_legacy_global_style = true;
+		return $this->stages->with_version_lock($page_id, function () use ($page_id) {
+			// Another request may have created it while we waited for the lock.
+			$stages = $this->stages->find_versions($page_id);
 
-		$new_version = $this->add_stage_version($page_id, 1, [], false, $has_legacy_global_style);
+			if (!$stages->is_empty()) {
+				return $this->staged_versions = $stages->map(fn ($stage) => $this->format_stage_version($stage));
+			}
 
-		$style_blocks_old_data = PostMeta::get_meta_value($page_id, PageMetaKeys::STYLE_BLOCKS, []);
-		$this->save_style_blocks($page_id, $style_blocks_old_data, $new_version);
+			// When stage version is empty, it means there is legacy global style blocks
+			$has_legacy_global_style = true;
 
-		$used_global_style_block_ids = PostMeta::get_meta_value($page_id, PageMetaKeys::USED_GLOBAL_STYLE_BLOCK_IDS, []);
-		$this->save_used_global_style_block_ids($page_id, $used_global_style_block_ids, $new_version);
+			// The first version is the published one. Publishing it also saves a copy of the
+			// published data for it, so it keeps its content after another version is published.
+			$this->add_stage_version($page_id, 1, [], false, $has_legacy_global_style);
 
-		$random_used_style_block_ids = PostMeta::get_meta_value($page_id, PageMetaKeys::USED_STYLE_BLOCK_IDS, []);
-		$this->save_used_style_block_ids($page_id, $random_used_style_block_ids, $new_version);
-
-		$used_font_list_data = PostMeta::get_meta_value($page_id, PageMetaKeys::USED_FONT_LIST, []);
-		$this->save_used_font_list($page_id, $used_font_list_data, $new_version);
-
-		$kirki_block_data = PostMeta::get_meta_value($page_id, PageMetaKeys::BLOCKS, []);
-		$this->save_blocks($page_id, $kirki_block_data, $new_version);
-		
-		return $this->publish_stage_version($page_id, $has_legacy_global_style);
+			return $this->publish_stage_version($page_id, $has_legacy_global_style);
+		});
 	}
 
 	/**
@@ -336,25 +478,20 @@ class PageManager
 		$datetime = wp_date(KirkiDateTimeFormat::DB_DATETIME); // @todo: improve later
 
 		if (!empty($being_restored)) {
-			$has_legacy_global_style = !($being_restored['has_legacy_global_style'] ?? false);
+			$has_legacy_global_style = empty($being_restored['no_legacy_global_style']);
 		}
 
-		$new_version = [
+		$this->stages->create_version($page_id, [
 			'version' => $version_number,
-			'edited_by_id' => user()->get_id(),
-			'edited_by' => user()->get_display_name(),
-			'created_on' => $datetime,
-			'last_updated' => $datetime,
 			'name' => $version_name,
-			'publish' => false,
-			'no_legacy_global_style' => !$has_legacy_global_style,
-		];
+			'edited_by' => user()->get_id(),
+			'is_published' => 0,
+			'no_legacy_global_style' => $has_legacy_global_style ? 0 : 1,
+			'created_at' => $datetime,
+			'updated_at' => $datetime,
+		]);
 
-		$prev_versions[] = $new_version;
-
-		PostMeta::update_meta_value($page_id, PageMetaKeys::STAGED_VERSIONS, $prev_versions);
-
-		$this->staged_versions = collection($prev_versions);
+		$this->refresh_staged_versions($page_id);
 
 		return $version_number;
 	}
@@ -371,23 +508,129 @@ class PageManager
 		$stage_must = false;
 		$version_id = $this->get_most_recent_stage_version($page_id, $stage_must);
 
-		$this->staged_versions = $this->get_all_staged_versions($page_id)
-			->map(function ($item) use ($version_id, $has_legacy_global_style) {
-				$is_published = isset($item['version']) && intval($item['version']) === intval($version_id);
+		// The editor has already saved the new data to the published keys. When the latest version
+		// is the published one (no auto save made a new version yet), publishing into it would
+		// replace its saved copy and the old version would be lost from the history.
+		// So the new data gets its own version.
+		if ($this->is_published_stage_version($page_id, $version_id) && $this->published_data_changed($page_id, $version_id)) {
+			$version_id = $this->add_stage_version($page_id, $version_id + 1);
+		}
 
-				$item['publish'] = $is_published;
-				$item['no_legacy_global_style'] = !$has_legacy_global_style;
+		// Fill any empty published keys from this version's data.
+		$this->promote_stage_version_data($page_id, $version_id);
 
-				return $item;
-			});
+		$this->stages->set_published($page_id, $version_id);
 
-		PostMeta::update_meta_value(
-			$page_id,
-			PageMetaKeys::STAGED_VERSIONS,
-			$this->staged_versions->to_array()
-		);
+		$this->snapshot_published_data($page_id, $version_id);
 
-		return $this->staged_versions;
+		PageStage::query()
+			->where('post_id', $page_id)
+			->update(['no_legacy_global_style' => $has_legacy_global_style ? 0 : 1]);
+
+		return $this->refresh_staged_versions($page_id);
+	}
+
+	/**
+	 * Is the published data (wp_postmeta) different from the copy saved for this version?
+	 *
+	 * @param int $page_id
+	 * @param int $version_id
+	 *
+	 * @return bool
+	 */
+	protected function published_data_changed(int $page_id, int $version_id)
+	{
+		$meta_keys = PageMetaKeys::get_stage_content_keys();
+
+		// The version has no saved copy (the empty first version of a new page), so there is
+		// nothing to keep. The first publish goes into it.
+		if (empty($this->stages->get_values($page_id, $version_id, $meta_keys))) {
+			return false;
+		}
+
+		foreach ($meta_keys as $meta_key) {
+			$published_value = get_post_meta($page_id, $meta_key, true);
+
+			if ($published_value === '') {
+				continue;
+			}
+
+			$saved_value = $this->stages->get_value($page_id, $version_id, $meta_key, '');
+
+			if (!$this->is_same_page_meta($published_value, $saved_value)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Two empty values are the same: an empty list is saved as '' in some places and [] in others.
+	 *
+	 * @param mixed $first
+	 * @param mixed $second
+	 *
+	 * @return bool
+	 */
+	protected function is_same_page_meta($first, $second)
+	{
+		return (empty($first) && empty($second)) || maybe_serialize($first) === maybe_serialize($second);
+	}
+
+	/**
+	 * Copy this version's data into the published keys, but only into keys that are empty.
+	 * 
+	 * The editor saves the page to the published keys right before it calls publish, so the
+	 * published keys already have the newest data. We never overwrite them. We only fill keys
+	 * the editor did not save, so the published page is complete.
+	 * 
+	 * @param int $page_id
+	 * @param int $version_id
+	 * 
+	 * @return void
+	 */
+	protected function promote_stage_version_data(int $page_id, int $version_id)
+	{
+		$meta_keys = PageMetaKeys::get_stage_content_keys();
+
+		$staged_data = $this->stages->get_values($page_id, $version_id, $meta_keys);
+
+		foreach ($staged_data as $meta_key => $value) {
+			$published_value = PostMeta::get_meta_value($page_id, $meta_key);
+
+			if (!empty($published_value) || empty($value)) {
+				continue;
+			}
+
+			PostMeta::update_meta_value($page_id, $meta_key, $value);
+		}
+	}
+
+	/**
+	 * Save a copy of the published data for the published version.
+	 *
+	 * wp_postmeta only has the current published data. When another version is published later,
+	 * this version is read from its own rows, so they must hold what was published.
+	 * (The old code kept staged_{version}_* copies for the same reason.)
+	 *
+	 * @param int $page_id
+	 * @param int $version_id
+	 *
+	 * @return void
+	 */
+	protected function snapshot_published_data(int $page_id, int $version_id)
+	{
+		foreach (PageMetaKeys::get_stage_content_keys() as $meta_key) {
+			$value = get_post_meta($page_id, $meta_key, true);
+
+			// Key not saved at all, nothing to copy.
+			if ($value === '') {
+				continue;
+			}
+
+			$this->stages->set_value($page_id, $version_id, $meta_key, $value);
+		}
 	}
 
 	/**
@@ -400,20 +643,9 @@ class PageManager
 	 */
 	public function rename_stage_version(int $page_id, int $version_id, string $new_name)
 	{
-		$staged_versions = $this->get_all_staged_versions($page_id, false);
-		
-		$this->staged_versions = $staged_versions->map(function ($item) use ($version_id, $new_name) {
-				if (is_array($item) && isset($item['version']) && intval($item['version']) === $version_id) {
-					$item['name'] = $new_name;
-				}
+		$this->stages->update_version($page_id, $version_id, ['name' => $new_name]);
 
-				return $item;
-			}
-		);
-
-		PostMeta::update_meta_value($page_id, PageMetaKeys::STAGED_VERSIONS, $this->staged_versions->to_array());
-
-		return $this->staged_versions;
+		return $this->refresh_staged_versions($page_id);
 	}
 
 	/**
@@ -425,48 +657,23 @@ class PageManager
 	 */
 	public function remove_stage_version(int $page_id, int $version_id)
 	{
-		$stage_only = true;
-		$meta_keys = [];
+		$version_info = $this->get_staged_version_info($page_id, $version_id);
 
-		foreach([
-			PageMetaKeys::STYLE_BLOCKS,
-			PageMetaKeys::GLOBAL_STYLE_BLOCK_DEPRECATED,
-			PageMetaKeys::USED_GLOBAL_STYLE_BLOCK_IDS,
-			PageMetaKeys::USED_STYLE_BLOCK_IDS,
-			PageMetaKeys::USED_FONT_LIST,
-			PageMetaKeys::BLOCKS
-		] as $key) {
-			$meta_keys[] = $this->get_staged_meta_name($key, $page_id, $version_id, $stage_only);
+		// Never delete the published version.
+		if (is_array($version_info) && isset($version_info['publish']) && is_truthy($version_info['publish'])) {
+			return $this->refresh_staged_versions($page_id);
 		}
 
-		PostMeta::query()
-			->where('post_id', $page_id)
-			->where_in('meta_key', $meta_keys)
-			->delete();
+		$this->stages->delete_version($page_id, $version_id);
 
-		$staged_versions = $this->get_all_staged_versions($page_id, false);
-
-		$this->staged_versions = $staged_versions->filter(function ($item) use ($version_id) {
-			// Filter out the version which is matched and not published
-			return !(
-				is_array($item) 
-				&& isset($item['publish'], $item['version']) 
-				&& is_falsy($item['publish']) 
-				&& intval($item['version']) === $version_id
-			);
-		})->values();
-		
-		PostMeta::update_meta_value($page_id, PageMetaKeys::STAGED_VERSIONS, $this->staged_versions->to_array());
-
-		return $this->staged_versions;
+		return $this->refresh_staged_versions($page_id);
 	}
 
 	protected function restore_page_meta(string $meta_key,int $page_id, int $old_version_id, int $new_version_id)
 	{
-		$old_meta_key = $this->get_staged_meta_name($meta_key, $page_id, $old_version_id);
-		$old_data = PostMeta::get_meta_value($page_id, $old_meta_key);
-		$new_meta_key = $this->get_staged_meta_name($meta_key, $page_id, $new_version_id);
-		PostMeta::update_meta_value($page_id, $new_meta_key, $old_data);
+		$old_data = $this->read_page_meta($page_id, $meta_key, $old_version_id);
+
+		$this->write_page_meta($page_id, $meta_key, $old_data, $new_version_id);
 	}
 
 	/**
@@ -480,16 +687,7 @@ class PageManager
 	{
 		$new_version_id = $this->get_most_recent_stage_version($page_id, true, true, $old_version_id);
 
-		$meta_keys = [
-			PageMetaKeys::STYLE_BLOCKS,
-			PageMetaKeys::GLOBAL_STYLE_BLOCK_DEPRECATED,
-			PageMetaKeys::USED_GLOBAL_STYLE_BLOCK_IDS,
-			PageMetaKeys::USED_STYLE_BLOCK_IDS,
-			PageMetaKeys::USED_FONT_LIST,
-			PageMetaKeys::BLOCKS
-		];
-
-		foreach($meta_keys as $meta_key) {
+		foreach(PageMetaKeys::get_stage_content_keys() as $meta_key) {
 			$this->restore_page_meta($meta_key, $page_id, $old_version_id, $new_version_id);
 		}
 
@@ -498,6 +696,9 @@ class PageManager
 
 	/**
 	 * Get the staged meta name
+	 * 
+	 * @deprecated Version data is not in wp_postmeta any more, so this key points to nothing.
+	 *             Use read_page_meta()/write_page_meta(). Kept so other plugins do not break.
 	 * 
 	 * @param string $meta_name
 	 * @param int $page_id
@@ -619,15 +820,13 @@ class PageManager
 
 		$staging_style_blocks = [];
 
-		$meta_key = $this->get_staged_meta_name(PageMetaKeys::GLOBAL_STYLE_BLOCK_DEPRECATED, $page_id, $stage_version);
-		$global_stage_style_blocks = PostMeta::get_meta_value($page_id, $meta_key, []);
+		$global_stage_style_blocks = $this->read_page_meta($page_id, PageMetaKeys::GLOBAL_STYLE_BLOCK_DEPRECATED, $stage_version, []);
 
 		if ($global_stage_style_blocks) {
 			$staging_style_blocks = $global_stage_style_blocks;
 		}
 
-		$current_style_meta_key = $this->get_staged_meta_name(PageMetaKeys::STYLE_BLOCKS, $page_id, $stage_version);
-		$current_stage_style_blocks = PostMeta::get_meta_value($page_id, $current_style_meta_key, []);
+		$current_stage_style_blocks = $this->read_page_meta($page_id, PageMetaKeys::STYLE_BLOCKS, $stage_version, []);
 
 		if ($current_stage_style_blocks) {
 			$staging_style_blocks = array_merge($staging_style_blocks, $current_stage_style_blocks);
@@ -663,8 +862,7 @@ class PageManager
 			return $this->merge_style_blocks($current_style_blocks, $global_style_blocks);
 		}
 
-		$current_stage_style_meta_key = $this->get_staged_meta_name(PageMetaKeys::STYLE_BLOCKS, $page_id, $stage_version);
-		$current_stage_style_blocks = PostMeta::get_meta_value($page_id, $current_stage_style_meta_key, []);
+		$current_stage_style_blocks = $this->read_page_meta($page_id, PageMetaKeys::STYLE_BLOCKS, $stage_version, []);
 
 		$current_stage_style_blocks = $this->resolve_duplicate_current_style_block_names($current_stage_style_blocks, $global_style_blocks);
 

@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Kirki 6.3.2\n"
+"Project-Id-Version: Kirki 6.4.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/kirki\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-29T10:20:08+00:00\n"
+"POT-Creation-Date: 2026-10-13T12:18:43+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: kirki\n"
@@ -1196,6 +1196,7 @@ msgstr ""
 
 #: customizer/packages/fields/dimensions/src/Dimensions.php:73
 #: customizer/packages/fields/typography/src/Field/Typography.php:356
+#: assets/js/kirki-editor.min.js:2
 msgid "Center"
 msgstr ""
 
@@ -1823,11 +1824,27 @@ msgid "Move"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+msgid "Frame"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "Text"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Video"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Pen Tool"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Rectangle Shape"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Circle Shape"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2291,6 +2308,10 @@ msgid "Offset"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+msgid "Collection"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "Fields"
 msgstr ""
 
@@ -2640,7 +2661,7 @@ msgid "Icon"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
-msgid "SVG"
+msgid "Vector"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2673,10 +2694,6 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Lightbox"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Collection"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -4181,6 +4198,10 @@ msgid "Add state"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+msgid "Path"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "Edit class"
 msgstr ""
 
@@ -4190,6 +4211,14 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Static link"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Select multi-reference"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Select reference"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -4265,6 +4294,10 @@ msgid "Opacity"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+msgid "Fill"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "Collection options"
 msgstr ""
 
@@ -4322,6 +4355,66 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Add pagination"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Inside"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Align"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Butt"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Round"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Square"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Miter"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Bevel"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "End points"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Join"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Gap"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Stroke"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Straight"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Mirrored"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Individual"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Join style"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -4918,14 +5011,14 @@ msgid "Back to admin"
 msgstr ""
 
 #: assets/js/kirki.min.js:2
-msgid "Failed! Please try again"
-msgstr ""
-
-#: assets/js/kirki.min.js:2
 #, js-format
 msgid "File size should be less than %dMB."
 msgstr ""
 
 #: assets/js/kirki.min.js:2
 msgid "Attachment Failed!"
+msgstr ""
+
+#: assets/js/kirki.min.js:2
+msgid "Failed! Please try again"
 msgstr ""

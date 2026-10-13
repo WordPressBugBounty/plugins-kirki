@@ -76,6 +76,26 @@ class PageMetaKeys
 
     const SEO_SETTINGS = 'kirki_page_seo_settings';
 
+    /**
+     * Meta keys that are saved per version.
+     *
+     * The published value is in wp_postmeta. Other versions are in the kirki_stage_data
+     * table, under the same key.
+     *
+     * @return array
+     */
+    public static function get_stage_content_keys()
+    {
+        return [
+            static::STYLE_BLOCKS,
+            static::GLOBAL_STYLE_BLOCK_DEPRECATED,
+            static::USED_GLOBAL_STYLE_BLOCK_IDS,
+            static::USED_STYLE_BLOCK_IDS,
+            static::USED_FONT_LIST,
+            static::BLOCKS,
+        ];
+    }
+
     public static function get_single_post_keys()
     {
         return [
