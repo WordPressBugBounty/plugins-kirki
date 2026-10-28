@@ -6,6 +6,9 @@ defined('ABSPATH') || exit;
 
 use Kirki\App\Constants\PostTypes;
 use Kirki\App\Models\Post as PostModel;
+use Kirki\App\Supports\PageUrl;
+
+use function Kirki\Framework\user;
 
 class PostService 
 {
@@ -23,13 +26,26 @@ class PostService
 		$posts = PostModel::filter_post_type($post_types)
 			->exclude_trash()
 			->search($search)
-			->get()
-			->group_by(function ($page) {
-				$group_keys = [PostTypes::TEMPLATE, PostTypes::UTILITY, PostTypes::POPUP];
-				
-				return in_array($page->post_type, $group_keys, true) ? PostTypes::WP_PAGE : $page->post_type;
-			});
+			->get();
 
-		return $posts;
+		$group_keys = [PostTypes::TEMPLATE, PostTypes::UTILITY, PostTypes::POPUP];
+		$grouped = [];
+
+		// Only expose posts the user can edit, and only the fields the global search needs.
+		foreach ($posts as $post) {
+			if (!user()->can_access_post('edit_post', $post)) {
+				continue;
+			}
+
+			$type_key = in_array($post->post_type, $group_keys, true) ? PostTypes::WP_PAGE : $post->post_type;
+
+			$grouped[$type_key][] = [
+				'id' => (int) $post->ID,
+				'title' => $post->post_title,
+				'editor_url' => PageUrl::create($post)->get_editor_url(),
+			];
+		}
+
+		return $grouped;
 	}
 }

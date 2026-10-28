@@ -122,7 +122,7 @@ class Collection {
 		if ( $collection_type === 'posts' ) {
 			return HelperFunctions::get_posts( $args );
 		} elseif ( $collection_type === 'users' ) {
-			return Users::get_users( $args );
+			return Users::hide_private_fields( Users::get_users( $args ) );
 		} elseif ( $collection_type === 'terms' ) {
 			$args  = array(
 				'taxonomy'      => $taxonomy,

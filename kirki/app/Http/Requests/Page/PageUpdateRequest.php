@@ -4,6 +4,7 @@ namespace Kirki\App\Http\Requests\Page;
 
 defined('ABSPATH') || exit;
 
+use Kirki\App\Constants\PostStatus;
 use Kirki\Framework\Http\Request;
 use Kirki\Framework\Sanitizer;
 
@@ -14,7 +15,7 @@ class PageUpdateRequest extends Request
         return [
             'post_title' => 'nullable|string',
             'post_name' => 'nullable|string',
-            'post_status' => 'nullable|string',
+            'post_status' => 'nullable|string|in:' . PostStatus::DRAFT . ',' . PostStatus::PUBLISH,
         ];
     }
 

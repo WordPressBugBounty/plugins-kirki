@@ -366,8 +366,13 @@ class KirkiCommentsRest extends WP_REST_Controller
 			'order' => 'ASC',
 			'number' => $per_page,
 			'search' => '*' . esc_attr($query) . '*',
-			'search_columns' => array('user_login', 'user_nicename', 'display_name', 'user_email'),
+			'search_columns' => array('user_login', 'user_nicename', 'display_name'),
 		);
+
+		// Searching by email lets anyone guess addresses one character at a time.
+		if (current_user_can('list_users')) {
+			$args['search_columns'][] = 'user_email';
+		}
 
 		$users = get_users($args);
 		$formatted_users = array();

@@ -47,7 +47,26 @@ class Users {
 			)
 		);
 
-		wp_send_json( $users );
+		wp_send_json( self::hide_private_fields( $users ) );
+	}
+
+	/**
+	 * Remove email and roles from a get_users() result unless the current user can list users.
+	 * These ajax responses reach any Kirki user (and the editor preview token).
+	 *
+	 * @param array $users get_users() result with 'data' and 'pagination'.
+	 * @return array
+	 */
+	public static function hide_private_fields( $users ) {
+		if ( current_user_can( 'list_users' ) || empty( $users['data'] ) ) {
+			return $users;
+		}
+
+		foreach ( $users['data'] as $index => $user ) {
+			unset( $users['data'][ $index ]['user_email'], $users['data'][ $index ]['roles'] );
+		}
+
+		return $users;
 	}
 
 	public static function get_users( $params ) {
@@ -73,8 +92,13 @@ class Users {
 			'paged'          => $current_page,
 			'offset'         => $offset_cal,
 			'search'         => '*' . $query . '*',  // The dynamic search query
-			'search_columns' => array( 'user_nicename', 'user_email', 'display_name' ),  // Fields to search in
+			'search_columns' => array( 'user_nicename', 'display_name' ),  // Fields to search in
 		);
+
+		// Searching by email lets anyone guess addresses one character at a time.
+		if ( current_user_can( 'list_users' ) ) {
+			$args['search_columns'][] = 'user_email';
+		}
 
 		if ( isset( $filters ) && is_array( $filters ) ) {
 			foreach ( $filters as $filter_item ) {

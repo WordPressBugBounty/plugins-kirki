@@ -24,6 +24,7 @@ class PageStageMigrationService
     const CURSOR_OPTION = 'kirki_stage_migration_cursor';
     const SWEEP_CURSOR_OPTION = 'kirki_stage_migration_sweep_cursor';
     const FAILED_OPTION = 'kirki_stage_migration_failed';
+    const ATTEMPTS_OPTION = 'kirki_stage_migration_attempts';
     const LOCK_TRANSIENT = 'kirki_stage_migration_lock';
     const CRON_HOOK = 'kirki_migrate_stage_data';
 
@@ -32,6 +33,9 @@ class PageStageMigrationService
     const STATUS_COMPLETE = 'complete';
 
     const LEGACY_VERSIONS_META_KEY = 'kirki_stage_versions';
+
+    /** A page whose migration crashed the request this many times is skipped. */
+    const MAX_ATTEMPTS = 3;
 
     /** @var int[] pages already moved in this request */
     protected static $migrated_in_request = [];
@@ -193,13 +197,22 @@ class PageStageMigrationService
                 return ['processed' => 0, 'done' => false];
             }
 
+            $processed = 0;
+
             foreach ($post_ids as $post_id) {
+                // Leave the rest for the next run, so one run never gets near the PHP limits.
+                if ($processed > 0 && $this->is_over_budget()) {
+                    break;
+                }
+
                 $this->migrate_post((int) $post_id);
 
                 update_option(self::CURSOR_OPTION, (int) $post_id, false);
+
+                ++$processed;
             }
 
-            return ['processed' => count($post_ids), 'done' => false];
+            return ['processed' => $processed, 'done' => false];
         } finally {
             delete_transient(self::LOCK_TRANSIENT);
         }
@@ -214,7 +227,44 @@ class PageStageMigrationService
      */
     public function has_legacy_data(int $page_id)
     {
-        return !empty(get_post_meta($page_id, self::LEGACY_VERSIONS_META_KEY, true));
+        global $wpdb;
+
+        $found = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT meta_id FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = %s LIMIT 1",
+                $page_id,
+                self::LEGACY_VERSIONS_META_KEY
+            )
+        );
+
+        return !empty($found);
+    }
+
+    /**
+     * Read one old meta value straight from the database.
+     *
+     * Never use get_post_meta() for old staging data. get_post_meta() loads every meta row of
+     * the page into memory, and a page with a long history can have hundreds of MB of
+     * staged_* rows. That crashed sites with "Allowed memory size exhausted" in 6.4.0.
+     *
+     * @param int $page_id
+     * @param string $meta_key
+     *
+     * @return mixed '' when the key does not exist, like get_post_meta(..., true)
+     */
+    public function get_legacy_value(int $page_id, string $meta_key)
+    {
+        global $wpdb;
+
+        $raw = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = %s ORDER BY meta_id ASC LIMIT 1",
+                $page_id,
+                $meta_key
+            )
+        );
+
+        return $raw === null ? '' : maybe_unserialize($raw);
     }
 
     /**
@@ -242,15 +292,28 @@ class PageStageMigrationService
         try {
             self::$migrated_in_request[$page_id] = true;
 
-            // Read again: another request may have moved this page while we waited for the lock.
-            wp_cache_delete($page_id, 'post_meta');
-
-            $versions = get_post_meta($page_id, self::LEGACY_VERSIONS_META_KEY, true);
+            // Read from the database, not the cache: another request may have moved this page
+            // while we waited for the lock.
+            $versions = $this->get_legacy_value($page_id, self::LEGACY_VERSIONS_META_KEY);
 
             if (empty($versions) || !is_array($versions)) {
                 $this->delete_orphan_stage_meta($page_id);
 
                 return false;
+            }
+
+            // A fatal error (e.g. out of memory) can not be caught, so count the attempt before
+            // the work starts. A page that keeps crashing is skipped instead of taking the site
+            // down on every request. Its old data stays and keeps working.
+            if (!$this->record_attempt($page_id)) {
+                return false;
+            }
+
+            // Copying a long history can take a while (about 12s for 180MB). Give it its own
+            // time and memory, where the host allows it.
+            wp_raise_memory_limit('kirki_stage_migration');
+            if (function_exists('set_time_limit')) {
+                @set_time_limit(300); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
             }
 
             DB::begin_transaction();
@@ -261,6 +324,7 @@ class PageStageMigrationService
                 DB::commit();
 
                 $this->set_failed($page_id, null);
+                $this->clear_attempts($page_id);
             } catch (Throwable $throwable) {
                 DB::rollback();
 
@@ -318,17 +382,17 @@ class PageStageMigrationService
 
                 $obsolete_meta_keys[] = $legacy_meta_key;
 
-                $value = get_post_meta($page_id, $legacy_meta_key, true);
+                $value = $this->get_legacy_value($page_id, $legacy_meta_key);
 
                 // Published version: its live data is in wp_postmeta. We also keep a copy in the
                 // table, so the version still has its content after another version is published.
                 // Take the copy from wp_postmeta. The old staged value is only used when the
                 // published key is missing, and then it also fills that key. Never overwrite it.
                 if ($is_published) {
-                    $published_value = get_post_meta($page_id, $meta_key, true);
+                    $published_value = $this->get_legacy_value($page_id, $meta_key);
 
                     if (empty($published_value) && !empty($value)) {
-                        update_post_meta($page_id, $meta_key, $value);
+                        $this->write_published_value($page_id, $meta_key, $value);
                     } elseif ($published_value !== '') {
                         $value = $published_value;
                     }
@@ -342,9 +406,126 @@ class PageStageMigrationService
             }
         }
 
-        foreach (array_unique($obsolete_meta_keys) as $meta_key) {
-            delete_post_meta($page_id, $meta_key);
+        $this->delete_legacy_meta($page_id, array_unique($obsolete_meta_keys));
+    }
+
+    /**
+     * Save a published value without update_post_meta(), which loads all meta of the page.
+     *
+     * @param int $page_id
+     * @param string $meta_key
+     * @param mixed $value
+     *
+     * @return void
+     */
+    protected function write_published_value(int $page_id, string $meta_key, $value)
+    {
+        global $wpdb;
+
+        $meta_id = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT meta_id FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = %s LIMIT 1",
+                $page_id,
+                $meta_key
+            )
+        );
+
+        if ($meta_id) {
+            $wpdb->update($wpdb->postmeta, ['meta_value' => maybe_serialize($value)], ['meta_id' => (int) $meta_id]);
+        } else {
+            $wpdb->insert($wpdb->postmeta, ['post_id' => $page_id, 'meta_key' => $meta_key, 'meta_value' => maybe_serialize($value)]);
         }
+
+        wp_cache_delete($page_id, 'post_meta');
+    }
+
+    /**
+     * Delete old meta rows of a page in one query. delete_post_meta() runs several queries per
+     * key, and a page can have thousands of old keys.
+     *
+     * @param int $page_id
+     * @param string[] $meta_keys
+     *
+     * @return void
+     */
+    protected function delete_legacy_meta(int $page_id, array $meta_keys)
+    {
+        global $wpdb;
+
+        foreach (array_chunk($meta_keys, 500) as $chunk) {
+            $placeholders = implode(',', array_fill(0, count($chunk), '%s'));
+
+            // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key IN ($placeholders)", array_merge([$page_id], $chunk)));
+        }
+
+        wp_cache_delete($page_id, 'post_meta');
+    }
+
+    /**
+     * Count one migration attempt of a page.
+     *
+     * @param int $page_id
+     *
+     * @return bool false when the page crashed too often and must be skipped
+     */
+    protected function record_attempt(int $page_id)
+    {
+        $attempts = get_option(self::ATTEMPTS_OPTION, []);
+        $attempts = is_array($attempts) ? $attempts : [];
+        $count = (int) ($attempts[$page_id] ?? 0);
+
+        // Visitors and cron skip the page. A user who can edit it still tries, so the editor
+        // never works on an empty version list while the real history waits in wp_postmeta.
+        if ($count >= self::MAX_ATTEMPTS && !current_user_can('edit_post', $page_id)) {
+            $this->set_failed($page_id, sprintf('Skipped after %d crashed attempts (out of memory or timeout).', $count));
+
+            return false;
+        }
+
+        $attempts[$page_id] = $count + 1;
+        update_option(self::ATTEMPTS_OPTION, $attempts, false);
+
+        return true;
+    }
+
+    /**
+     * @param int $page_id
+     *
+     * @return void
+     */
+    protected function clear_attempts(int $page_id)
+    {
+        $attempts = get_option(self::ATTEMPTS_OPTION, []);
+
+        if (!is_array($attempts) || !isset($attempts[$page_id])) {
+            return;
+        }
+
+        unset($attempts[$page_id]);
+
+        if (empty($attempts)) {
+            delete_option(self::ATTEMPTS_OPTION);
+            return;
+        }
+
+        update_option(self::ATTEMPTS_OPTION, $attempts, false);
+    }
+
+    /**
+     * Has this request used more than half of its memory or 20 seconds?
+     *
+     * @return bool
+     */
+    protected function is_over_budget()
+    {
+        $memory_limit = wp_convert_hr_to_bytes(ini_get('memory_limit'));
+
+        if ($memory_limit > 0 && memory_get_usage() > $memory_limit / 2) {
+            return true;
+        }
+
+        return (microtime(true) - $_SERVER['REQUEST_TIME_FLOAT']) > 20;
     }
 
     /**
@@ -489,16 +670,10 @@ class PageStageMigrationService
             )
         );
 
-        foreach ($meta_keys as $meta_key) {
-            if (!$this->is_legacy_stage_meta_key($meta_key)) {
-                continue;
-            }
-
-            delete_post_meta($page_id, $meta_key);
-        }
+        $meta_keys = array_values(array_filter($meta_keys, [$this, 'is_legacy_stage_meta_key']));
 
         if (!empty($meta_keys)) {
-            clean_post_cache($page_id);
+            $this->delete_legacy_meta($page_id, $meta_keys);
         }
     }
 
@@ -533,7 +708,7 @@ class PageStageMigrationService
             $post_id = (int) $post_id;
 
             // This page got a version list after the first pass passed it, so move it normally.
-            if (get_post_meta($post_id, self::LEGACY_VERSIONS_META_KEY, true)) {
+            if ($this->has_legacy_data($post_id)) {
                 unset(self::$migrated_in_request[$post_id]);
 
                 $this->migrate_post($post_id);
@@ -606,7 +781,8 @@ class PageStageMigrationService
 
     /**
      * Mark the migration as done. Keep only the status option, delete the other helper options
-     * and stop the cron job. Failed pages keep their old data and move when opened.
+     * and stop the cron job. Failed pages keep their old data and move when opened. The crash
+     * counter is kept, so a page that crashed too often stays skipped.
      *
      * @return void
      */
@@ -633,6 +809,7 @@ class PageStageMigrationService
         update_option(self::CURSOR_OPTION, 0, false);
         update_option(self::SWEEP_CURSOR_OPTION, 0, false);
         delete_option(self::FAILED_OPTION);
+        delete_option(self::ATTEMPTS_OPTION);
 
         self::$migrated_in_request = [];
 

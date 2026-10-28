@@ -309,13 +309,20 @@ class CollaborationCommentService
             AccessLevels::VIEW_ACCESS,
         ]);
 
+        $search_columns = ['user_login', 'user_nicename', 'display_name'];
+
+        // Searching by email lets anyone guess addresses one character at a time.
+        if (current_user_can('list_users')) {
+            $search_columns[] = 'user_email';
+        }
+
         return get_users([
             'role__in' => $roles,
             'orderby' => 'display_name',
             'order' => 'ASC',
             'number' => $limit,
             'search' => '*' . $query . '*',
-            'search_columns' => ['user_login', 'user_nicename', 'display_name', 'user_email'],
+            'search_columns' => $search_columns,
         ]); // @todo: Update this if we plan to use our own User model to handle user related query
     }
 }

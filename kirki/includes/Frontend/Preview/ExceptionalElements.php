@@ -802,6 +802,18 @@ class ExceptionalElements {
 		if(isset($options['inside_symbol']) && $options['inside_symbol'] === true){
 			$collection_info['post_id'] = $options['symbol_id'];
 		}
+
+		// Staging preview (?staging_version=N&nonce=...): pass the version on, so "load more",
+		// pagination and filters render the same version. The endpoint checks the nonce again.
+		//phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		$staging_version = isset( $_GET['staging_version'] ) ? intval( HelperFunctions::sanitize_text( $_GET['staging_version'] ) ) : false;
+		//phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		$nonce = HelperFunctions::sanitize_text( isset( $_GET['nonce'] ) ? $_GET['nonce'] : '' );
+		if ( $staging_version && (int) $collection_info['post_id'] === get_queried_object_id() && wp_verify_nonce( $nonce, 'kirki_preview_staging_nonce' ) ) {
+			$collection_info['staging_version'] = $staging_version;
+			$collection_info['staging_nonce'] = $nonce;
+		}
+
 		return $collection_info;
 	}
 

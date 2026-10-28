@@ -54,7 +54,7 @@ class WebhookActionHandler implements FormActionHandler
         $url = rtrim($url, '/');
         $url .= '/';
 
-        $response = Http::get($url . '?' . $query_string);
+        $response = Http::with_options($this->safe_request_options())->get($url . '?' . $query_string);
 
         return $response->status() !== 0;
     }
@@ -72,8 +72,25 @@ class WebhookActionHandler implements FormActionHandler
             return false;
         }
 
-        $response = Http::as_form()->post($url, $form_data);
+        $response = Http::with_options($this->safe_request_options())->as_form()->post($url, $form_data);
 
         return $response->status() !== 0;
+    }
+
+    /**
+     * Request options that keep the webhook on the URL is_safe_url() approved.
+     *
+     * is_safe_url() only checks the initial URL. Redirects would be followed without
+     * a re-check, so they are disabled; reject_unsafe_urls makes WordPress validate the
+     * target again at connect time (no private/loopback IPs, only ports 80, 443, 8080).
+     *
+     * @return array
+     */
+    protected function safe_request_options()
+    {
+        return [
+            'redirection' => 0,
+            'reject_unsafe_urls' => true,
+        ];
     }
 }

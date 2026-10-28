@@ -237,12 +237,12 @@ class Staging {
 	 * yet return keys here.
 	 */
 	public static function get_all_stage_related_meta_names( $post_id ) {
-		$versions = get_post_meta( $post_id, PageStageMigrationService::LEGACY_VERSIONS_META_KEY, true );
+		$migration = new PageStageMigrationService();
+		$versions  = $migration->get_legacy_value( (int) $post_id, PageStageMigrationService::LEGACY_VERSIONS_META_KEY );
 		if ( ! $versions || ! is_array( $versions ) ) {
 			return array();
 		}
 
-		$migration  = new PageStageMigrationService();
 		$meta_names = array( PageStageMigrationService::LEGACY_VERSIONS_META_KEY );
 		foreach ( $versions as $version ) {
 			if ( ! is_array( $version ) || ! isset( $version['version'] ) ) {

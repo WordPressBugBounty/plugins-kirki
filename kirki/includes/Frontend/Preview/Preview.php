@@ -507,6 +507,8 @@ class Preview extends ExceptionalElements {
 				}
 			}
 		}
+		// change all stretch value to -webkit-fill-available;
+		$s = str_replace('stretch', '-webkit-fill-available', $s);
 		return $s;
 	}
 
@@ -1189,19 +1191,20 @@ class Preview extends ExceptionalElements {
 			}
 
 			foreach ( $value as $key => $val ) {
-				$option_type  = $val['type'];
-				$option_value = $val['value'];
+				$option_type   = $val['type'];
+				$option_value  = $val['value'];
+				$dynamic_value = '';
 
 				if ( $option_type === 'text' ) {
 					$seo_value .= $option_value;
 				} elseif ( $option_type === 'post' ) {
 					// post author
 					if ( isset( $post->$option_value ) && $option_value === 'post_author' ) {
-						$seo_value .= get_the_author_meta( 'display_name', $post->post_author );
+						$dynamic_value .= get_the_author_meta( 'display_name', $post->post_author );
 					} elseif ( $option_value === 'post_id' ) {
-						$seo_value .= isset( $post->ID ) ? $post->ID : '';
+						$dynamic_value .= isset( $post->ID ) ? $post->ID : '';
 					} else {
-						$seo_value .= isset( $post->$option_value ) ? $post->$option_value : '';
+						$dynamic_value .= isset( $post->$option_value ) ? $post->$option_value : '';
 					}
 				} elseif ( $option_type === KIRKI_CONTENT_MANAGER_PREFIX . '_field' ) {
 					$meta_key = ContentManagerHelper::get_child_post_meta_key_using_field_id( $post->post_parent, $option_value );
@@ -1213,18 +1216,18 @@ class Preview extends ExceptionalElements {
 						$post_meta_value = $post_meta_value['url'];
 					}
 
-					$seo_value .= wp_strip_all_tags( $post_meta_value );
+					$dynamic_value .= wp_strip_all_tags( $post_meta_value );
 				} elseif ( $option_type === 'featured_image' ) {
-					$seo_value .= get_the_post_thumbnail_url( $post->ID );
+					$dynamic_value .= get_the_post_thumbnail_url( $post->ID );
 				} elseif ( $option_type === 'user' ) {
 					$user_id = HelperFunctions::get_user_id_if_possible_from_url();
 
 					if ( $option_value === 'user_id' ) {
-						$seo_value .= $user_id;
+						$dynamic_value .= $user_id;
 					} elseif ( $option_value === 'user_name' ) {
-						$seo_value .= get_the_author_meta( 'display_name', $user_id );
+						$dynamic_value .= get_the_author_meta( 'display_name', $user_id );
 					} else {
-						$seo_value .= get_the_author_meta( $option_value, $user_id );
+						$dynamic_value .= get_the_author_meta( $option_value, $user_id );
 					}
 				} elseif ( $option_type === 'term' ) {
 					$term_id = HelperFunctions::get_term_id_if_possible_from_url();
@@ -1232,14 +1235,20 @@ class Preview extends ExceptionalElements {
 						$term = get_term( $term_id );
 
 						if ( $option_value === 'term_id' ) {
-							$seo_value .= $term->term_id;
+							$dynamic_value .= $term->term_id;
 						} elseif ( $option_value === 'term_name' ) {
-							$seo_value .= $term->name;
+							$dynamic_value .= $term->name;
 						} elseif ( $option_value === 'term_slug' ) {
-							$seo_value .= $term->slug;
+							$dynamic_value .= $term->slug;
 						}
 					}
 				}
+
+				// Dynamic values come from user-editable data (display_name, bio, term
+				// name, CMS fields…). The assembled string goes through do_shortcode()
+				// below, so strip shortcode brackets from them. Only the admin-authored
+				// 'text' parts may contain shortcodes.
+				$seo_value .= Utils::sanitize_plain_text_input( (string) $dynamic_value );
 			}
 		} else {
 			$seo_value = $value;

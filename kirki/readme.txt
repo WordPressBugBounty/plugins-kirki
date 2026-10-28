@@ -3,7 +3,7 @@ Contributors: themeum
 Tags: page builder, website builder, drag and drop, form builder, freeform canvas
 Requires at least: 5.9
 Tested up to: 7.1
-Stable tag: 6.4.0
+Stable tag: 6.4.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -190,6 +190,20 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 ---
 
 == Changelog ==
+
+= 6.4.1 =
+* Update: Disabled keyboard shortcuts while popups, such as Content Manager and Variable, are open.
+* Update: Improved CSS generation for gap, row-gap, and column-gap properties.
+* Update: Enhanced vector drawing functionality, including keyboard shortcuts, vertex selection in the vertex controller, and other usability improvements.
+* Update: Clicking a vertex without holding the Shift key now selects only that vertex.
+* Fix: Fixed an issue where mouse movement handling stopped near the left and right sidebars.
+* Fix: Fixed an issue where collection items did not inherit global classes in the preview.
+* Fix: Resolved a system crash caused by references to non-existent element IDs.
+* Fix: Fixed the text direction issue in Dynamic Text Box.
+* Fix: Fixed security vulnerabilities that allow author roles to access other user's posts and update content without proper authorization.
+* Fix: Resolved the undo issue when deleting multiple nested elements.
+* Fix: Fixed the background-repeat reset issue when multiple elements are selected.
+
 
 = 6.4.0 =
 * New: Added a new SVG Drawing Tool to the canvas.

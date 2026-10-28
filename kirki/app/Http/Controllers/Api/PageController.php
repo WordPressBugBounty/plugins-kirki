@@ -26,11 +26,14 @@ use Kirki\App\Resources\PageContentResource;
 use Kirki\App\Resources\PageResource;
 use Kirki\App\Services\PageService;
 use Kirki\App\Supports\CollectionItem;
+use Kirki\App\Supports\EditorPreview;
 use Kirki\App\Supports\Facades\Page;
+use Kirki\Framework\Exceptions\AuthorizationException;
 use Kirki\Framework\Http\Request;
 use Kirki\Framework\Http\Response;
 
 use function Kirki\Framework\response;
+use function Kirki\Framework\user;
 
 class PageController
 {
@@ -62,6 +65,8 @@ class PageController
             throw new Exception(esc_html__('Page not found.', 'kirki'), Response::NOT_FOUND);
         }
 
+        $this->authorize_post($page, 'edit_post');
+
         $payload = EditorPagePayloadDTO::from_array($request->sanitized());
         $payload->page = $page;
 
@@ -82,6 +87,10 @@ class PageController
             throw new Exception(esc_html__('Page not found.', 'kirki'), Response::NOT_FOUND);
         }
 
+        if (!EditorPreview::has_valid_token()) {
+            $this->authorize_post($page, 'edit_post');
+        }
+
         return response()->json([
             'data' => Page::get_all_staged_versions($page->ID, false),
         ], Response::OK);
@@ -94,6 +103,8 @@ class PageController
         if (empty($page)) {
             throw new Exception(esc_html__('Page not found.', 'kirki'), Response::NOT_FOUND);
         }
+
+        $this->authorize_post($page, 'edit_post');
 
         return response()->json([
             'data' => Page::publish_stage_version($page->ID),
@@ -109,6 +120,8 @@ class PageController
             throw new Exception(esc_html__('Page not found.', 'kirki'), Response::NOT_FOUND);
         }
 
+        $this->authorize_post($page, 'edit_post');
+
         return response()->json([
             'data' => Page::rename_stage_version($page->ID, $request->int('version_id'), $request->string('name')),
             'message' => __('Staging version renamed successfully.', 'kirki'),
@@ -122,6 +135,8 @@ class PageController
         if (empty($page)) {
             throw new Exception(esc_html__('Page not found.', 'kirki'), Response::NOT_FOUND);
         }
+
+        $this->authorize_post($page, 'edit_post');
 
         return response()->json([
             'data' => [
@@ -140,6 +155,8 @@ class PageController
             throw new Exception(esc_html__('Page not found.', 'kirki'), Response::NOT_FOUND);
         }
 
+        $this->authorize_post($page, 'edit_post');
+
         return response()->json([
             'data' => Page::remove_stage_version($page->ID, $request->int('version_id')),
             'message' => __('Staging version removed successfully.', 'kirki'),
@@ -153,6 +170,8 @@ class PageController
         if (empty($page)) {
             throw new Exception(esc_html__('Page not found.', 'kirki'), Response::NOT_FOUND);
         }
+
+        $this->authorize_post($page, 'edit_post');
 
         $payload = EditPageDTO::from_array($request->sanitized());
 
@@ -172,6 +191,8 @@ class PageController
             throw new Exception(esc_html__('Popup not found.', 'kirki'), Response::NOT_FOUND);
         }
 
+        $this->authorize_post($popup, 'edit_post');
+
         $payload = EditPopupDTO::from_array($request->sanitized());
 
         $popup = $this->service->update_popup_data($popup, $payload);
@@ -189,6 +210,8 @@ class PageController
         if (empty($page)) {
             throw new Exception(esc_html__('Page not found.', 'kirki'), Response::NOT_FOUND);
         }
+
+        $this->authorize_post($page, 'edit_post');
 
         $payload = TogglePageSymbolDTO::from_array($request->sanitized());
 
@@ -209,6 +232,8 @@ class PageController
             throw new Exception(esc_html__('Page not found.', 'kirki'), Response::NOT_FOUND);
         }
 
+        $this->authorize_post($page, 'edit_post');
+
         return response()->json([
             'data' => new PageResource($this->service->duplicate_page($page)),
             'message' => __('Unused style blocks removed.', 'kirki'),
@@ -222,6 +247,8 @@ class PageController
         if (empty($page)) {
             throw new Exception(esc_html__('Page not found.', 'kirki'), Response::NOT_FOUND);
         }
+
+        $this->authorize_post($page, 'delete_post');
 
         $this->service->delete_page($page);
 
@@ -270,6 +297,8 @@ class PageController
             throw new Exception(esc_html__('Post not found.', 'kirki'), Response::NOT_FOUND);
         }
 
+        $this->authorize_post($post, 'edit_post');
+
         return response()->json([
             'data' => $post,
         ]);
@@ -281,6 +310,10 @@ class PageController
 
         if (empty($page)) {
             throw new Exception(esc_html__('Page not found.', 'kirki'), Response::NOT_FOUND);
+        }
+
+        if (!EditorPreview::has_valid_token()) {
+            $this->authorize_post($page, 'read_post');
         }
 
         return response()->json([
@@ -306,10 +339,30 @@ class PageController
             throw new Exception(esc_html__('Page not found.', 'kirki'), Response::NOT_FOUND);
         }
 
+        // Returns the latest unpublished (staged) data, so it needs edit rights, not just read.
+        if (!EditorPreview::has_valid_token()) {
+            $this->authorize_post($page, 'edit_post');
+        }
+
         $stage_version = $request->int('stage_version') ?? false;
 
         return response()->json([
             'data' => new PageContentResource($page, $stage_version),
         ]);
+    }
+
+    /**
+     * Stop the request when the current user lacks the post capability on this page.
+     *
+     * @param PageModel|PostModel $post
+     * @param string $capability edit_post, delete_post or read_post.
+     *
+     * @throws AuthorizationException
+     */
+    protected function authorize_post($post, string $capability)
+    {
+        if (!user()->can_access_post($capability, $post)) {
+            throw new AuthorizationException(__('You don\'t have the permission to access this request', 'kirki'));
+        }
     }
 }

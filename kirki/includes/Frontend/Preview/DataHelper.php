@@ -73,8 +73,14 @@ class DataHelper {
 		}
 		$element['id'] = $new_id;
 
-		if ( isset( $element['styleIds'] ) && ! empty( $element['styleIds'] ) ) {
-			foreach ( $element['styleIds'] as $style_id ) {
+		$style_ids = isset( $element['styleIds'] ) ? $element['styleIds'] : array();
+		$class_ids = isset( $element['properties']['classesIds'] ) ? $element['properties']['classesIds'] : array();
+
+		// Merge the global classIds with the styleIds to apply class styles
+		$style_ids = array_merge( $class_ids, $style_ids );
+
+		if ( ! empty( $style_ids ) ) {
+			foreach ( $style_ids as $style_id ) {
 				if ( isset( $styles[ $style_id ] ) ) {
 					$this->temp_styles[ $style_id ] = $styles[ $style_id ];
 				}
@@ -210,8 +216,14 @@ class DataHelper {
 		$data_n_styles['blocks'][ $root_id ] = $block;
 
 		// Add styles for this block
-		if ( ! empty( $block['styleIds'] ) ) {
-			foreach ( $block['styleIds'] as $style_id ) {
+		$style_ids = isset( $block['styleIds'] ) ? $block['styleIds'] : array();
+		$class_ids = isset( $block['properties']['classesIds'] ) ? $block['properties']['classesIds'] : array();
+
+		// Merge the global classIds with the styleIds to preview class styles
+		$style_ids = array_merge( $class_ids, $style_ids );
+
+		if ( ! empty( $style_ids ) ) {
+			foreach ( $style_ids as $style_id ) {
 				if ( isset( $styles[ $style_id ] ) ) {
 					$data_n_styles['styles'][ $style_id ] = $styles[ $style_id ];
 				}

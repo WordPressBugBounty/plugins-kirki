@@ -22,7 +22,7 @@ class AccessLevels
     const ROLE_ACCESS_MAP = [
         'administrator' => self::FULL_ACCESS,
         'editor' => self::EDITOR_ACCESS,
-        'author' => self::CONTENT_ACCESS,
+        'author' => self::NO_ACCESS,
         'subscriber' => self::NO_ACCESS,
     ];
 }

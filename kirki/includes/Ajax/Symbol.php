@@ -1015,6 +1015,11 @@ class Symbol {
 		$symbol_id = HelperFunctions::sanitize_text( isset( $_POST['symbol_id'] ) ? $_POST['symbol_id'] : null );
 		//phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$post_symbol_data = isset( $_POST['data'] ) ? $_POST['data'] : null;
+		// Only symbols can be updated here; otherwise this would overwrite any page's blocks.
+		if ( get_post_type( $symbol_id ) !== KIRKI_SYMBOL_TYPE ) {
+			wp_send_json( false );
+		}
+
 		if ( $symbol_id && ! empty( $post_symbol_data ) ) {
 			$data        = json_decode( stripslashes( $post_symbol_data ), true );
 			$symbol_data = get_post_meta( $symbol_id, 'kirki', true );

@@ -109,10 +109,18 @@ class CollectionController extends FrontendRESTController {
 					}
 				}
 			}else {
-				// read_page_meta() resolves the most recent version to the right source
-				// either post_meta or the staging table, depending on the post's state.
-				$all_blocks = Page::read_page_meta( $post_id, 'kirki', false, null );
-				$all_styles = Page::get_page_styleblocks( $post_id, false );
+				// Staging preview sends the version it shows, with the preview nonce. Use that exact
+				// version. Without it (normal visitors), use the published data.
+				$staging_version = isset( $kirki_data['staging_version'] ) ? (int) $kirki_data['staging_version'] : 0;
+				$staging_nonce   = isset( $kirki_data['staging_nonce'] ) ? HelperFunctions::sanitize_text( $kirki_data['staging_nonce'] ) : '';
+				if ( ! $staging_version || ! wp_verify_nonce( $staging_nonce, 'kirki_preview_staging_nonce' ) || ! Page::get_staged_version_info( $post_id, $staging_version ) ) {
+					$staging_version = false;
+				}
+
+				// read_page_meta() reads the published version from post_meta and a staged one
+				// from the staging table.
+				$all_blocks = $staging_version ? Page::read_page_meta( $post_id, 'kirki', $staging_version, null ) : get_post_meta( $post_id, 'kirki', true );
+				$all_styles = Page::get_page_styleblocks( $post_id, $staging_version );
 				if ( is_array( $all_blocks ) && isset( $all_blocks['blocks'] ) ) {
 					DataHelper::get_data_and_styles_from_root( $collection_data_id, $data_n_styles, $all_blocks['blocks'], $all_styles );
 				}
