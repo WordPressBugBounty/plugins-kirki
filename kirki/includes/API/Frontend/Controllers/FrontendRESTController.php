@@ -12,6 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 use WP_Error;
 use WP_REST_Controller;
+use Kirki\HelperFunctions;
 
 
 /**
@@ -56,11 +57,11 @@ abstract class FrontendRESTController extends WP_REST_Controller {
 
 			$context_type = $context['type'];
 
-			// For user contexts, require list_users capability.
 			if ( 'user' === $context_type ) {
 				$target_user_id = absint( $context['id'] ?? 0 );
-				// Allow access only if the requester is querying their own record OR list_users capability
-				if ( $target_user_id !== get_current_user_id() && ! current_user_can( 'list_users' ) ) {
+				// Allowed: own record, list_users, or a public author (has published posts, so their
+				// author archive page already renders the same published template for anyone).
+				if ( $target_user_id !== get_current_user_id() && !HelperFunctions::user_has_post_edit_access()) {
 					return new WP_Error(
 						'rest_forbidden',
 						'You do not have permission to read this user.',
@@ -163,22 +164,6 @@ abstract class FrontendRESTController extends WP_REST_Controller {
 	 * @return bool
 	 */
 	protected function can_user_read_post( int $post_id ): bool {
-		$post = get_post( $post_id );
-
-		if ( ! $post ) {
-			return false;
-		}
-
-		$is_password_protected = !empty( $post->post_password );
-
-		if ( 'publish' === $post->post_status && ! $is_password_protected ) {
-			return true;
-		}
-
-		if ( 'publish' === $post->post_status && $is_password_protected ) {
-			return ! post_password_required( $post ) || current_user_can( 'read_post', $post_id );
-		}
-
-		return current_user_can( 'read_post', $post_id );
+		return HelperFunctions::can_user_read_post( $post_id );
 	}
 }

@@ -51,14 +51,15 @@ class Users {
 	}
 
 	/**
-	 * Remove email and roles from a get_users() result unless the current user can list users.
+	 * Remove email and roles from a get_users() result unless the current user can edit Kirki
+	 * content (needed to design user collections) or list users.
 	 * These ajax responses reach any Kirki user (and the editor preview token).
 	 *
 	 * @param array $users get_users() result with 'data' and 'pagination'.
 	 * @return array
 	 */
 	public static function hide_private_fields( $users ) {
-		if ( current_user_can( 'list_users' ) || empty( $users['data'] ) ) {
+		if ( HelperFunctions::user_has_post_edit_access() || current_user_can( 'list_users' ) || empty( $users['data'] ) ) {
 			return $users;
 		}
 

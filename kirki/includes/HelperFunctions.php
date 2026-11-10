@@ -247,7 +247,7 @@ class HelperFunctions
 			if (!$controller_data) {
 				$init = array(
 					'active' => 'md',
-					'defaults' => ["md", "tablet", "mobileLandscape", "mobile"],
+					'defaults' => ["md", "tablet", "mobile"],
 					'list' => $page_data['viewportList'],
 					'mdWidth' => 1200,
 					"scale" => 1,
@@ -255,8 +255,11 @@ class HelperFunctions
 					"zoom" => 1
 				);
 				$controller_data = array('viewport' => $init);
-			} else if (isset($controller_data['viewport'], $controller_data['viewport']['list'])) {
-				$controller_data['viewport']['list'] = $page_data['viewportList'];
+			} else if (isset($controller_data['viewport'])) {
+				$controller_data['viewport']['list'] = (object) array_merge(
+					(array) ($controller_data['viewport']['list'] ?? array()),
+					(array) $page_data['viewportList']
+				);
 			}
 
 			HelperFunctions::update_global_data_using_key(KIRKI_USER_CONTROLLER_META_KEY, $controller_data);
@@ -3357,6 +3360,27 @@ class HelperFunctions
 		return false;
 	}
 
+	/**
+	 * Check if the current user may read a post (published & not password-locked, or read_post capability).
+	 *
+	 * @param int $post_id post id.
+	 * @return bool
+	 */
+	public static function can_user_read_post($post_id)
+	{
+		$post = get_post($post_id);
+
+		if (!$post) {
+			return false;
+		}
+
+		if ('publish' === $post->post_status) {
+			return !post_password_required($post) || current_user_can('read_post', $post->ID);
+		}
+
+		return current_user_can('read_post', $post->ID);
+	}
+
 
 	/**
 	 * Check if the Editor-Preview-Token header is valid
@@ -4339,7 +4363,6 @@ class HelperFunctions
    "defaults":[
       "md",
       "tablet",
-      "mobileLandscape",
       "mobile"
    ],
    "list":{
@@ -4353,29 +4376,20 @@ class HelperFunctions
          "activeIcon":"desktop-hover"
       },
       "tablet":{
-         "value":991,
+         "value":1199,
          "scale":1,
-         "minWidth":991,
-         "maxWidth":991,
+         "minWidth":1199,
+         "maxWidth":1199,
          "title":"Tablet",
          "icon":"tablet-default",
          "activeIcon":"tablet-hover"
       },
-      "mobileLandscape":{
+      "mobile":{
          "value":767,
          "scale":1,
          "minWidth":767,
          "maxWidth":767,
-         "title":"Landscape",
-         "icon":"phone-hr-default",
-         "activeIcon":"phone-hr-hover"
-      },
-      "mobile":{
-         "value":575,
-         "scale":1,
-         "minWidth":575,
-         "maxWidth":575,
-         "title":"Mobile",
+         "title":"Phone",
          "icon":"phone-vr-default",
          "activeIcon":"phone-vr-hover"
       }
@@ -4569,10 +4583,12 @@ class HelperFunctions
 	 *
 	 * @param string $type stymbol type header|footer.
 	 * @param string $html if true the function will return html otherwise return symbol object.
+	 * @param string $query_mode responsive query mode, media|container.
 	 * @return string|object custom section html or stymbol object.
 	 */
-	public static function get_page_custom_section($type, $html = true)
+	public static function get_page_custom_section($type, $html = true, $query_mode = 'media')
 	{
+		$query_mode = $query_mode === 'container' ? 'container' : 'media';
 		$show = apply_filters('kirki_show_custom_section_' . $type, true);
 		if (!$show) {
 			return '';
@@ -4584,8 +4600,9 @@ class HelperFunctions
 			return $symbol;
 		}
 
-		if (isset(self::$custom_sections[$type])) {
-			return self::$custom_sections[$type];
+		$section_cache_key = $type . ':' . $query_mode;
+		if (isset(self::$custom_sections[$section_cache_key])) {
+			return self::$custom_sections[$section_cache_key];
 		}
 
 		$s = self::isShowWPThemeHeaderFooter() ? '' : ' '; // this is for disableing theme header footer forcefully if is_show_wp_theme_header_footer is false
@@ -4617,7 +4634,7 @@ class HelperFunctions
 				'style_blocks' => $symbol_data['styleBlocks'],
 				'root' => $symbol_data['root'],
 				'post_id' => $symbol['id'],
-				'options' => [],
+				'options' => array('query_mode' => $query_mode),
 				'get_style' => true,
 				'get_variable' => false,
 				'should_take_app_script' => false,
@@ -4639,7 +4656,7 @@ class HelperFunctions
 
 		$s = do_shortcode($s);
 
-		self::$custom_sections[$type] = $s;
+		self::$custom_sections[$section_cache_key] = $s;
 
 		return $s;
 	}

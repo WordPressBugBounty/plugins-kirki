@@ -103,13 +103,16 @@ class Collection {
 			$context = $context_param;
 		}
 
+		// Read-only viewers (preview-token link, view access) get only what the public site shows.
+		$is_read_only = ! HelperFunctions::user_has_post_edit_access();
+
 		$args = array(
 			'name'                => $name,
 			'sorting'             => $sorting,
 			'filters'             => $filters,
 			'inherit'             => $inherit,
 			'post_parent'         => $post_parent,
-			'post_status'         => 'any',
+			'post_status'         => $is_read_only ? 'publish' : 'any',
 			'related'             => $related,
 			'related_post_parent' => $related_post_parent,
 			'item_per_page'       => $item_per_page,
@@ -120,7 +123,13 @@ class Collection {
 		);
 
 		if ( $collection_type === 'posts' ) {
-			return HelperFunctions::get_posts( $args );
+			$posts = HelperFunctions::get_posts( $args );
+			if ( $is_read_only && ! empty( $posts['data'] ) ) {
+				foreach ( $posts['data'] as $post ) {
+					unset( $post->post_password );
+				}
+			}
+			return $posts;
 		} elseif ( $collection_type === 'users' ) {
 			return Users::hide_private_fields( Users::get_users( $args ) );
 		} elseif ( $collection_type === 'terms' ) {
@@ -135,7 +144,13 @@ class Collection {
 			);
 			return HelperFunctions::get_terms( $args );
 		} else {
-			return apply_filters( 'kirki_collection_' . $collection_type, false, $args );
+			$collection = apply_filters( 'kirki_collection_' . $collection_type, false, $args );
+			if ( $is_read_only && $collection_type === 'comments' && ! empty( $collection['data'] ) ) {
+				foreach ( $collection['data'] as $index => $comment ) {
+					unset( $collection['data'][ $index ]['comment_author_email'], $collection['data'][ $index ]['comment_agent'] );
+				}
+			}
+			return $collection;
 		}
 	}
 

@@ -80,6 +80,9 @@ class DynamicContent {
 				} elseif ( isset( $content_info['collectionItem'], $content_info['collectionItem']['ID'] ) ) {
 					$post = get_post( $content_info['collectionItem']['ID'] );
 				}
+				if ( $post && ! HelperFunctions::can_user_read_post( $post->ID ) ) {
+					return '';
+				}
 				$dynamic_options = array();
 				if ( $cm_field_type === 'time' || $content_value === 'post_time' ) {
 					$dynamic_options['timeFormat'] = $time_format;
@@ -97,13 +100,29 @@ class DynamicContent {
 				} elseif ( isset( $content_info['collectionItem'], $content_info['collectionItem']['ID'] ) ) {
 					$post = get_post( $content_info['collectionItem']['ID'] );
 				}
+				if ( $post && ! HelperFunctions::can_user_read_post( $post->ID ) ) {
+					return '';
+				}
 				return HelperFunctions::get_post_dynamic_content( $content_value, $post );
 			}
 
 			case 'user': {
 				$user_id = ! empty( $post_id ) ? $post_id : get_current_user_id();
 				if ( isset( $content_info['collectionItem'], $content_info['collectionItem']['ID'] ) ) {
-					$user_id = $content_info['collectionItem']['ID'];
+					// Collection item ID: a user ID in a users collection, a post ID in a posts collection.
+					$collection_item_id = $content_info['collectionItem']['ID'];
+					if ( isset( $content_info['collectionItem']['post_type'] ) ) {
+						// Posts collection item: "User" means the item's author (matches the frontend).
+						$collection_item_post = get_post( $collection_item_id );
+						$user_id              = $collection_item_post ? (int) $collection_item_post->post_author : 0;
+					} else {
+						$user_id = $collection_item_id;
+					}
+				}
+				// Builder users need every user field to design; read-only viewers (preview token)
+				// only get their own record.
+				if ( (int) $user_id !== get_current_user_id() && ! HelperFunctions::user_has_post_edit_access() && ! current_user_can( 'list_users' ) ) {
+					return '';
 				}
 				$dynamic_options = array();
 				if ( $content_value === 'registered_date' ) {

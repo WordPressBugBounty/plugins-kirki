@@ -20,6 +20,17 @@ use function Kirki\App\is_truthy;
 class Template
 {
 	/**
+	 * Extensions permitted inside a remote template ZIP. Mirrors the set the
+	 * exporter writes (ExportImport::get_assets_make_zip) — anything else,
+	 * including executable/script types, is rejected before extraction.
+	 */
+	const ALLOWED_TEMPLATE_EXTENSIONS = [
+		'jpg', 'jpeg', 'png', 'webp', 'gif', 'avif',
+		'mp4', 'mov', 'webm', 'mp3',
+		'json', 'lottie',
+	];
+
+	/**
 	 * @param string|string[] $name
 	 * @param string|null     $prefix
 	 * 
@@ -87,17 +98,17 @@ class Template
 		$file_name_new = uniqid('', true) . '.zip'; // 'random.ext'
 		$zip_file_path = FileHandler::download_zip_from_remote($remote_url, $file_name_new);
 
-		if ($zip_file_path) {
-			$json_data = static::save_kirki_template_from_zip($page_id, $zip_file_path);
-
-			if (!empty($json_data)) {
-				// delete zip file
-				File::delete($zip_file_path);
-				return true;
-			}
+		if (!$zip_file_path) {
+			return false;
 		}
 
-		return false;
+		try {
+			$json_data = static::save_kirki_template_from_zip($page_id, $zip_file_path);
+			return !empty($json_data);
+		} finally {
+			// delete zip file
+			File::delete($zip_file_path);
+		}
 	}
 
 	/**
@@ -184,31 +195,32 @@ class Template
 	{
 		$temp_folder_path = FileHandler::get_temp_folder_path();
 
-		$result = FileHandler::extract_zip_file($zip_path, $temp_folder_path);
+		try {
+			$result = FileHandler::extract_zip_file($zip_path, $temp_folder_path, static::ALLOWED_TEMPLATE_EXTENSIONS);
 
-		if ($result === false) {
+			if ($result === false) {
+				return false;
+			}
+
+			$kirki_json_file = $temp_folder_path . '/kirki-data.json';
+
+			// is_file() — a directory named kirki-data.json must not satisfy this check.
+			if (!File::is_file($kirki_json_file)) {
+				return false;
+			}
+
+			$kirki_json_data = File::get($kirki_json_file);
+
+			if (empty($kirki_json_data)) {
+				return false;
+			}
+
+			return $kirki_json_data;
+		} finally {
+			// delete temp folder unconditionally — extracted files must never
+			// outlive this call, even when reading the JSON throws.
 			File::delete($temp_folder_path);
-			return false;
 		}
-
-		$kirki_json_file = $temp_folder_path . '/kirki-data.json';
-
-		if (File::missing($kirki_json_file)) {
-			File::delete($temp_folder_path);
-
-			return false;
-		}
-
-		$kirki_json_data = File::get($kirki_json_file);
-
-		// delete temp folder
-		File::delete($temp_folder_path);
-
-		if (empty($kirki_json_data)) {
-			return false;
-		}
-
-		return $kirki_json_data;
 	}
 
 	/**

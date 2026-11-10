@@ -158,10 +158,14 @@ class Symbol {
 		$component_field_values = isset( $_POST['componentFieldValues'] ) ? $_POST['componentFieldValues'] : null;
 		$collection_item        = isset( $_POST['collectionItem'] ) ? $_POST['collectionItem'] : null;
 		$variable_css           = isset( $_POST['variableCSS'] ) ? $_POST['variableCSS'] : true;
+		$query_mode             = isset( $_POST['query_mode'] ) && 'container' === HelperFunctions::sanitize_text( $_POST['query_mode'] )
+			? 'container'
+			: 'media';
 		$options                = $collection_item && 'false' !== $collection_item
 			? json_decode( stripslashes( $collection_item ), true )
 			: array();
 		$options                = is_array( $options ) ? $options : array();
+		$options['query_mode']  = $query_mode;
 		foreach ( $options as $key => $value ) {
 			if ( is_array( $value ) && $key !== 'user' ) {
 				$options[ $key ] = json_decode( json_encode( $value ) );

@@ -11,6 +11,9 @@ class PagePayloadDTO extends DTO
     /** @var string */
     public $post_title;
 
+    /** @var bool|null */
+    public $auto_page_title;
+
     /** @var string */
     public $post_type;
 

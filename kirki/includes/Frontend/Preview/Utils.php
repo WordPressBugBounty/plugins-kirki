@@ -463,9 +463,15 @@ class Utils {
 			$html .= $options['term'][ $dynamic_content['value'] ];
 		} elseif ( $dynamic_content['type'] === 'user' ) {
 			// $html .= $options['user'][ $dynamic_content['value'] ];
+			$user_id = $options['user']['ID'] ?? null;
+			// Inside a posts collection item, "User" means the item's author (not the viewer).
+			if ( ! $user_id && isset( $options['itemType'], $options['post']->ID ) && $options['itemType'] === 'post' ) {
+				$collection_item_post = get_post( $options['post']->ID );
+				$user_id              = $collection_item_post ? (int) $collection_item_post->post_author : null;
+			}
 			$content = HelperFunctions::get_user_dynamic_content(
 				$dynamic_content['value'],
-				$options['user']['ID'] ?? null,
+				$user_id,
 				$dynamic_content['meta'] ?? ''
 			);
 

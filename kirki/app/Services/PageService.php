@@ -20,6 +20,7 @@ use Kirki\App\Supports\Canvas;
 use Kirki\App\Supports\Facades\GlobalData;
 use Kirki\App\Supports\Facades\Page;
 use Kirki\App\Supports\Template;
+use Kirki\Framework\Database\Query\Expression;
 use Kirki\Framework\Database\Query\Paginator;
 use Kirki\Framework\Database\Query\QueryBuilder;
 use Kirki\Framework\Http\Response;
@@ -29,6 +30,18 @@ use function Kirki\Framework\collection;
 
 class PageService 
 {
+	/** Get the next number from page titles, excluding deleted pages. */
+	private function next_page_title(string $post_type): string
+	{
+		$highest = (int) PageModel::query()
+			->where('post_type', $post_type)
+			->where_not_in('post_status', ['trash', 'auto-draft'])
+			->where('post_title', 'regexp', '^Page [0-9]+$')
+			->max(new Expression('CAST(SUBSTRING(post_title, 6) AS UNSIGNED)'));
+
+		return 'Page ' . ($highest + 1);
+	}
+
 	/**
 	 * Create a new page.
 	 * 
@@ -44,6 +57,11 @@ class PageService
 			// Check if type = kirki_page then change it to wp page type. cause we only set template if page type is kirki_page.
 			'post_type' => $payload->post_type === PostTypes::PAGE ? PostTypes::WP_PAGE : $payload->post_type,
 		];
+
+		if (!empty($payload->auto_page_title)) {
+			$page_data['post_title'] = $this->next_page_title($page_data['post_type']);
+			$page_data['post_name'] = $page_data['post_title'];
+		}
 
 		$page = PageModel::create_post($page_data);
 
@@ -217,7 +235,7 @@ class PageService
 					$controller_data = [
 						'viewport' => [
 							'active' => 'md',
-							'defaults'=> ["md", "tablet", "mobileLandscape", "mobile"],
+							'defaults'=> ["md", "tablet", "mobile"],
 							'list' => $page_data['viewportList'],
 							'mdWidth' => 1200,
 							"scale" => 1,
@@ -227,7 +245,10 @@ class PageService
 					];
 				}
 
-				$controller_data['viewport']['list'] = $page_data['viewportList'];
+				$controller_data['viewport']['list'] = (object) array_merge(
+					(array) ($controller_data['viewport']['list'] ?? []),
+					(array) $page_data['viewportList']
+				);
 
 				GlobalData::update_global_ui_controller($controller_data);
 				break;

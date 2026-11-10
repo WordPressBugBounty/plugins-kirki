@@ -662,7 +662,6 @@ class GlobalDataManager
 			'defaults' => [
 				'md',
 				'tablet',
-				'mobileLandscape',
 				'mobile',
 			],
 			'list' => [
@@ -676,29 +675,20 @@ class GlobalDataManager
 					'activeIcon' => 'desktop-hover',
 				],
 				'tablet' => [
-					'value'      => 991,
+					'value'      => 1199,
 					'scale'      => 1,
-					'minWidth'   => 991,
-					'maxWidth'   => 991,
+					'minWidth'   => 1199,
+					'maxWidth'   => 1199,
 					'title'      => 'Tablet',
 					'icon'       => 'tablet-default',
 					'activeIcon' => 'tablet-hover',
 				],
-				'mobileLandscape' => [
+				'mobile' => [
 					'value'      => 767,
 					'scale'      => 1,
 					'minWidth'   => 767,
 					'maxWidth'   => 767,
-					'title'      => 'Landscape',
-					'icon'       => 'phone-hr-default',
-					'activeIcon' => 'phone-hr-hover',
-				],
-				'mobile' => [
-					'value'      => 575,
-					'scale'      => 1,
-					'minWidth'   => 575,
-					'maxWidth'   => 575,
-					'title'      => 'Mobile',
+					'title'      => 'Phone',
 					'icon'       => 'phone-vr-default',
 					'activeIcon' => 'phone-vr-hover',
 				],

@@ -102,7 +102,7 @@ class EmailActionHandler implements FormActionHandler
         }
 
         if (strlen($reply_to) > 0 && strlen($name) > 0) {
-            $header = ['Reply-To: ' . $name . ' <' . $reply_to . '>'];
+            $header = ['Reply-To: ' . $this->sanitize_email_display_name($name) . ' <' . $reply_to . '>'];
         }
 
         if (isset($email_action['emailList']) && !empty($email_action['emailList'])) {
@@ -150,6 +150,22 @@ class EmailActionHandler implements FormActionHandler
         }
 
         return $value;
+    }
+
+    /**
+     * Sanitize an email display name for use inside a mail header.
+     *
+     * The name may contain visitor-submitted field values, so characters that
+     * would let it forge extra addresses (<, >, ,) or break the header line
+     * (", CR, LF) are stripped before the header is composed.
+     *
+     * @param string $name The rendered display name.
+     * @return string
+     */
+    protected function sanitize_email_display_name($name)
+    {
+        $name = preg_replace('/[<>",\r\n]/', ' ', (string) $name);
+        return trim((string) preg_replace('/\s+/', ' ', $name));
     }
 
     /**

@@ -32,7 +32,6 @@ $load_iframe_url = HelperFunctions::get_post_url_arr_from_post_id(HelperFunction
 		<div id="kirki-top-bar"></div>
 		<div id="kirki-left-bar"></div>
 		<div id="kirki-content-bar">
-			<div id="kirki-responsive-devices"></div>
 			<div id="kirki-front-overlay"></div>
 			<div id="kirki-class-editing-backdrop"></div>
 		</div>

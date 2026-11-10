@@ -488,6 +488,7 @@ class TemplateExport
 			$single_data = array();
 			$single_data['exportId'] = $template_data['exportId'];
 			$single_data['batch_id'] = $template_data['batch_id'];
+			$single_data['viewPorts'] = $template_data['viewPorts'];
 
 			$template_info = array(
 				'symbols' => $this->count($template_data['symbols']),

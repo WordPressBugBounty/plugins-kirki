@@ -3,7 +3,7 @@ Contributors: themeum
 Tags: page builder, website builder, drag and drop, form builder, freeform canvas
 Requires at least: 5.9
 Tested up to: 7.1
-Stable tag: 6.4.1
+Stable tag: 6.4.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -190,6 +190,22 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 ---
 
 == Changelog ==
+
+= 6.4.2 =
+* Update: Default breakpoints can now be removed, except Desktop. Removed breakpoints appear as options when you add a breakpoint.
+* Update: Default breakpoints are now Desktop, Tablet, and Phone, with updated sizes to narrow the gap between Desktop and Tablet.
+* Update: Improved the Freeform Canvas performance.
+* Update: Enhanced the Vector Drawing tool.
+* Update: Added a confirmation dialog before replacing mixed interactions.
+* Update: Moved the light/dark theme toggle from the Island to the Left Sidebar.
+* Update: Enabled the Typography panel for submit buttons.
+* Fix: Fixed duplicate page titles appearing after deleting a page.
+* Fix: Fixed the display of "Mixed" text and interaction replacement for custom interactions.
+* Fix: Resolved a private data leak involving preview tokens.
+* Fix: Fixed custom attribute escaping when rendering legacy comments.
+* Fix: Secured remote template imports against malicious ZIP archives.
+* Fix: Sanitized form values used in notification email headers.
+
 
 = 6.4.1 =
 * Update: Disabled keyboard shortcuts while popups, such as Content Manager and Variable, are open.

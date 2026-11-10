@@ -27,6 +27,7 @@ class PageRequest extends Request
     {
         return [
             'post_title' => 'required|string',
+            'auto_page_title' => 'nullable|boolean',
             'post_type' => 'required|string',
             'blocks' => 'nullable|array',
             'conditions' => 'nullable|array',
@@ -63,6 +64,7 @@ class PageRequest extends Request
     {
         return [
             'post_title' => Sanitizer::TEXT,
+            'auto_page_title' => Sanitizer::BOOL,
             'post_type' => Sanitizer::TEXT,
             'blocks' => Sanitizer::ARRAY,
             'conditions' => Sanitizer::ARRAY,

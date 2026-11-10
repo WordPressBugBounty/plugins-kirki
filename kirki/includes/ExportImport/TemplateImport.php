@@ -672,6 +672,7 @@ class TemplateImport {
 		if ( ! isset( $new_view_ports['list'] ) ) {
 			$new_view_ports['list'] = array();
 		}
+
 		if ( ! isset( $control['viewport'], $control['viewport']['list'] ) ) {
 			$control['viewport'] = $new_view_ports;
 		} else {

@@ -85,10 +85,15 @@ class FileHandler
 
 
 	/**
+	 * @param string      $zip_file_path
+	 * @param string      $destination_dir
+	 * @param array|null  $allowed_extensions When provided, every extracted
+	 *                                        member must be a directory or
+	 *                                        carry one of these extensions.
 	 * @return array|false
 	 * return false on failure
 	 */
-	public static function extract_zip_file(string $zip_file_path, string $destination_dir)
+	public static function extract_zip_file(string $zip_file_path, string $destination_dir, ?array $allowed_extensions = null)
 	{
 		if (!class_exists('PclZip')) {
 			require_once ABSPATH . 'wp-admin/includes/class-pclzip.php';
@@ -106,7 +111,7 @@ class FileHandler
 
 		$zip = new PclZip($zip_file_path);
 
-		static::validate_zip_file($zip);
+		static::validate_zip_file($zip, $allowed_extensions);
 
 		$result = $zip->extract(
 			PCLZIP_OPT_PATH,
@@ -120,7 +125,7 @@ class FileHandler
 		return false;
 	}
 
-	public static function validate_zip_file(PclZip $zip)
+	public static function validate_zip_file(PclZip $zip, ?array $allowed_extensions = null)
 	{
 		$list = $zip->listContent();
 
@@ -133,11 +138,11 @@ class FileHandler
 				throw new Exception(esc_html__('Invalid ZIP file.', 'kirki'));
 			}
 
-			static::validate_zip_entry($entry['filename']);
+			static::validate_zip_entry($entry['filename'], $allowed_extensions);
 		}
 	}
 
-	private static function validate_zip_entry(string $entry_filename)
+	private static function validate_zip_entry(string $entry_filename, ?array $allowed_extensions = null)
 	{
 		$entry_filename = clean_path($entry_filename, false);
 
@@ -150,7 +155,18 @@ class FileHandler
 			throw new Exception(esc_html__('Invalid ZIP file.', 'kirki'));
 		}
 
-		return static::verify_directory_traversal($entry_filename);
+		static::verify_directory_traversal($entry_filename);
+
+		// Directory entries end with '/' and carry no extension.
+		if ($allowed_extensions !== null && !str_ends_with($entry_filename, '/')) {
+			$extension = strtolower((string) pathinfo($entry_filename, PATHINFO_EXTENSION));
+
+			if (!in_array($extension, $allowed_extensions, true)) {
+				throw new Exception(esc_html__('Invalid file type in ZIP archive.', 'kirki'));
+			}
+		}
+
+		return true;
 	}
 
 	Public static function verify_directory_traversal(string $path) {

@@ -87,6 +87,12 @@ class Preview extends ExceptionalElements {
 	 * $view_ports user all viewports data.
 	 */
 	private $view_ports = array();
+	/**
+	 * Responsive query type used by generated styles.
+	 *
+	 * @var string
+	 */
+	private static $query_mode = 'media';
 
 	/**
 	 * Initialize some variables for element related data. Like: custom codes, lightbox, map, slider etc.
@@ -263,7 +269,7 @@ class Preview extends ExceptionalElements {
 	/**
 	 * List of anchor elements.
 	 */
-	private $prevent_anchor_elements = array( 'heading', 'image', 'paragraph' );
+	private $prevent_anchor_elements = array( 'heading', 'image', 'paragraph', 'text' );
 	/**
 	 * List anchor attrs.
 	 */
@@ -302,6 +308,7 @@ class Preview extends ExceptionalElements {
 	 */
 	public function getHTML( $options = array() ) {
 		$this->include_component_field_metadata = ! empty( $options['include_component_field_metadata'] );
+		self::$query_mode = isset( $options['query_mode'] ) && 'container' === $options['query_mode'] ? 'container' : 'media';
 		// TODO: need to fix this code
 		// if(!isset($options['user']) && get_current_user_id() > 0){
 		// $options['user'] = Users::get_user_by_id(get_current_user_id());
@@ -713,7 +720,7 @@ class Preview extends ExceptionalElements {
 			if ( $variant[0] === 'md' ) {
 				$css_string .= $selector . '{' . $css_text . '}';
 			} elseif ( isset( $this->view_ports[ $variant[0] ] ) ) {
-				$css_string .= '@media only screen and (' . $type . '-width: ' . $this->view_ports[ $variant[0] ][ $type . 'Width' ] . 'px) {' . $selector . '{' . $css_text . '}}';
+				$css_string .= $this->wrapResponsiveCss( $type . '-width: ' . $this->view_ports[ $variant[0] ][ $type . 'Width' ] . 'px', $selector . '{' . $css_text . '}' );
 			}
 		} elseif ( count( $variant ) === 2 ) {
 			// active, hover, focus or pseudo class.
@@ -721,9 +728,7 @@ class Preview extends ExceptionalElements {
 			if ( $variant[0] === 'md' ) {
 				$css_string .= $selector . $psuedo_class . '{' . $css_text . '}';
 			} elseif ( isset( $this->view_ports[ $variant[0] ] ) ) {
-				$css_string .= '@media only screen and (' . $type . '-width: ' . $this->view_ports[ $variant[0] ][ $type . 'Width' ] . 'px) {';
-				$css_string .= $selector . $psuedo_class . '{' . $css_text . '}';
-				$css_string .= '}';
+				$css_string .= $this->wrapResponsiveCss( $type . '-width: ' . $this->view_ports[ $variant[0] ][ $type . 'Width' ] . 'px', $selector . $psuedo_class . '{' . $css_text . '}' );
 			}
 		} elseif ( count( $variant ) === 3 ) {
 			// active, hover, focus + pseudo class.
@@ -733,12 +738,18 @@ class Preview extends ExceptionalElements {
 			if ( $variant[0] === 'md' ) {
 				$css_string .= $selector . $psuedo_class1 . $psuedo_class2 . '{' . $css_text . '}';
 			} elseif ( isset( $this->view_ports[ $variant[0] ] ) ) {
-				$css_string .= '@media only screen and (' . $type . '-width: ' . $this->view_ports[ $variant[0] ][ $type . 'Width' ] . 'px) {';
-				$css_string .= $selector . $psuedo_class1 . $psuedo_class2 . '{' . $css_text . '}';
-				$css_string .= '}';
+				$css_string .= $this->wrapResponsiveCss( $type . '-width: ' . $this->view_ports[ $variant[0] ][ $type . 'Width' ] . 'px', $selector . $psuedo_class1 . $psuedo_class2 . '{' . $css_text . '}' );
 			}
 		}
 		return $css_string;
+	}
+
+	private static function wrapResponsiveCss( $condition, $css ) {
+		if ( 'container' === self::$query_mode ) {
+			return '@container kirki-device-canvas (' . $condition . '){' . $css . '}';
+		}
+
+		return '@media only screen and (' . $condition . '){' . $css . '}';
 	}
 
 	/**
@@ -1040,7 +1051,7 @@ class Preview extends ExceptionalElements {
 
 			$media_type = ( isset( $vp['type'] ) && $vp['type'] === 'max' ) ? 'max' : 'min';
 			$media_value = isset( $vp['value'] ) ? $vp['value'] : $vp[ $media_type . 'Width' ];
-			$css .= '@media only screen and (' . $media_type . '-width:' . $media_value . 'px){' . $device_rules[ $device ] . '}';
+			$css .= self::wrapResponsiveCss( $media_type . '-width:' . $media_value . 'px', $device_rules[ $device ] );
 		}
 
 		return $css;
@@ -1514,6 +1525,8 @@ class Preview extends ExceptionalElements {
 
 		foreach ( $viewPorts as $key => $vp ) {
 			if ( in_array( $key, $deviceList ) ) {
+				$range_min = null !== $prev_viewport ? $prev_viewport['value'] + 1 : $vp['value'];
+
 				if ( $count === 0 && $vp['value'] < 1200 ) {
 					$ranges[] = array(
 						'min' => null,
@@ -1521,7 +1534,7 @@ class Preview extends ExceptionalElements {
 					);
 				} elseif ( $vp['value'] < 1200 ) {
 					$ranges[] = array(
-						'min' => $prev_viewport['value'] + 1,
+						'min' => $range_min,
 						'max' => $vp['value'],
 					);
 				} elseif ( $count === count( $viewPorts ) - 1 && $vp['value'] > 1200 ) {
@@ -1531,7 +1544,7 @@ class Preview extends ExceptionalElements {
 					);
 				} elseif ( $vp['value'] > 1200 ) {
 					$ranges[] = array(
-						'min' => $prev_viewport['value'] + 1,
+						'min' => $range_min,
 						'max' => $vp['value'],
 					);
 				} else {
@@ -1539,14 +1552,14 @@ class Preview extends ExceptionalElements {
 					if ( $count === count( $viewPorts ) - 1 ) {
 						// thats means: no md upper device like: 1600
 						$ranges[] = array(
-							'min' => $prev_viewport['value'] + 1,
+							'min' => $range_min,
 							'max' => null,
 						);
 					} else {
 						// next viewport
 						$next_viewport = $viewPorts[ $orderedKeys[ $count + 1 ] ];
 						$ranges[]      = array(
-							'min' => $prev_viewport['value'] + 1,
+							'min' => $range_min,
 							'max' => $next_viewport['value'] - 1,
 						);
 					}
@@ -1559,11 +1572,11 @@ class Preview extends ExceptionalElements {
 			$min = $value['min'];
 			$max = $value['max'];
 			if ( $min !== null && $max !== null ) {
-				$media_queries .= "@media (min-width: {$min}px) and (max-width: {$max}px) { $cssValue } ";
+				$media_queries .= $this->wrapResponsiveCss( "min-width: {$min}px) and (max-width: {$max}px", $cssValue );
 			} elseif ( $min !== null ) {
-				$media_queries .= "@media (min-width: {$min}px) { $cssValue } ";
+				$media_queries .= $this->wrapResponsiveCss( "min-width: {$min}px", $cssValue );
 			} elseif ( $max !== null ) {
-				$media_queries .= "@media (max-width: {$max}px) { $cssValue } ";
+				$media_queries .= $this->wrapResponsiveCss( "max-width: {$max}px", $cssValue );
 			}
 		}
 
@@ -2362,6 +2375,7 @@ class Preview extends ExceptionalElements {
 			case 'link-text':
 			case 'navigation-item':
 			case 'paragraph':
+			case 'text':
 			case 'heading':
 			case 'button': {
 				if ( $dynamic_content ) {
@@ -2638,7 +2652,7 @@ class Preview extends ExceptionalElements {
 						$value = implode( ' ', $value );
 					}
 
-					return $key . '="' . $value . '"';
+					return esc_attr( $key ) . '="' . esc_attr( (string) $value ) . '"';
 				},
 				array_values( $attributes ),
 				array_keys( $attributes )
@@ -2653,7 +2667,7 @@ class Preview extends ExceptionalElements {
 			$attributes        = $this_element['properties']['customAttributes'] ?: array();
 			$custom_attributes = array_map(
 				function ( $value, $key ) {
-					return $key . '="' . $value . '"';
+					return esc_attr( $key ) . '="' . esc_attr( (string) $value ) . '"';
 				},
 				array_values( $attributes ),
 				array_keys( $attributes )

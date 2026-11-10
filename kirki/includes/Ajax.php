@@ -597,7 +597,8 @@ class Ajax
 
 		if ($endpoint === 'get-page-custom-section') {
 			$type = HelperFunctions::sanitize_text(isset($_GET['type']) ? $_GET['type'] : '');
-			wp_send_json(HelperFunctions::get_page_custom_section($type, true));
+			$query_mode = HelperFunctions::sanitize_text(isset($_GET['query_mode']) ? $_GET['query_mode'] : 'media');
+			wp_send_json(HelperFunctions::get_page_custom_section($type, true, $query_mode));
 		}
 
 		/**
