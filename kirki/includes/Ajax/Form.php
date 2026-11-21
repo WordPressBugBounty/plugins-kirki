@@ -472,7 +472,19 @@ class Form {
 		foreach ( $array as $line ) {
 			$row = array();
 			foreach ( $columns as $column ) {
-				$row[] = isset( $line[ $column ] ) ? $line[ $column ] : '';
+				$value = isset( $line[ $column ] ) ? $line[ $column ] : '';
+				if ( is_array( $value ) ) {
+					$value = implode(
+						', ',
+						array_map(
+							static function ( $item ) {
+								return is_scalar( $item ) ? (string) $item : wp_json_encode( $item );
+							},
+							$value
+						)
+					);
+				}
+				$row[] = $value;
 			}
 			$file_content[] = $row;
 		}

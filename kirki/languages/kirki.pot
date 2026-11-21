@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Kirki 6.4.2\n"
+"Project-Id-Version: Kirki 6.4.3\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/kirki\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-10T06:31:14+00:00\n"
+"POT-Creation-Date: 2026-11-20T08:29:38+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: kirki\n"
@@ -2265,7 +2265,35 @@ msgid "Media Manager"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+msgid "Search for images..."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Search for videos..."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Search for SVGs..."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Search..."
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 msgid "Browse"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Upload Image"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Upload Video"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "Upload SVG"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2342,10 +2370,6 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "URL"
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Upload Video"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -2744,6 +2768,10 @@ msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Disable for this page"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
+msgid "This component is deleted"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
@@ -3630,16 +3658,16 @@ msgid "Click to replace"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
+msgid "Please select valid file types"
+msgstr ""
+
+#: assets/js/kirki-editor.min.js:2
 #, js-format
 msgid "Please enable %s upload option from WP Dashboard/Kirki"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2
 msgid "Uploading..."
-msgstr ""
-
-#: assets/js/kirki-editor.min.js:2
-msgid "Upload Image"
 msgstr ""
 
 #: assets/js/kirki-editor.min.js:2

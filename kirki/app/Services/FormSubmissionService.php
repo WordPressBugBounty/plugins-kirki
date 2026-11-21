@@ -107,10 +107,16 @@ class FormSubmissionService
 			if (array_key_exists($name, $raw_data)) {
 				$form_data[$name] = $raw_data[$name];
 			} else {
-				// ponytail: PHP mangles spaces/dots to _ in request keys ("First Name" arrives as "First_Name").
-				$mangled = str_replace([' ', '.'], '_', $name);
-				if (array_key_exists($mangled, $raw_data)) {
-					$form_data[$name] = $raw_data[$mangled];
+				// PHP parses a multiple select named "field[]" under the base key "field".
+				$base_name = preg_replace('/\[\]$/', '', $name);
+				if (array_key_exists($base_name, $raw_data)) {
+					$form_data[$name] = $raw_data[$base_name];
+				} else {
+					// PHP mangles spaces/dots to _ in request keys ("First Name" arrives as "First_Name").
+					$mangled = str_replace([' ', '.'], '_', $base_name);
+					if (array_key_exists($mangled, $raw_data)) {
+						$form_data[$name] = $raw_data[$mangled];
+					}
 				}
 			}
 		}

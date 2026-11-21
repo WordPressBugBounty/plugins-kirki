@@ -1414,24 +1414,29 @@ class Preview extends ExceptionalElements {
 				$others_attributes = array();
 
 				if ( $session_data && isset( $element['properties']['attributes']['name'] ) ) {
+					$field_name = preg_replace( '/\[\]$/', '', $element['properties']['attributes']['name'] );
+					$field_attributes = array_merge(
+						$element['properties']['attributes'],
+						array( 'name' => $field_name )
+					);
 					if ( ! isset( $session_data['fields'] ) ) {
 						$session_data['fields'] = array(
-							$element['properties']['attributes']['name'] => array_merge(
+							$field_name => array_merge(
 								array(
 									'type'     => $type,
 									'required' => $element['properties']['attributes']['required'] ?? false,
 								),
-								$element['properties']['attributes'],
+								$field_attributes,
 								$others_attributes,
 							),
 						);
 					} else {
-						$session_data['fields'][ $element['properties']['attributes']['name'] ] = array_merge(
+						$session_data['fields'][ $field_name ] = array_merge(
 							array(
 								'type'     => $type,
 								'required' => $element['properties']['attributes']['required'] ?? false,
 							),
-							$element['properties']['attributes'],
+							$field_attributes,
 							$others_attributes,
 						);
 					}
@@ -2626,6 +2631,9 @@ class Preview extends ExceptionalElements {
 		if ( isset( $this_element['properties']['attributes'] ) ) {
 			$attributes   = $this_element['properties']['attributes'];
 			$element_name = $this_element['name'];
+			if ( 'select' === $element_name && ! empty( $attributes['multiple'] ) && ! empty( $attributes['name'] ) ) {
+				$attributes['name'] = preg_replace( '/\[\]$/', '', $attributes['name'] ) . '[]';
+			}
 
 			if ( $this_element['name'] === 'image' && isset( $attributes['width'] ) ) {
 				unset( $attributes['width'] );

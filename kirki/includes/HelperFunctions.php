@@ -1057,8 +1057,9 @@ class HelperFunctions
 						$content = $fields[$content_value]['default_value'];
 					}
 
-					if (isset($fields[$content_value]) && $fields[$content_value]['type'] === 'date') {
-						$content = self::format_date($content, $fields[$content_value]['default_format']); //TODO: need to check with editor format
+					if (isset($fields[$content_value]['type']) && $fields[$content_value]['type'] === 'date') {
+						$date_format = $fields[$content_value]['default_format'] ?? 'YYYY-MM-DD';
+						$content = self::format_date($content, $date_format); //TODO: need to check with editor format
 					}
 					if (isset($fields[$content_value]['type']) && $fields[$content_value]['type'] === 'image') {
 						$content = array(
@@ -1335,6 +1336,7 @@ class HelperFunctions
 		$post_id = $params['post_id'] ?? null;
 		$get_style = $params['get_style'] ?? true;
 		$get_variable = $params['get_variable'] ?? true;
+		$get_initial_script = $params['get_initial_script'] ?? true;
 		$should_take_app_script = $params['should_take_app_script'] ?? true;
 		$prefix = $params['prefix'] ?? false;
 		$get_all_style_forcefully_if_get_style_true = $params['get_all_style_forcefully_if_get_style_true'] ?? false;
@@ -1369,7 +1371,9 @@ class HelperFunctions
 			$s .= $preview->getStyleTag($only_used_style_blocks);
 		}
 
-		$s .= $preview->get_interaction_set_as_initial_css();
+		if ($get_initial_script) {
+			$s .= $preview->get_interaction_set_as_initial_css();
+		}
 
 
 
@@ -2626,8 +2630,11 @@ class HelperFunctions
 
 		if ('none' !== $orderby) {
 			if (isset($name) && str_contains($name, KIRKI_CONTENT_MANAGER_PREFIX) && !in_array($orderby, KIRKI_WORDPRESS_SORT_BY_OPTIONS, true)) {
-				$args['orderby'] = 'meta_value'; // Use 'meta_value' or 'meta_value_num' as needed
-				$args['meta_key'] = ContentManagerHelper::get_child_post_meta_key_using_field_id($post_parent, $orderby);
+				$collection_parent = $post_parent ?: (int) str_replace(KIRKI_CONTENT_MANAGER_PREFIX . '_', '', $name);
+				$custom_fields = ContentManagerHelper::get_post_type_custom_field_keys($collection_parent);
+				$field_type = isset($custom_fields[$orderby]['type']) ? $custom_fields[$orderby]['type'] : '';
+				$args['orderby'] = 'number' === $field_type ? 'meta_value_num' : 'meta_value';
+				$args['meta_key'] = ContentManagerHelper::get_child_post_meta_key_using_field_id($collection_parent, $orderby);
 			} elseif ('date' === $orderby) {
 				$args['orderby'] = array('date' => $order, 'ID' => $order);
 			} else {

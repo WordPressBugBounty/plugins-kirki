@@ -3,7 +3,7 @@ Contributors: themeum
 Tags: page builder, website builder, drag and drop, form builder, freeform canvas
 Requires at least: 5.9
 Tested up to: 7.1
-Stable tag: 6.4.2
+Stable tag: 6.4.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -190,6 +190,18 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 ---
 
 == Changelog ==
+
+= 6.4.3 =
+* Update: Slider re-rendering performance and behavior.
+* Update: Context-menu behavior outside canvas devices.
+* Fix: Ticker spacing and overflow issues.
+* Fix: Component resizing issues inside collection items.
+* Fix: Popup editing to ensure existing elements are updated correctly.
+* Fix: Fixed overlays incorrectly affecting device height calculations.
+* Fix: CSS style conversion issues affecting header and footer HTML.
+* Fix: Several interaction-related issues, including children-reveal animations triggering before elements enter the viewport and item-stack animation measurements breaking when page content shifts.
+* Fix: Fixed a stored XSS vulnerability by disabling auto-initialization and expression evaluation in the bundled Lottie player.
+
 
 = 6.4.2 =
 * Update: Default breakpoints can now be removed, except Desktop. Removed breakpoints appear as options when you add a breakpoint.

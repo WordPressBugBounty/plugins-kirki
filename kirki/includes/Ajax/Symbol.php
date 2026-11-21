@@ -931,6 +931,7 @@ class Symbol {
 			'get_variable'           => HelperFunctions::isTruthy( $variable_css ),
 			'should_take_app_script' => false,
 			'prefix'                 => 'kirki-s' . $symbol['id'],
+			'get_initial_script'     => false
 		);
 
 		$s = HelperFunctions::get_html_using_preview_script( $params );

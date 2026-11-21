@@ -1,0 +1,33 @@
+diff --git a/node_modules/lottie-web/build/player/lottie.js b/node_modules/lottie-web/build/player/lottie.js
+index ecaaf2d..9a2bc0b 100644
+--- a/node_modules/lottie-web/build/player/lottie.js
++++ b/node_modules/lottie-web/build/player/lottie.js
+@@ -4464,7 +4464,9 @@
+     queryString = myScript.src ? myScript.src.replace(/^[^\?]+\??/, '') : ''; // eslint-disable-line no-useless-escape
+     renderer = getQueryVariable('renderer');
+   }
+-  var readyStateCheckInterval = setInterval(checkReady, 100);
++  // Kirki security patch: auto-init (DOM scan for .lottie/.bodymovin) disabled.
++  // Kirki instantiates animations explicitly via lottie.loadAnimation().
++  var readyStateCheckInterval = null;
+ 
+   // this adds bodymovin to the window object for backwards compatibility
+   try {
+@@ -14419,7 +14421,7 @@
+       var velocityAtTime;
+       var scoped_bm_rt;
+       // val = val.replace(/(\\?"|')((http)(s)?(:\/))?\/.*?(\\?"|')/g, "\"\""); // deter potential network calls
+-      var expression_function = eval('[function _expression_function(){' + val + ';scoped_bm_rt=$bm_rt}]')[0]; // eslint-disable-line no-eval
++      var expression_function = function () { scoped_bm_rt = value; }; // Kirki security patch: no eval of animation data
+       var numKeys = property.kf ? data.k.length : 0;
+       var active = !this.data || this.data.hd !== true;
+       var wiggle = function wiggle(freq, amp) {
+@@ -17041,7 +17043,7 @@
+   ShapeModifiers.registerModifier('op', OffsetPathModifier);
+ 
+   // Registering expression plugin
+-  setExpressionsPlugin(Expressions);
++  // Kirki security patch: After Effects expressions disabled so animation JSON can never be evaluated as code.
+   setExpressionInterfaces(getInterface);
+   initialize$1();
+   initialize();

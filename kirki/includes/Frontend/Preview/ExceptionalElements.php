@@ -569,12 +569,17 @@ class ExceptionalElements {
 	private function select_element( $this_data, $attributes, $options ) {
 		$properties       = $this_data['properties'];
 		$select_options   = isset( $properties['options']['list'] ) ? $properties['options']['list'] : array();
-				$selected = isset( $properties['options']['selectedOption'] ) ? $properties['options']['selectedOption'] : '';
+		$selected        = isset( $properties['options']['selectedOption'] ) ? $properties['options']['selectedOption'] : '';
+
+		$selected_values = is_array( $selected ) ? $selected : array( $selected );
+
+		$selected_values = array_map( 'strval', $selected_values );
+
 				$html     = '<select ' . $attributes . '>';
 		foreach ( $select_options as $option ) {
 			$html .= "<option value='";
 			$html .= $option['value'] . "'";
-			$html .= $selected === $option['value'] ? ' selected' : '';
+			$html .= in_array( (string) $option['value'], $selected_values, true ) ? ' selected' : '';
 			$html .= '>';
 			$html .= $option['contents'];
 			$html .= '</option>';
