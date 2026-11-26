@@ -232,7 +232,7 @@ class Typography extends Field {
 		/**
 		 * Add a hidden field, the label & description.
 		 */
-		new \Kirki\Field\Generic(
+		new \Kirki\Field\TypographyParent(
 			wp_parse_args(
 				[
 					'sanitize_callback' => isset( $args['sanitize_callback'] ) ? $args['sanitize_callback'] : [ __CLASS__, 'sanitize' ],

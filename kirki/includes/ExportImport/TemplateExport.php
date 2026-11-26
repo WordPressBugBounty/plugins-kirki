@@ -54,7 +54,7 @@ class TemplateExport
 			$environment['queue'][] = 'assetUrls';
 		}
 
-		HelperFunctions::update_global_data_using_key('kirki_project_export', $environment);
+		$this->save_environment($environment);
 		return array(
 			'status' => 'init',
 			'queue' => $environment['queue'],
@@ -70,15 +70,12 @@ class TemplateExport
 				'message' => 'Nothing found to export',
 			);
 		}
-		$site_name = get_bloginfo('name');
 		$template_data = $environment['template_data'];
-		$template_data['variable_prefix'] = $site_name;
 		$this->only_published_pages = $environment['only_published_pages'];
-
-		$formattedString = preg_replace('/[^a-zA-Z ]/', '', $site_name); // Remove numbers & special symbols
-		$formattedString = str_replace(' ', '_', strtolower($formattedString));
-		$template_data['batch_id'] = $formattedString;
-		$template_data['prefix'] = $formattedString;
+		
+		$template_data['variable_prefix'] = '';
+		$template_data['batch_id'] = '';
+		$template_data['prefix'] = '';
 
 		$queue = $environment['queue'];
 		if (count($queue) > 0) {
@@ -139,7 +136,7 @@ class TemplateExport
 			$environment['asset_urls_tracker'] = $this->asset_urls_tracker;
 			$environment['asset_urls'] = $this->asset_urls;
 			$environment['template_data'] = $template_data;
-			HelperFunctions::update_global_data_using_key('kirki_project_export', $environment);
+			$this->save_environment($environment);
 			return array(
 				'status' => 'exporting',
 				'queue' => $queue,
@@ -156,6 +153,33 @@ class TemplateExport
 		}
 	}
 
+	/**
+	 * Save the export state between steps.
+	 *
+	 * The state is saved with update_post_meta(), which removes one level of backslashes from every
+	 * string it saves (wp_unslash()). The state holds the exported pages with their raw meta values,
+	 * so without adding a level first, every export step strips backslashes from them. A page whose
+	 * data contains backslashes (e.g. in custom code) then can't be unserialized any more, and its
+	 * blocks and media are missing from the export.
+	 *
+	 * @param array $environment The export state.
+	 * @return void
+	 */
+	private function save_environment($environment)
+	{
+		// Copy first: map_deep() changes objects (the exported posts) in place.
+		$environment = unserialize(serialize($environment));
+
+		$environment = map_deep(
+			$environment,
+			function ($value) {
+				return is_string($value) ? addslashes($value) : $value;
+			}
+		);
+
+		HelperFunctions::update_global_data_using_key('kirki_project_export', $environment);
+	}
+
 	private function export_and_get_url($template_data)
 	{
 		// creating a zip file name for template export.
@@ -166,6 +190,8 @@ class TemplateExport
 		}
 		// Convert the site name to a slug format
 		$zip_filename = strtolower(str_replace(' ', '-', $site_name));
+		// The zip is stored in the public uploads folder until it is downloaded, so its name must not be guessable.
+		$zip_filename = sanitize_file_name($zip_filename . '-' . wp_generate_password(16, false));
 		$zip_file_url = $this->make_zip_and_get_url($zip_filename, $template_data);
 
 		return $zip_file_url;
@@ -175,6 +201,7 @@ class TemplateExport
 		$this->extract_asset_url_from_content_manager($template_data['contentManager']);
 		$this->extract_asset_url_from_pages($template_data['pages']);
 		$this->extract_asset_url_from_template($template_data['templates']);
+		$this->extract_asset_url_from_pages($template_data['utility_pages']);
 		$this->extract_asset_url_from_popups($template_data['popups']);
 		$this->extract_asset_url_from_symbols($template_data['symbols']);
 		$this->extract_asset_url_from_string(json_encode($template_data['globalStyleBlocks']));
@@ -187,7 +214,8 @@ class TemplateExport
 		}
 		$string = stripslashes($string);
 		// Define a regular expression pattern to match any image URLs
-		$pattern = '/https?:\/\/[^\s]+\/[^\s]+\.(jpg|jpeg|png|gif|svg|webp)/i';
+		// Stop at quotes, brackets and spaces, so that every URL in a JSON or CSS string is matched on its own.
+		$pattern = '/https?:\/\/[^\s"\'()<>]+\.(jpg|jpeg|png|gif|svg|webp)/i';
 		// Find all image URLs matching the pattern in the string
 		preg_match_all($pattern, $string, $matches);
 		// Output the found image URLs
@@ -199,7 +227,7 @@ class TemplateExport
 
 	private function extract_asset_url_from_content_manager($contentManager)
 	{
-		$types = array('image', 'video', 'gallery');
+		$types = array('image', 'video', 'gallery', 'file');
 
 		foreach ($contentManager as $key => $collection) {
 			$asset_field_ids = array(); // [{type: 'image', id: 'kirki_cm_field_952_dp23nqfx'}]
@@ -296,6 +324,10 @@ class TemplateExport
 					$this->exact_asset_url_from_blocks($kirki_data, 'popups');
 				}
 			}
+			if (!empty($meta['kirki_global_style_block_random'])) {
+				$kirki_global_style_block_random = maybe_unserialize($meta['kirki_global_style_block_random'][0]);
+				$this->extract_asset_url_from_string(json_encode($kirki_global_style_block_random));
+			}
 		}
 	}
 
@@ -371,6 +403,11 @@ class TemplateExport
 
 			global $wp_filesystem;
 			$zip = new \ZipArchive();
+
+			// Exports without media have no asset list.
+			if (!isset($template_data['assetUrls']) || !is_array($template_data['assetUrls'])) {
+				$template_data['assetUrls'] = array();
+			}
 
 			$upload_dir = wp_upload_dir();
 
@@ -534,7 +571,8 @@ class TemplateExport
 			}
 
 			// Step 3: Open the zip file
-			if (true !== $zip->open($zip_file_path, \ZipArchive::CREATE)) {
+			// OVERWRITE: start from an empty zip, even if an earlier export with the same name was never downloaded.
+			if (true !== $zip->open($zip_file_path, \ZipArchive::CREATE | \ZipArchive::OVERWRITE)) {
 				// throw new \Exception('Failed to create zip file');
 				wp_send_json_error('Failed to write template file');
 			}
@@ -542,14 +580,15 @@ class TemplateExport
 			// Step 4: Add file to the zip file
 			foreach ($template_data['assetUrls'] as $key => $asset_item) {
 				$url = $asset_item['url'];
-				$file_name = basename($url); // Extract only the filename (e.g., "image.jpg")
+				$file_name = basename($url); // Extract only the filename (e.g., "image.jpg"). The importer looks the file up by this name.
 
-				$file_path = $upload_dir['basedir'] . str_replace($upload_dir['baseurl'], '', $url);
+				$attachment_id = isset($asset_item['attachment_id']) ? $asset_item['attachment_id'] : 0;
+				$file_path = $this->get_asset_file_path($attachment_id, $url);
 				$zip_path = 'assets/' . $file_name; // Place all files inside "media/" without subdirectories
 
 				// Check if file exists
-				if (!file_exists($file_path)) {
-					// error_log("File not found: " . $file_path);
+				if (!$file_path) {
+					// error_log("File not found: " . $url);
 					continue; // Skip to the next file
 				}
 
@@ -745,14 +784,227 @@ class TemplateExport
 	private function push_to_asset_urls_tracker($attachment_id, $url)
 	{
 		if (!$attachment_id) {
-			$attachment_id = attachment_url_to_postid($url);
+			$attachment_id = $this->find_attachment_id_by_url($url);
 		}
 		if ($attachment_id) {
+			$url = $this->get_asset_file_url($attachment_id, $url);
 			$this->asset_urls_tracker[$attachment_id] = array(
 				'attachment_id' => $attachment_id,
 				'url' => $url,
 			);
 		}
+	}
+
+	/**
+	 * Get the path of an uploaded file inside the uploads folder from its URL (e.g. "2025/01/hero.jpg").
+	 *
+	 * Works when the URL's scheme or domain differs from the current site (http/https, www, a previous domain).
+	 *
+	 * @param string $url The file URL.
+	 * @return string|false The relative path, or false when the URL is not inside an uploads folder.
+	 */
+	private function get_uploads_relative_path($url)
+	{
+		$upload_dir = wp_upload_dir();
+		$uploads_path = wp_parse_url($upload_dir['baseurl'], PHP_URL_PATH);
+		$url_path = wp_parse_url($url, PHP_URL_PATH);
+
+		if (!$uploads_path || !$url_path) {
+			return false;
+		}
+
+		$uploads_path = trailingslashit($uploads_path);
+		$position = strpos($url_path, $uploads_path);
+		if (false === $position) {
+			return false;
+		}
+
+		$relative_path = rawurldecode(substr($url_path, $position + strlen($uploads_path)));
+
+		// Never leave the uploads folder.
+		if ('' === $relative_path || preg_match('#(^|/)\.\.(/|$)#', $relative_path)) {
+			return false;
+		}
+
+		return $relative_path;
+	}
+
+	/**
+	 * Find the attachment of an uploaded file URL.
+	 *
+	 * Besides the exact URL, this also matches resized copies (e.g. "hero-300x200.jpg"),
+	 * the "-scaled" copy of large images, and URLs whose scheme or domain differs from the current site.
+	 *
+	 * @param string $url The file URL.
+	 * @return int The attachment ID, or 0 when none is found.
+	 */
+	private function find_attachment_id_by_url($url)
+	{
+		$attachment_id = attachment_url_to_postid($url);
+		if ($attachment_id) {
+			return $attachment_id;
+		}
+
+		// The attachment's page link on this site, e.g. "https://site.test/?attachment_id=32".
+		$query = wp_parse_url($url, PHP_URL_QUERY);
+		if ($query && wp_parse_url($url, PHP_URL_HOST) === wp_parse_url(home_url(), PHP_URL_HOST)) {
+			parse_str($query, $query_args);
+			if (!empty($query_args['attachment_id']) && 'attachment' === get_post_type((int) $query_args['attachment_id'])) {
+				return (int) $query_args['attachment_id'];
+			}
+		}
+
+		$relative_path = $this->get_uploads_relative_path($url);
+		if (!$relative_path) {
+			return 0;
+		}
+
+		$upload_dir = wp_upload_dir();
+		$original_path = preg_replace('/-\d+x\d+(\.[^.\/]+)$/', '$1', $relative_path);
+		$candidates = array_unique(
+			array(
+				$relative_path,
+				$original_path,
+				preg_replace('/(\.[^.\/]+)$/', '-scaled$1', $original_path),
+			)
+		);
+
+		foreach ($candidates as $candidate) {
+			$attachment_id = attachment_url_to_postid(trailingslashit($upload_dir['baseurl']) . $candidate);
+			if ($attachment_id) {
+				return $attachment_id;
+			}
+		}
+
+		return 0;
+	}
+
+	/**
+	 * Get the URL to record for an asset.
+	 *
+	 * Media data uses the attachment's guid as its URL, which can be the attachment's page link
+	 * (e.g. "https://site.test/?attachment_id=32") instead of its file URL. The importer finds each
+	 * file in the zip by the URL's file name, so record the attachment's file URL whenever the
+	 * given URL doesn't lead to a file. Images and content manager media are relinked by ID.
+	 *
+	 * @param int    $attachment_id The asset's attachment ID.
+	 * @param string $url           The asset URL found in the content.
+	 * @return string The URL to record.
+	 */
+	private function get_asset_file_url($attachment_id, $url)
+	{
+		if ($this->get_asset_file_path($attachment_id, $url)) {
+			return $url;
+		}
+
+		$file_url = wp_get_attachment_url($attachment_id);
+		if ($file_url && $this->get_asset_file_path($attachment_id, $file_url)) {
+			return $file_url;
+		}
+
+		return $url;
+	}
+
+	/**
+	 * Find the file on disk for an asset.
+	 *
+	 * @param int    $attachment_id The asset's attachment ID.
+	 * @param string $url           The asset URL.
+	 * @return string|false The file path, or false when the file can't be found.
+	 */
+	private function get_asset_file_path($attachment_id, $url)
+	{
+		$upload_dir = wp_upload_dir();
+		$candidates = array();
+
+		// The URL inside the current uploads URL.
+		$relative_url = str_replace($upload_dir['baseurl'], '', $url);
+		if ($relative_url !== $url && !preg_match('#(^|/)\.\.(/|$)#', $relative_url)) {
+			$candidates[] = $upload_dir['basedir'] . $relative_url;
+		}
+
+		// The URL's path inside the uploads folder, whatever its scheme, domain or query string.
+		$relative_path = $this->get_uploads_relative_path($url);
+		if ($relative_path) {
+			$candidates[] = trailingslashit($upload_dir['basedir']) . $relative_path;
+		}
+
+		$attached_file = $attachment_id ? get_attached_file($attachment_id) : false;
+		$url_path = wp_parse_url($url, PHP_URL_PATH);
+		if ($attached_file && $url_path) {
+			$url_file_name = wp_basename(rawurldecode($url_path));
+
+			// A copy with the URL's file name next to the attachment's file (a resized or "-scaled" copy).
+			$candidates[] = trailingslashit(dirname($attached_file)) . $url_file_name;
+
+			// The attachment's own file, when the URL is a copy of it whose file is missing.
+			$url_original_name = preg_replace('/(-\d+x\d+|-scaled)(\.[^.]+)$/', '$2', $url_file_name);
+			$attached_original_name = preg_replace('/-scaled(\.[^.]+)$/', '$1', wp_basename($attached_file));
+			if ($url_original_name === $attached_original_name) {
+				$candidates[] = $attached_file;
+			}
+		}
+
+		// Only files that belong to the attachment may be exported.
+		$allowed_files = $this->get_attachment_files($attachment_id);
+		foreach ($candidates as $candidate) {
+			$real = realpath($candidate);
+			if ($real && isset($allowed_files[wp_normalize_path($real)])) {
+				return $real;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Get the files that belong to an attachment: its file, its original image and its registered sizes.
+	 *
+	 * Asset URLs and IDs come from site content, so only these files may be added to an export.
+	 * Paths are resolved with realpath() and must stay inside the uploads folder (this also stops
+	 * "..", backslash and symlink tricks).
+	 *
+	 * @param int $attachment_id The attachment ID.
+	 * @return array Map of allowed real file paths (normalized path => real path).
+	 */
+	private function get_attachment_files($attachment_id)
+	{
+		$attachment_id = (int) $attachment_id;
+		if (!$attachment_id || 'attachment' !== get_post_type($attachment_id)) {
+			return array();
+		}
+
+		$attached_file = get_attached_file($attachment_id);
+		$upload_dir = wp_upload_dir();
+		$uploads_dir = realpath($upload_dir['basedir']);
+		if (!$attached_file || !$uploads_dir) {
+			return array();
+		}
+		$uploads_dir = trailingslashit(wp_normalize_path($uploads_dir));
+
+		$dir = trailingslashit(dirname($attached_file));
+		$names = array(wp_basename($attached_file));
+		$metadata = wp_get_attachment_metadata($attachment_id);
+		if (!empty($metadata['original_image'])) {
+			$names[] = wp_basename($metadata['original_image']);
+		}
+		if (!empty($metadata['sizes']) && is_array($metadata['sizes'])) {
+			foreach ($metadata['sizes'] as $size) {
+				if (!empty($size['file'])) {
+					$names[] = wp_basename($size['file']);
+				}
+			}
+		}
+
+		$files = array();
+		foreach (array_unique($names) as $name) {
+			$real = realpath($dir . $name);
+			if ($real && is_file($real) && 0 === strpos(wp_normalize_path($real), $uploads_dir)) {
+				$files[wp_normalize_path($real)] = $real;
+			}
+		}
+
+		return $files;
 	}
 
 	private function get_all_content_manager_ref_fields()

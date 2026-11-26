@@ -80,6 +80,44 @@ abstract class Field {
 			$args = [];
 		}
 
+		/*
+		 * Themes often create fields directly from functions.php, before `init`.
+		 * Setting a field up translates its labels, and since WordPress 6.7 loading
+		 * translations before `init` triggers a _doing_it_wrong() notice
+		 * ("Translation loading for the kirki domain was triggered too early").
+		 * In that case, defer the setup to `init`, which still runs before every
+		 * hook a field relies on (wp_loaded, wp, customize_register, wp_head).
+		 */
+		if ( ! did_action( 'init' ) ) {
+			// Keep the field's arguments (and default) available to Kirki::get_option() right away.
+			if ( isset( $args['settings'] ) ) {
+				\Kirki\Compatibility\Kirki::$all_fields[ $args['settings'] ] = $args;
+			}
+
+			add_action(
+				'init',
+				function() use ( $args ) {
+					$this->setup_field( $args );
+				},
+				1
+			);
+			return;
+		}
+
+		$this->setup_field( $args );
+
+	}
+
+	/**
+	 * Set up the field: run its init logic and register its hooks.
+	 *
+	 * @access protected
+	 * @since 6.4.4
+	 * @param array $args The field arguments.
+	 * @return void
+	 */
+	protected function setup_field( $args ) {
+
 		$control_class = property_exists( $this, 'control_class' ) && ! empty( $this->control_class ) ? $this->control_class : '';
 
 		// Allow 3rd parties to do their custom "init" work.
@@ -87,6 +125,10 @@ abstract class Field {
 
 		// Allow 3rd parties to early stop the field from being registered.
 		if ( apply_filters( 'kirki_field_exclude_init', false, $this, $args ) ) {
+			// Undo the early registration made in __construct() for fields created before init.
+			if ( isset( $args['settings'] ) && isset( \Kirki\Compatibility\Kirki::$all_fields[ $args['settings'] ] ) && \Kirki\Compatibility\Kirki::$all_fields[ $args['settings'] ] === $args ) {
+				unset( \Kirki\Compatibility\Kirki::$all_fields[ $args['settings'] ] );
+			}
 			return;
 		}
 

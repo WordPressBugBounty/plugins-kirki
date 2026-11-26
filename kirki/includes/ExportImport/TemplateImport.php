@@ -328,11 +328,14 @@ class TemplateImport {
 			unset( $environment['json_data']['templates'] );
 			unset( $environment['json_data']['utility_pages'] );
 
-			HelperFunctions::update_global_data_using_key( 'kirki_project_import', $environment );
+			// update_post_meta() removes one level of backslashes from every string it saves (wp_unslash()),
+			// so add one first. Otherwise every import step strips backslashes from the imported data, and
+			// a page whose data contains backslashes (e.g. in custom code) can't be read any more.
+			HelperFunctions::update_global_data_using_key( 'kirki_project_import', wp_slash( $environment ) );
 
-			HelperFunctions::update_global_data_using_key( 'kirki_project_import_pages', $all_kirki_pages );
-			HelperFunctions::update_global_data_using_key( 'kirki_project_import_templates', $all_templates_pages );
-			HelperFunctions::update_global_data_using_key( 'kirki_project_import_utility', $all_utility_pages );
+			HelperFunctions::update_global_data_using_key( 'kirki_project_import_pages', wp_slash( $all_kirki_pages ) );
+			HelperFunctions::update_global_data_using_key( 'kirki_project_import_templates', wp_slash( $all_templates_pages ) );
+			HelperFunctions::update_global_data_using_key( 'kirki_project_import_utility', wp_slash( $all_utility_pages ) );
 		} else {
 			HelperFunctions::update_global_data_using_key( 'kirki_project_import', false );
 			HelperFunctions::update_global_data_using_key( 'kirki_project_import_pages', false );
@@ -634,7 +637,7 @@ class TemplateImport {
 					}
 				}
 			}
-			update_post_meta( $post_id, 'kirki', $kirki_data );
+			update_post_meta( $post_id, 'kirki', wp_slash( $kirki_data ) );
 		}
 
 		// now loop through the kirki_cm_ref_field_post_tracker and update the post_id and ref_post_id
@@ -659,7 +662,7 @@ class TemplateImport {
 			}
 
 			// update the post meta
-			update_post_meta( $new_post_id, KIRKI_CONTENT_MANAGER_PREFIX . '_fields', $kirki_cm_fields );
+			update_post_meta( $new_post_id, KIRKI_CONTENT_MANAGER_PREFIX . '_fields', wp_slash( $kirki_cm_fields ) );
 		}
 	}
 
@@ -1008,7 +1011,8 @@ class TemplateImport {
 			}
 
 			$updated_key_value = $this->handle_kirki_related_meta( $key, $v, $post );
-			update_post_meta( $post_id, $updated_key_value[0], $updated_key_value[1] );
+			// Slashed, because update_post_meta() unslashes: the value is saved exactly as exported.
+			update_post_meta( $post_id, $updated_key_value[0], wp_slash( $updated_key_value[1] ) );
 		}
 	}
 

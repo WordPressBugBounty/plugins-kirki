@@ -1991,8 +1991,18 @@ class Preview extends ExceptionalElements {
 			$href = $this->get_href_value( $this_data, $options );
 
 			if ( $href ) {
-				// replace href.
-				$attributes = preg_replace( '/href="([^"]+")/i', "href='$href'", $attributes );
+				// Replace the href with the resolved link. The value can come from stored block data
+				// (e.g. links copied from page content by the Convert migration), so it is escaped,
+				// written in double quotes, and inserted with a callback so "$1"/"\\1" in it stay literal.
+				$escaped_href = esc_url( $href );
+				$attributes   = preg_replace_callback(
+					'/(?<![\w-])href="[^"]*"/i',
+					function () use ( $escaped_href ) {
+						return 'href="' . $escaped_href . '"';
+					},
+					$attributes,
+					1
+				);
 
 				// check if the link is active.
 				$attributes = $this->add_link_active_class( $href, $attributes );
@@ -2011,13 +2021,21 @@ class Preview extends ExceptionalElements {
 		if ( in_array( $tag, $nested_not_allowed_tags ) && HelperFunctions::check_string_has_this_tags( $child_content_or_html, $tag ) ) {
 			$tag = 'div';
 		}
-		// Start Tag <div>.
-		$html      = '<' . $tag . ' ' . $attributes . '>';
-			$html .= $child_content_or_html;
-		$html     .= '</' . $tag . '>';
-		$html     .= $preload_link;
-		// End Tag </div>.
-		return $html;
+
+		if($this->is_text_list_element( $this_data )){
+			$html = $child_content_or_html;
+			$html     .= $preload_link;
+			return $html;
+		}else{
+			// Start Tag <div>.
+			$html      = '<' . $tag . ' ' . $attributes . '>';
+				$html .= $child_content_or_html;
+			$html     .= '</' . $tag . '>';
+			$html     .= $preload_link;
+			// End Tag </div>.
+			return $html;
+		}
+		
 	}
 
 	/**
@@ -2508,7 +2526,7 @@ class Preview extends ExceptionalElements {
 		$properties = $this_data['properties'];
 
 		if ( isset( $properties['preload'] ) && $properties['preload'] !== 'default' ) {
-			return '<link rel="' . $properties['preload'] . '" href="' . $href . '">';
+			return '<link rel="' . esc_attr( $properties['preload'] ) . '" href="' . esc_url( $href ) . '">';
 		}
 
 		return '';

@@ -85,6 +85,13 @@ class EditWithButton {
 	 * @return array
 	 */
 	public function filter_post_row_actions( $actions, $post ) {
+
+		$exclude_post_statuses = array('trash');
+		if (in_array($post->post_status, $exclude_post_statuses)) {
+			unset($actions['edit_with_kirki']);
+			return $actions;
+		}
+
 		$editor_mode = HelperFunctions::is_editor_mode_is_kirki( $post->ID );
 		if ( $editor_mode && HelperFunctions::user_has_post_edit_access( $post->ID ) ) {
 			$editor_url                                 = HelperFunctions::get_post_url_arr_from_post_id( $post->ID, array( 'editor_url' => true ) )['editor_url'];

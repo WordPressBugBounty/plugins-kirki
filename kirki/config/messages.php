@@ -2,7 +2,7 @@
 
 return [
     'validator' => [
-        'failed' => __('Validation failed!', 'kirki'),
+        'failed' => __('Validation failed! Please check all fields and try again.', 'kirki'),
         /* translators: %s: Field name. */
         'invalid' => __('The %s field is invalid.', 'kirki'),
         /* translators: %s: Validation rule name. */

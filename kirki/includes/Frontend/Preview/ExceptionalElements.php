@@ -635,7 +635,7 @@ class ExceptionalElements {
 		$preload_link = '';
 
 		if ( $href ) {
-			$attributes = preg_replace( '/href="([^"]+")/i', '', $attributes );
+			$attributes = preg_replace( '/(?<![\w-])href="[^"]*"/i', '', $attributes );
 
 			// check if this link is active
 			$attributes = $this->add_link_active_class( $href, $attributes, $this_data, $options );
@@ -643,7 +643,7 @@ class ExceptionalElements {
 			$preload_link = $this->get_preload_link( $href, $this_data );
 		}
 
-		return '<a ' . $attributes . ' ' . ' href="' . $href . '" >' . $this->construct_children_markup( isset( $this_data['children'] ) ? $this_data['children'] : array(), $options ) . '</a>' . $preload_link;
+		return '<a ' . $attributes . ' ' . ' href="' . esc_url( $href ) . '" >' . $this->construct_children_markup( isset( $this_data['children'] ) ? $this_data['children'] : array(), $options ) . '</a>' . $preload_link;
 	}
 
 	private function button_element( $this_data, $attributes, $options ) {
@@ -651,7 +651,7 @@ class ExceptionalElements {
 		$preload_link = '';
 
 		if ( $href ) {
-			$attributes = preg_replace( '/href="([^"]+")/i', '', $attributes );
+			$attributes = preg_replace( '/(?<![\w-])href="[^"]*"/i', '', $attributes );
 
 			// check if this link is active
 			$attributes = $this->add_link_active_class( $href, $attributes, $this_data, $options );
@@ -665,7 +665,9 @@ class ExceptionalElements {
 			$tag = 'a';
 		}
 
-		return "<$tag $attributes href=\"$href\">
+		$escaped_href = esc_url( $href );
+
+		return "<$tag $attributes href=\"$escaped_href\">
 			$children_markup
 		</$tag>
 		$preload_link";
@@ -1039,7 +1041,7 @@ class ExceptionalElements {
 		}
 		$depth++;
 		foreach ( $submenus as $key => $menu ) {
-			$str .= '<li class="' . 'kirki-element-nav-item"><a class="' . 'kirki-link-element" href="' . $menu->url . '" target="' . $menu->target . '">' . $menu->title . '</a>' . $this->rec_gen_menu_items( $menu->submenus, $depth ) . '</li>';
+			$str .= '<li class="' . 'kirki-element-nav-item"><a class="' . 'kirki-link-element" href="' . esc_url( $menu->url ) . '" target="' . esc_attr( $menu->target ) . '">' . $menu->title . '</a>' . $this->rec_gen_menu_items( $menu->submenus, $depth ) . '</li>';
 		}
 		$str .= '</ul>';
 		return $str;

@@ -22,7 +22,7 @@ class ExportImport
 	public static function export()
 	{
 		$filename = HelperFunctions::sanitize_text(isset($_POST['filename']) ? $_POST['filename'] : '');
-		$filename = basename($filename);
+		$filename = sanitize_file_name(basename($filename));
 		$data = isset($_POST['data']) ? $_POST['data'] : '{}';
 		$data = json_decode(stripslashes($data), true);
 		$blocks = $data['blocks'];

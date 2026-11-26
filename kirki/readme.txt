@@ -3,7 +3,7 @@ Contributors: themeum
 Tags: page builder, website builder, drag and drop, form builder, freeform canvas
 Requires at least: 5.9
 Tested up to: 7.1
-Stable tag: 6.4.3
+Stable tag: 6.4.4
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -190,6 +190,21 @@ Nothing. All existing Customizer controls are fully preserved. Your current setu
 ---
 
 == Changelog ==
+
+= 6.4.4 =
+* New: Added multi-select drag-and-drop functionality for easier element management.
+* Update: Improved SVG element CSS and properties, including automatic default sizing to match the SVG viewBox.
+* Update: Added span wrappers when splitting list item text.
+* Update: Preserved whitespace when splitting text for animations.
+* Update: Enhanced component editing with improved undo and redo functionality.
+* Update: Remove edit with kirki option from the trash pages.
+* Fix: Resolved undo and redo issues when duplicating multiple elements using the Alt key.
+* Fix: Fixed page export errors caused by spaces in file names.
+* Fix: Improved bulk element updates during real-time collaboration.
+* Fix: _load_textdomain_just_in_time called incorrectly from kirki customizer.
+* Fix: Font Variant previews correctly but font-weight reverts after publishing issue resolved.
+* Fix: Comment Anchor href sanitization issue resolved.
+
 
 = 6.4.3 =
 * Update: Slider re-rendering performance and behavior.
